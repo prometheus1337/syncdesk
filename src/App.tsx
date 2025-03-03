@@ -5,6 +5,7 @@ import { RefundDashboard } from './components/RefundDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { DocsHub } from './components/DocsHub';
 import { DocsViewer } from './components/DocsViewer';
+import { LandingPage } from './components/LandingPage';
 import LoginPage from './components/LoginPage';
 import { Layout } from './components/Layout';
 
@@ -33,17 +34,6 @@ const theme = extendTheme({
   },
 });
 
-// Componente de teste que não requer autenticação
-function TestPage() {
-  return (
-    <Box p={8} maxWidth="800px" mx="auto">
-      <Heading mb={4}>Página de Teste</Heading>
-      <Text>Esta é uma página de teste que não requer autenticação.</Text>
-      <Text mt={4}>Se você está vendo esta página, a aplicação está funcionando corretamente.</Text>
-    </Box>
-  );
-}
-
 function PrivateRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole?: 'admin' | 'support' }) {
   const { appUser, loading } = useAuth();
 
@@ -68,8 +58,8 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/test" element={<TestPage />} />
             <Route
               path="/admin"
               element={
@@ -104,7 +94,6 @@ function App() {
             />
             <Route path="/docs/admin" element={<DocsHub />} />
             <Route path="/docs/edit/:docId" element={<DocsHub />} />
-            <Route path="/" element={<Navigate to="/test" />} />
           </Routes>
         </Router>
       </AuthProvider>
