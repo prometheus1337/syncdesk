@@ -27,6 +27,7 @@ import {
   TableContainer,
   Flex,
   Spacer,
+  ModalFooter,
 } from '@chakra-ui/react';
 import { DeleteIcon, EditIcon, AddIcon } from '@chakra-ui/icons';
 import { supabase } from '../lib/supabase';
@@ -44,6 +45,9 @@ export function AdminDashboard() {
   const [users, setUsers] = useState<AppUser[]>([]);
   const [selectedUser, setSelectedUser] = useState<AppUser | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [currentUserEmail, setCurrentUserEmail] = useState('');
   const toast = useToast();
   const { appUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -274,6 +278,34 @@ export function AdminDashboard() {
             </ModalBody>
           </ModalContent>
         </Modal>
+
+        {/* Modal de senha do admin */}
+        <Modal isOpen={isPasswordModalOpen} onClose={() => setIsPasswordModalOpen(false)}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Confirme sua senha</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <FormControl>
+                <FormLabel>Digite sua senha para continuar</FormLabel>
+                <Input
+                  type="password"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  placeholder="Sua senha"
+                />
+              </FormControl>
+            </ModalBody>
+            <ModalFooter>
+              <Button colorScheme="blue" mr={3} onClick={handleAdminRelogin}>
+                Confirmar
+              </Button>
+              <Button variant="ghost" onClick={() => setIsPasswordModalOpen(false)}>
+                Cancelar
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
       </Box>
     </Box>
   );
@@ -293,6 +325,7 @@ export function AdminDashboard() {
       // Salva o usuário atual
       const currentSession = await supabase.auth.getSession();
       const currentUser = currentSession.data.session?.user;
+      setCurrentUserEmail(currentUser?.email || '');
 
       // Cria o novo usuário
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -318,13 +351,8 @@ export function AdminDashboard() {
 
       if (appError) throw appError;
 
-      // Faz login novamente com o usuário admin
-      if (currentUser) {
-        await supabase.auth.signInWithPassword({
-          email: currentUser.email!,
-          password: prompt('Por favor, insira sua senha para continuar:') || '',
-        });
-      }
+      // Abre o modal de senha
+      setIsPasswordModalOpen(true);
 
       toast({
         title: 'Usuário criado com sucesso',
@@ -345,6 +373,25 @@ export function AdminDashboard() {
       });
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleAdminRelogin() {
+    try {
+      await supabase.auth.signInWithPassword({
+        email: currentUserEmail,
+        password: adminPassword,
+      });
+      setIsPasswordModalOpen(false);
+      setAdminPassword('');
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao fazer login',
+        description: error.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
     }
   }
 

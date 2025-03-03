@@ -86,6 +86,7 @@ function formatDate(date?: string) {
 export function RefundDashboard() {
   const [refunds, setRefunds] = useState<Refund[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAscending, setIsAscending] = useState(false);
   const [filter, setFilter] = useState({
     type: '',
     search: '',
@@ -111,7 +112,7 @@ export function RefundDashboard() {
     let query = supabase
       .from('data')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: isAscending });
 
     if (filter.type) {
       query = query.eq('type', filter.type);
@@ -976,6 +977,19 @@ export function RefundDashboard() {
                 </MenuList>
               </Menu>
             </Box>
+            
+            <Tooltip label="Alternar ordenação">
+              <IconButton
+                aria-label="Alternar ordenação"
+                icon={<RepeatIcon transform={isAscending ? "rotate(180deg)" : "none"} color="black" />}
+                onClick={() => setIsAscending(!isAscending)}
+                isLoading={isLoading}
+                bg="#FFDB01"
+                _hover={{ bg: "#e5c501" }}
+                _focus={{ outline: "none", boxShadow: "none" }}
+                _active={{ outline: "none", boxShadow: "none" }}
+              />
+            </Tooltip>
             
             <Tooltip label="Atualizar lista">
               <IconButton
