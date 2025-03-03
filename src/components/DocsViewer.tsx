@@ -306,18 +306,7 @@ export function DocsViewer() {
           boxShadow="sm"
         >
           <Flex alignItems="center">
-            <Heading size="md" color={textColor}>v1.0</Heading>
-            <Tooltip label="Atualizar documentação">
-              <IconButton
-                aria-label="Atualizar documentação"
-                icon={<RepeatIcon />}
-                size="sm"
-                variant="ghost"
-                ml={2}
-                onClick={handleRefresh}
-                isLoading={isLoading}
-              />
-            </Tooltip>
+            <Heading size="md" color={textColor}>Documentação e instruções</Heading>
           </Flex>
           <InputGroup maxW="300px">
             <InputLeftElement pointerEvents="none">
@@ -343,15 +332,6 @@ export function DocsViewer() {
             overflowY="auto"
             p={0}
           >
-            <Box p={4} borderBottom="1px" borderColor={borderColor}>
-              <Text fontWeight="bold" fontSize="sm" color={mutedTextColor} mb={2}>JUMP TO</Text>
-              <Input 
-                placeholder="⌘/" 
-                size="sm" 
-                bg={bgColor}
-                borderColor={borderColor}
-              />
-            </Box>
             
             {/* Renderizar as seções do banco de dados */}
             <Box p={4}>
