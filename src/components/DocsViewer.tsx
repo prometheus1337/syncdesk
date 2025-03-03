@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Box, Flex, Heading, Text, Card, CardBody, Stack, Spinner, useToast, Input, InputGroup, InputLeftElement, Divider, Link as ChakraLink, useColorModeValue, IconButton, Tooltip, Button } from "@chakra-ui/react";
-import { SearchIcon, EditIcon, ChevronRightIcon, ChevronDownIcon, RepeatIcon, ArrowBackIcon } from "@chakra-ui/icons";
+import { Box, Flex, Heading, Text, Card, CardBody, Stack, Spinner, useToast, Input, InputGroup, InputLeftElement, Divider, Link as ChakraLink, useColorModeValue, IconButton, Button } from "@chakra-ui/react";
+import { SearchIcon, EditIcon, ChevronRightIcon, ChevronDownIcon, ArrowBackIcon } from "@chakra-ui/icons";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
 import ReactMarkdown from "react-markdown";
@@ -269,17 +269,6 @@ export function DocsViewer() {
   
   function hasChildren(docId: string): boolean {
     return docs.some(doc => doc.parent_id === docId);
-  }
-
-  async function handleRefresh() {
-    console.log('DocsViewer: Atualizando manualmente');
-    await fetchSections();
-    await fetchAllDocs();
-    toast({
-      title: 'Documentação atualizada',
-      status: 'success',
-      duration: 2000,
-    });
   }
 
   if (!appUser) {
