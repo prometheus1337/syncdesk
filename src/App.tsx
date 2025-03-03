@@ -1,11 +1,10 @@
-import { ChakraProvider, extendTheme, Box, Text, Heading } from '@chakra-ui/react';
+import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { RefundDashboard } from './components/RefundDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { DocsHub } from './components/DocsHub';
 import { DocsViewer } from './components/DocsViewer';
-import { LandingPage } from './components/LandingPage';
 import LoginPage from './components/LoginPage';
 import { Layout } from './components/Layout';
 
@@ -58,7 +57,7 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={<Navigate to="/login" />} />
             <Route path="/login" element={<LoginPage />} />
             <Route
               path="/admin"
