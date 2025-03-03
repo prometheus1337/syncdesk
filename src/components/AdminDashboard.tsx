@@ -290,7 +290,7 @@ export function AdminDashboard() {
     };
 
     try {
-      // Cria o usuário com a API normal e confirma o email automaticamente
+      // Cria o usuário com a API normal
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
@@ -304,14 +304,6 @@ export function AdminDashboard() {
 
       if (authError) throw authError;
 
-      // Confirma o email do usuário automaticamente
-      const { error: updateError } = await supabase.auth.admin.updateUserById(
-        authData.user!.id,
-        { email_confirm: true }
-      );
-
-      if (updateError) throw updateError;
-
       // Insere o usuário na tabela app_users
       const { error: appError } = await supabase.from('app_users').insert({
         id: authData.user?.id,
@@ -324,6 +316,7 @@ export function AdminDashboard() {
 
       toast({
         title: 'Usuário criado com sucesso',
+        description: 'Um email de confirmação foi enviado para o usuário',
         status: 'success',
         duration: 5000,
         isClosable: true,
