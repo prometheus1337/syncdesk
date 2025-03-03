@@ -1,0 +1,1 @@
+ALTER TABLE data ADD COLUMN phone TEXT, ADD COLUMN invoice_id TEXT, ADD COLUMN payment_method TEXT, ADD COLUMN purchase_date TIMESTAMP, ADD COLUMN refund_motive TEXT, ADD COLUMN refund_explained BOOLEAN DEFAULT FALSE;

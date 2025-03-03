@@ -1,0 +1,226 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  min-width: 100%;
+  min-height: 100vh;
+  width: 100%;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-focus-ring-color: transparent !important;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Estilos globais */
+* {
+  outline: none !important;
+}
+
+*:focus, *:hover, *:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+button:focus,
+button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-focus-ring-color: transparent !important;
+}
+
+.chakra-menu__menuitem {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.chakra-menu__menuitem:focus, 
+.chakra-menu__menuitem:hover, 
+.chakra-menu__menuitem:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.chakra-menu__menu-list {
+  outline: none !important;
+}
+
+.chakra-menu__menu-button {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Remover contorno azul específico do Chrome */
+*:focus {
+  outline-color: transparent !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Remover contorno azul específico do Firefox */
+*::-moz-focus-inner {
+  border: 0 !important;
+}
+
+/* Remover contorno azul específico do Safari */
+*[tabindex] {
+  outline: none !important;
+}
+
+/* Remover contorno azul específico do IE */
+*::-ms-clear {
+  display: none !important;
+}
+
+/* Remover contorno azul específico do Edge */
+*:focus {
+  outline: none !important;
+}
+
+/* Classe específica para remover contornos */
+.no-outline {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+.no-outline:focus,
+.no-outline:hover,
+.no-outline:active {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+/* Regras específicas para o menu do Chakra UI */
+.chakra-menu__menuitem-option {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.chakra-menu__menuitem * {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.chakra-menu__menuitem *:focus,
+.chakra-menu__menuitem *:hover,
+.chakra-menu__menuitem *:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.chakra-menu button,
+.chakra-menu button:focus,
+.chakra-menu button:hover,
+.chakra-menu button:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Regras mais agressivas para remover contornos */
+[role="menuitem"],
+[role="menuitem"]:focus,
+[role="menuitem"]:hover,
+[role="menuitem"]:active {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Regras específicas para os elementos dentro dos itens do menu */
+.chakra-menu__menuitem * {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.chakra-menu__menuitem *:focus,
+.chakra-menu__menuitem *:hover,
+.chakra-menu__menuitem *:active {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Regras para o Flex dentro dos itens do menu */
+.chakra-menu__menuitem .chakra-flex {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.chakra-menu__menuitem .chakra-flex:focus,
+.chakra-menu__menuitem .chakra-flex:hover,
+.chakra-menu__menuitem .chakra-flex:active {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Regras para as imagens dentro dos itens do menu */
+.chakra-menu__menuitem img {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}

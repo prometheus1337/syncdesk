@@ -1,0 +1,500 @@
+/* Estilos para o conteúdo Markdown */
+.markdown-content {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.6;
+  color: #333;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Cabeçalhos */
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+}
+
+.markdown-content h1 {
+  font-size: 2em;
+  border-bottom: 1px solid #eaecef;
+  padding-bottom: 0.3em;
+}
+
+.markdown-content h2 {
+  font-size: 1.5em;
+  border-bottom: 1px solid #eaecef;
+  padding-bottom: 0.3em;
+}
+
+.markdown-content h3 {
+  font-size: 1.25em;
+}
+
+.markdown-content h4 {
+  font-size: 1em;
+}
+
+/* Parágrafos */
+.markdown-content p {
+  margin-top: 0;
+  margin-bottom: 1em;
+  text-align: justify;
+}
+
+/* Listas */
+.markdown-content ul,
+.markdown-content ol {
+  padding-left: 2em;
+  margin-top: 0;
+  margin-bottom: 1em;
+}
+
+.markdown-content li {
+  margin-bottom: 0.25em;
+}
+
+.markdown-content li > ul,
+.markdown-content li > ol {
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+}
+
+/* Blocos de código */
+.markdown-content pre {
+  background-color: #f6f8fa;
+  border-radius: 3px;
+  padding: 16px;
+  overflow: auto;
+  margin-bottom: 1em;
+}
+
+.markdown-content code {
+  font-family: SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+  background-color: rgba(27, 31, 35, 0.05);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-size: 85%;
+}
+
+.markdown-content pre code {
+  background-color: transparent;
+  padding: 0;
+  font-size: 100%;
+  white-space: pre;
+}
+
+/* Tabelas */
+.markdown-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 1em;
+}
+
+.markdown-content table th,
+.markdown-content table td {
+  padding: 6px 13px;
+  border: 1px solid #dfe2e5;
+}
+
+.markdown-content table tr {
+  background-color: #fff;
+  border-top: 1px solid #c6cbd1;
+}
+
+.markdown-content table tr:nth-child(2n) {
+  background-color: #f6f8fa;
+}
+
+/* Citações */
+.markdown-content blockquote {
+  padding: 0 1em;
+  color: #6a737d;
+  border-left: 0.25em solid #dfe2e5;
+  margin-bottom: 1em;
+}
+
+.markdown-content blockquote > :first-child {
+  margin-top: 0;
+}
+
+.markdown-content blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+/* Imagens */
+.markdown-content img {
+  max-width: 100%;
+  border-radius: 8px;
+  box-shadow: none;
+  margin: 1.5em 0;
+  display: block;
+}
+
+/* Vídeos */
+.markdown-content video {
+  max-width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin: 1.5em 0;
+  display: block;
+}
+
+/* Links */
+.markdown-content a {
+  color: #0366d6;
+  text-decoration: none;
+}
+
+.markdown-content a:hover {
+  text-decoration: underline;
+}
+
+/* Linha horizontal */
+.markdown-content hr {
+  height: 0.25em;
+  padding: 0;
+  margin: 24px 0;
+  background-color: #e1e4e8;
+  border: 0;
+}
+
+/* Estilos para o editor Markdown estilo Notion */
+.notion-style-editor {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+}
+
+/* Remover bordas pretas */
+.notion-style-editor .w-md-editor {
+  border: none !important;
+  background-color: #fff !important;
+}
+
+.notion-style-editor .w-md-editor-preview {
+  box-shadow: none !important;
+  border-left: 1px solid #e2e8f0 !important;
+  background-color: #fff !important;
+}
+
+.notion-style-editor .w-md-editor-text-pre,
+.notion-style-editor .w-md-editor-text-input,
+.notion-style-editor .w-md-editor-text {
+  background-color: #fff !important;
+  color: #333 !important;
+}
+
+.notion-style-editor .w-md-editor-toolbar {
+  border-bottom: 1px solid #e2e8f0;
+  padding: 8px 12px;
+  background-color: #f8f9fa;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+.notion-style-editor .w-md-editor-toolbar ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.notion-style-editor .w-md-editor-toolbar li > button {
+  border-radius: 4px;
+  color: #4a5568;
+  transition: all 0.2s;
+  padding: 4px 8px;
+}
+
+.notion-style-editor .w-md-editor-toolbar li > button:hover {
+  background-color: #f7fafc;
+  color: #1a202c;
+}
+
+.notion-style-editor .w-md-editor-toolbar li.active > button {
+  background-color: #ebf8ff;
+  color: #3182ce;
+}
+
+/* Estilizando o conteúdo do editor */
+.notion-style-editor .w-md-editor-content {
+  height: calc(100% - 50px) !important;
+  overflow: auto;
+}
+
+.notion-style-editor .w-md-editor-text-pre,
+.notion-style-editor .w-md-editor-text-input {
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+.notion-style-editor .w-md-editor-text-input {
+  padding: 16px !important;
+}
+
+/* Estilizando a visualização do markdown */
+.notion-style-editor .wmde-markdown {
+  padding: 20px !important;
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+  color: #333 !important;
+  background-color: #fff !important;
+}
+
+.notion-style-editor .wmde-markdown h1,
+.notion-style-editor .wmde-markdown h2,
+.notion-style-editor .wmde-markdown h3,
+.notion-style-editor .wmde-markdown h4,
+.notion-style-editor .wmde-markdown h5,
+.notion-style-editor .wmde-markdown h6 {
+  margin-top: 24px !important;
+  margin-bottom: 16px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+.notion-style-editor .wmde-markdown h1 {
+  font-size: 2em !important;
+  padding-bottom: 0.3em !important;
+  border-bottom: 1px solid #eaecef !important;
+}
+
+.notion-style-editor .wmde-markdown h2 {
+  font-size: 1.5em !important;
+  padding-bottom: 0.3em !important;
+  border-bottom: 1px solid #eaecef !important;
+}
+
+.notion-style-editor .wmde-markdown h3 {
+  font-size: 1.25em !important;
+}
+
+.notion-style-editor .wmde-markdown p {
+  margin-top: 0 !important;
+  margin-bottom: 16px !important;
+}
+
+.notion-style-editor .wmde-markdown ul,
+.notion-style-editor .wmde-markdown ol {
+  padding-left: 2em !important;
+  margin-top: 0 !important;
+  margin-bottom: 16px !important;
+}
+
+.notion-style-editor .wmde-markdown li {
+  margin-bottom: 4px !important;
+}
+
+.notion-style-editor .wmde-markdown blockquote {
+  padding: 0 1em !important;
+  color: #6a737d !important;
+  border-left: 0.25em solid #dfe2e5 !important;
+  margin: 0 0 16px 0 !important;
+}
+
+.notion-style-editor .wmde-markdown pre {
+  padding: 16px !important;
+  overflow: auto !important;
+  font-size: 85% !important;
+  line-height: 1.45 !important;
+  background-color: #f6f8fa !important;
+  border-radius: 6px !important;
+  margin-bottom: 16px !important;
+}
+
+.notion-style-editor .wmde-markdown code {
+  padding: 0.2em 0.4em !important;
+  margin: 0 !important;
+  font-size: 85% !important;
+  background-color: rgba(27, 31, 35, 0.05) !important;
+  border-radius: 3px !important;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace !important;
+}
+
+.notion-style-editor .wmde-markdown img {
+  max-width: 100% !important;
+  box-sizing: content-box !important;
+  background-color: #fff !important;
+  border-radius: 4px !important;
+  margin: 8px 0 !important;
+}
+
+/* Estilo para o modo escuro */
+.chakra-ui-dark .notion-style-editor .w-md-editor-toolbar {
+  background-color: #1a202c;
+  border-bottom: 1px solid #2d3748;
+}
+
+.chakra-ui-dark .notion-style-editor .w-md-editor-toolbar li > button {
+  color: #a0aec0;
+}
+
+.chakra-ui-dark .notion-style-editor .w-md-editor-toolbar li > button:hover {
+  background-color: #2d3748;
+  color: #e2e8f0;
+}
+
+.chakra-ui-dark .notion-style-editor .w-md-editor-toolbar li.active > button {
+  background-color: #2c5282;
+  color: #ebf8ff;
+}
+
+.chakra-ui-dark .notion-style-editor .w-md-editor-content {
+  background-color: #1a202c;
+}
+
+.chakra-ui-dark .notion-style-editor .w-md-editor-text-input {
+  color: #e2e8f0;
+}
+
+.chakra-ui-dark .notion-style-editor .wmde-markdown {
+  color: #e2e8f0;
+}
+
+.chakra-ui-dark .notion-style-editor .wmde-markdown blockquote {
+  border-left-color: #4a5568;
+  color: #a0aec0;
+}
+
+.chakra-ui-dark .notion-style-editor .wmde-markdown pre {
+  background-color: #2d3748;
+}
+
+.chakra-ui-dark .notion-style-editor .wmde-markdown code {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Remover bordas pretas e melhorar aparência */
+.notion-style-editor .w-md-editor-fullscreen {
+  background-color: #fff !important;
+  z-index: 9999;
+}
+
+.notion-style-editor .w-md-editor-bar {
+  display: none !important;
+}
+
+.notion-style-editor .w-md-editor-show-edit {
+  background-color: #fff !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+.notion-style-editor .w-md-editor-show-preview {
+  background-color: #fff !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+.notion-style-editor .w-md-editor-preview {
+  padding: 16px !important;
+}
+
+.notion-style-editor .w-md-editor-input {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Ajustes para modo escuro */
+.chakra-ui-dark .notion-style-editor {
+  background-color: #1a202c !important;
+}
+
+.chakra-ui-dark .notion-style-editor .w-md-editor {
+  background-color: #1a202c !important;
+  border: none !important;
+}
+
+.chakra-ui-dark .notion-style-editor .w-md-editor-preview {
+  background-color: #1a202c !important;
+  border-left: 1px solid #2d3748 !important;
+}
+
+.chakra-ui-dark .notion-style-editor .w-md-editor-text-pre,
+.chakra-ui-dark .notion-style-editor .w-md-editor-text-input,
+.chakra-ui-dark .notion-style-editor .w-md-editor-text {
+  background-color: #1a202c !important;
+  color: #e2e8f0 !important;
+}
+
+.chakra-ui-dark .notion-style-editor .w-md-editor-show-edit,
+.chakra-ui-dark .notion-style-editor .w-md-editor-show-preview {
+  background-color: #1a202c !important;
+}
+
+/* Limitar altura das imagens */
+.markdown-content img,
+.wmde-markdown img {
+  max-height: 500px !important;
+  object-fit: contain !important;
+}
+
+/* Estilos específicos para garantir visibilidade do texto no editor */
+.w-md-editor-text-input {
+  color: #333 !important;
+  opacity: 1 !important;
+  background-color: white !important;
+  caret-color: #333 !important;
+}
+
+.w-md-editor-text {
+  color: #333 !important;
+  background-color: white !important;
+}
+
+.w-md-editor-text-pre {
+  color: #333 !important;
+  background-color: white !important;
+}
+
+.w-md-editor-content {
+  background-color: white !important;
+}
+
+.w-md-editor-show-edit {
+  background-color: white !important;
+}
+
+/* Forçar visibilidade do texto */
+textarea.w-md-editor-text-input {
+  -webkit-text-fill-color: #333 !important;
+  color: #333 !important;
+}
+
+/* Classe específica para o editor com texto visível */
+.editor-with-visible-text .w-md-editor-text-input {
+  color: #333 !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: #333 !important;
+  background-color: white !important;
+}
+
+/* Garantir visibilidade no modo de visualização */
+.editor-with-visible-text .w-md-editor-preview {
+  color: #333 !important;
+  background-color: white !important;
+}
+
+/* Garantir visibilidade em ambos os modos */
+.w-md-editor-show-preview {
+  background-color: white !important;
+}
+
+.chakra-ui-dark .editor-with-visible-text .w-md-editor-text-input {
+  color: #e2e8f0 !important;
+  -webkit-text-fill-color: #e2e8f0 !important;
+  background-color: #1a202c !important;
+}
+
+.chakra-ui-dark .editor-with-visible-text .w-md-editor-preview {
+  color: #e2e8f0 !important;
+  background-color: #1a202c !important;
+} 
