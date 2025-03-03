@@ -64,6 +64,7 @@ interface Refund {
   type: 'refund' | 'chargeback';
   access_revoked: boolean;
   concluido: boolean;
+  close_date?: string;
   platform: 'Hubla' | 'Hotmart' | 'Kiwify' | null;
   phone?: string;
   invoice_id?: string;
@@ -1005,6 +1006,7 @@ export function RefundDashboard() {
                 <Th>Plataforma</Th>
                 <Th>Acesso Revogado</Th>
                 <Th>Concluído</Th>
+                <Th>Data Conclusão</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -1103,6 +1105,7 @@ export function RefundDashboard() {
                       </FormLabel>
                     </FormControl>
                   </Td>
+                  <Td py={2}>{formatDate(refund.close_date)}</Td>
                 </Tr>
               ))}
               {refunds.length === 0 && (
@@ -1267,6 +1270,10 @@ export function RefundDashboard() {
                   <GridItem>
                     <Text fontWeight="bold">Data do Reembolso:</Text>
                     <Text>{formatDate(selectedRefund.created_at)}</Text>
+                  </GridItem>
+                  <GridItem>
+                    <Text fontWeight="bold">Data de Conclusão:</Text>
+                    <Text>{formatDate(selectedRefund.close_date)}</Text>
                   </GridItem>
                 </Grid>
 
