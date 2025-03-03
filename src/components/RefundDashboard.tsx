@@ -86,13 +86,13 @@ function formatDate(date?: string) {
 export function RefundDashboard() {
   const [refunds, setRefunds] = useState<Refund[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isAscending, setIsAscending] = useState(false);
   const [filter, setFilter] = useState({
     type: '',
     search: '',
     platform: '',
     accessRevoked: '',
     concluido: '',
+    order: 'desc',
   });
   const [selectedRefund, setSelectedRefund] = useState<Refund | null>(null);
   const [editingMotive, setEditingMotive] = useBoolean(false);
@@ -112,7 +112,7 @@ export function RefundDashboard() {
     let query = supabase
       .from('data')
       .select('*')
-      .order('created_at', { ascending: isAscending });
+      .order('created_at', { ascending: filter.order === 'asc' });
 
     if (filter.type) {
       query = query.eq('type', filter.type);
@@ -978,18 +978,86 @@ export function RefundDashboard() {
               </Menu>
             </Box>
             
-            <Tooltip label="Alternar ordenação">
-              <IconButton
-                aria-label="Alternar ordenação"
-                icon={<RepeatIcon transform={isAscending ? "rotate(180deg)" : "none"} color="black" />}
-                onClick={() => setIsAscending(!isAscending)}
-                isLoading={isLoading}
-                bg="#FFDB01"
-                _hover={{ bg: "#e5c501" }}
-                _focus={{ outline: "none", boxShadow: "none" }}
-                _active={{ outline: "none", boxShadow: "none" }}
-              />
-            </Tooltip>
+            <Box width="200px" position="relative">
+              <Menu autoSelect={false} closeOnSelect={true}>
+                <MenuButton 
+                  as={Button} 
+                  width="100%"
+                  textAlign="left"
+                  variant="outline"
+                  size="md"
+                  borderColor="gray.400"
+                  color="black"
+                  _hover={{ borderColor: "gray.500", outline: "none", boxShadow: "none" }}
+                  _focus={{ outline: "none", boxShadow: "none", border: "1px solid", borderColor: "gray.400" }}
+                  _active={{ outline: "none", boxShadow: "none", border: "1px solid", borderColor: "gray.400" }}
+                  paddingRight="30px"
+                  paddingLeft="10px"
+                  height="40px"
+                  style={{ outline: "none" }}
+                  css={`
+                    &:hover, &:focus, &:active {
+                      outline: none !important;
+                      box-shadow: none !important;
+                    }
+                  `}
+                  tabIndex={-1}
+                >
+                  <Text isTruncated width="100%" color="black">
+                    {filter.order === 'asc' ? 'Mais antigos primeiro' : 'Mais recentes primeiro'}
+                  </Text>
+                </MenuButton>
+                <Box 
+                  position="absolute" 
+                  right="8px" 
+                  top="50%" 
+                  transform="translateY(-50%)" 
+                  pointerEvents="none"
+                  zIndex={2}
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  width="20px"
+                  height="20px"
+                  bg="white"
+                >
+                  <ChevronDownIcon color="black" />
+                </Box>
+                <MenuList 
+                  zIndex={3}
+                  borderRadius="md"
+                  boxShadow="0px 4px 12px rgba(0, 0, 0, 0.15)"
+                  _focus={{ outline: "none", boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.15)" }}
+                  style={{ outline: "none" }}
+                  className="no-outline"
+                >
+                  <MenuItem 
+                    onClick={() => setFilter({ ...filter, order: 'desc' })}
+                    _focus={{ bg: "gray.50", outline: "none", boxShadow: "none" }}
+                    _active={{ bg: "gray.50", outline: "none", boxShadow: "none" }}
+                    _hover={{ bg: "gray.50", outline: "none", boxShadow: "none" }}
+                    style={{ outline: "none" }}
+                    tabIndex={-1}
+                    className="no-outline"
+                    role="menuitem"
+                  >
+                    Mais recentes primeiro
+                  </MenuItem>
+                  <MenuItem 
+                    onClick={() => setFilter({ ...filter, order: 'asc' })}
+                    _focus={{ bg: "gray.50", outline: "none", boxShadow: "none" }}
+                    _active={{ bg: "gray.50", outline: "none", boxShadow: "none" }}
+                    _hover={{ bg: "gray.50", outline: "none", boxShadow: "none" }}
+                    style={{ outline: "none" }}
+                    tabIndex={-1}
+                    className="no-outline"
+                    role="menuitem"
+                  >
+                    Mais antigos primeiro
+                  </MenuItem>
+                </MenuList>
+              </Menu>
+            </Box>
             
             <Tooltip label="Atualizar lista">
               <IconButton
@@ -1011,7 +1079,7 @@ export function RefundDashboard() {
           <Table variant="simple" size="sm" width="100%">
             <Thead>
               <Tr>
-                <Th>Data</Th>
+                <Th>Data de Criação</Th>
                 <Th>Cliente</Th>
                 <Th>Email</Th>
                 <Th>Valor</Th>
@@ -1031,7 +1099,7 @@ export function RefundDashboard() {
                   _hover={{ bg: "gray.50", cursor: "pointer" }}
                   onClick={() => handleRowClick(refund)}
                 >
-                  <Td py={2}>{formatDate(refund.purchase_date)}</Td>
+                  <Td py={2}>{formatDate(refund.created_at)}</Td>
                   <Td py={2}>{refund.customer_name}</Td>
                   <Td py={2}>{refund.customer_email}</Td>
                   <Td py={2}>{formatCurrency(refund.amount)}</Td>
