@@ -331,8 +331,7 @@ export function DocsViewer() {
             bg={sidebarBgColor}
             overflowY="auto"
             p={0}
-          >
-            
+          > 
             {/* Renderizar as seções do banco de dados */}
             <Box p={4}>
               {sections.map((section) => (
