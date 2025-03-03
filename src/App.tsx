@@ -37,7 +37,7 @@ function PrivateRoute({ children, requiredRole }: { children: React.ReactNode; r
   const { appUser, loading } = useAuth();
 
   if (loading) {
-    return <div>Carregando...</div>;
+    return <div>Carregando..</div>;
   }
 
   if (!appUser) {
