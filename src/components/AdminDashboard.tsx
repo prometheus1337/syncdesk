@@ -290,7 +290,11 @@ export function AdminDashboard() {
     };
 
     try {
-      // Cria o usuário com a API normal
+      // Salva o usuário atual
+      const currentSession = await supabase.auth.getSession();
+      const currentUser = currentSession.data.session?.user;
+
+      // Cria o novo usuário
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
@@ -314,9 +318,16 @@ export function AdminDashboard() {
 
       if (appError) throw appError;
 
+      // Faz login novamente com o usuário admin
+      if (currentUser) {
+        await supabase.auth.signInWithPassword({
+          email: currentUser.email!,
+          password: prompt('Por favor, insira sua senha para continuar:') || '',
+        });
+      }
+
       toast({
         title: 'Usuário criado com sucesso',
-        description: 'Um email de confirmação foi enviado para o usuário',
         status: 'success',
         duration: 5000,
         isClosable: true,
