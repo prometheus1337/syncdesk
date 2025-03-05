@@ -1095,7 +1095,7 @@ export function RefundDashboard() {
               {refunds.map((refund) => (
                 <Tr 
                   key={refund.id}
-                  bg={refund.access_revoked || refund.concluido ? "green.50" : "transparent"}
+                  bg={refund.concluido ? "green.50" : "transparent"}
                   _hover={{ bg: "gray.50", cursor: "pointer" }}
                   onClick={() => handleRowClick(refund)}
                 >
