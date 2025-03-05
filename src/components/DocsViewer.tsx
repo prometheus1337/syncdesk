@@ -480,27 +480,27 @@ export function DocsViewer() {
                 {/* Conteúdo do documento */}
                 {selectedDoc ? (
                   <Box p={6}>
-                    <Flex justifyContent="space-between" alignItems="center" mb={6}>
-                      <Heading size="lg">{selectedDoc.title}</Heading>
-                      <Flex>
-                        <Button
-                          leftIcon={<ArrowBackIcon />}
-                          size="sm"
-                          variant="outline"
-                          mr={2}
-                          onClick={() => {
-                            if (breadcrumbs.length > 1) {
-                              // Voltar para o documento anterior
-                              const previousItem = breadcrumbs[breadcrumbs.length - 2];
-                              handleBreadcrumbClick(previousItem, breadcrumbs.length - 2);
-                            } else {
-                              // Voltar para a seção
-                              setSelectedDoc(null);
-                            }
-                          }}
-                        >
-                          Voltar
-                        </Button>
+                    <Button
+                      leftIcon={<ArrowBackIcon />}
+                      size="sm"
+                      variant="outline"
+                      mb={8}
+                      onClick={() => {
+                        if (breadcrumbs.length > 1) {
+                          // Voltar para o documento anterior
+                          const previousItem = breadcrumbs[breadcrumbs.length - 2];
+                          handleBreadcrumbClick(previousItem, breadcrumbs.length - 2);
+                        } else {
+                          // Voltar para a seção
+                          setSelectedDoc(null);
+                        }
+                      }}
+                    >
+                      Voltar
+                    </Button>
+                    <Box mb={6}>
+                      <Flex justifyContent="space-between" alignItems="center">
+                        <Heading size="lg">{selectedDoc.title}</Heading>
                         {appUser?.role === 'admin' && (
                           <IconButton
                             aria-label="Editar documento"
@@ -512,7 +512,7 @@ export function DocsViewer() {
                           />
                         )}
                       </Flex>
-                    </Flex>
+                    </Box>
                     <Box className="markdown-content">
                       <ReactMarkdown 
                         remarkPlugins={[remarkGfm]}
