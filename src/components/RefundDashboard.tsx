@@ -1249,7 +1249,7 @@ export function RefundDashboard() {
                       <Text>{selectedRefund.phone || 'Não informado'}</Text>
                       {selectedRefund.phone && (
                         <Link 
-                          href={`https://wa.me/${formatPhoneForWhatsApp(selectedRefund.phone)}`} 
+                          href={`https://wa.me/${formatPhoneForWhatsApp(selectedRefund.phone)}?text=${encodeURIComponent("Olá! Tudo bem?\n\nVimos que você solicitou um reembolso na Plataforma Vinícius Oliveira e queremos entender melhor sua experiência.\n\nSe tiver alguma dificuldade, estamos aqui para ajudar! Caso prefira seguir com o reembolso, podemos dar andamento conforme nossa política.\n\nMe conta como podemos te ajudar? 😊")}`} 
                           isExternal 
                           ml={2}
                         >
