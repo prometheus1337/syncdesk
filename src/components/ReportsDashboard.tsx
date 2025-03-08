@@ -24,8 +24,10 @@ import {
   Input,
   Select,
   SimpleGrid,
+  FormControl,
+  FormLabel,
 } from '@chakra-ui/react';
-import { AddIcon } from '@chakra-ui/icons';
+import { AddIcon, CalendarIcon } from '@chakra-ui/icons';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -56,6 +58,7 @@ export function ReportsDashboard() {
   });
   const { isOpen: isCreateOpen, onOpen: onCreateOpen, onClose: onCreateClose } = useDisclosure();
   const { isOpen: isViewOpen, onOpen: onViewOpen, onClose: onViewClose } = useDisclosure();
+  const { isOpen: isFilterOpen, onOpen: onFilterOpen, onClose: onFilterClose } = useDisclosure();
   const toast = useToast();
   const { appUser } = useAuth();
 
@@ -176,6 +179,20 @@ export function ReportsDashboard() {
     }
   }
 
+  function handleApplyDateFilter() {
+    fetchReports();
+    onFilterClose();
+  }
+
+  function handleClearDateFilter() {
+    setFilter(prev => ({
+      ...prev,
+      startDate: '',
+      endDate: ''
+    }));
+    onFilterClose();
+  }
+
   if (!appUser) {
     return (
       <Card>
@@ -209,19 +226,20 @@ export function ReportsDashboard() {
             </Button>
           </Flex>
 
-          <Grid templateColumns={appUser.role === 'admin' ? "repeat(3, 1fr)" : "repeat(2, 1fr)"} gap={4}>
-            <Input
-              type="date"
-              value={filter.startDate}
-              onChange={(e) => setFilter({ ...filter, startDate: e.target.value })}
-              placeholder="Data inicial"
-            />
-            <Input
-              type="date"
-              value={filter.endDate}
-              onChange={(e) => setFilter({ ...filter, endDate: e.target.value })}
-              placeholder="Data final"
-            />
+          <Grid templateColumns={appUser.role === 'admin' ? "repeat(2, 1fr)" : "repeat(1, 1fr)"} gap={4}>
+            <Button
+              leftIcon={<CalendarIcon />}
+              onClick={onFilterOpen}
+              size="md"
+              variant="outline"
+              w="100%"
+            >
+              {filter.startDate || filter.endDate ? (
+                `${filter.startDate ? formatDate(filter.startDate) : 'Início'} até ${filter.endDate ? formatDate(filter.endDate) : 'Fim'}`
+              ) : (
+                'Filtrar por Data'
+              )}
+            </Button>
             {appUser.role === 'admin' && (
               <Select
                 value={filter.role}
@@ -359,6 +377,55 @@ export function ReportsDashboard() {
               onClick={onViewClose}
             >
               Fechar
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Modal de filtro de data */}
+      <Modal isOpen={isFilterOpen} onClose={onFilterClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Filtrar por Data</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Stack spacing={4}>
+              <FormControl>
+                <FormLabel>Data Inicial</FormLabel>
+                <Input
+                  type="date"
+                  value={filter.startDate}
+                  onChange={(e) => setFilter({ ...filter, startDate: e.target.value })}
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Data Final</FormLabel>
+                <Input
+                  type="date"
+                  value={filter.endDate}
+                  onChange={(e) => setFilter({ ...filter, endDate: e.target.value })}
+                />
+              </FormControl>
+            </Stack>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="ghost"
+              mr={3}
+              onClick={handleClearDateFilter}
+              bg="gray.100"
+              color="black"
+              _hover={{ bg: "gray.200" }}
+            >
+              Limpar
+            </Button>
+            <Button
+              bg="#FFDB01"
+              color="black"
+              _hover={{ bg: "#e5c501" }}
+              onClick={handleApplyDateFilter}
+            >
+              Aplicar
             </Button>
           </ModalFooter>
         </ModalContent>
