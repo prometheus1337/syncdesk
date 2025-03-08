@@ -38,6 +38,7 @@ interface Report {
   user_role: string;
   created_at: string;
   updated_at: string;
+  additional_comments: string | null;
 }
 
 interface Filter {
@@ -51,6 +52,8 @@ export function ReportsDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [newReportContent, setNewReportContent] = useState('');
+  const [additionalComments, setAdditionalComments] = useState('');
+  const [isEditingComments, setIsEditingComments] = useState(false);
   const [filter, setFilter] = useState<Filter>({
     startDate: '',
     endDate: '',
@@ -142,8 +145,55 @@ export function ReportsDashboard() {
     setIsLoading(false);
   }
 
+  async function handleSaveAdditionalComments() {
+    if (!selectedReport) return;
+    
+    setIsLoading(true);
+    const { error } = await supabase
+      .from('reports')
+      .update({ additional_comments: additionalComments })
+      .eq('id', selectedReport.id);
+
+    if (error) {
+      toast({
+        title: 'Erro ao salvar comentários',
+        description: error.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } else {
+      toast({
+        title: 'Comentários salvos com sucesso',
+        status: 'success',
+        duration: 2000,
+      });
+      setSelectedReport({ ...selectedReport, additional_comments: additionalComments });
+      setIsEditingComments(false);
+      fetchReports();
+    }
+    
+    setIsLoading(false);
+  }
+
+  function handleStartEditingComments() {
+    if (selectedReport) {
+      setAdditionalComments(selectedReport.additional_comments || '');
+      setIsEditingComments(true);
+    }
+  }
+
+  function handleCancelEditingComments() {
+    setIsEditingComments(false);
+    if (selectedReport) {
+      setAdditionalComments(selectedReport.additional_comments || '');
+    }
+  }
+
   function handleViewReport(report: Report) {
     setSelectedReport(report);
+    setAdditionalComments(report.additional_comments || '');
+    setIsEditingComments(false);
     onViewOpen();
   }
 
@@ -373,6 +423,59 @@ export function ReportsDashboard() {
                 <Box>
                   <Text fontWeight="bold">Conteúdo:</Text>
                   <Text whiteSpace="pre-wrap">{selectedReport.content}</Text>
+                </Box>
+                <Box>
+                  <Flex justifyContent="space-between" alignItems="center">
+                    <Text fontWeight="bold">Comentários Adicionais:</Text>
+                    {selectedReport.user_id === appUser?.id && !isEditingComments && (
+                      <Button
+                        size="sm"
+                        bg="#FFDB01"
+                        color="black"
+                        _hover={{ bg: "#e5c501" }}
+                        onClick={handleStartEditingComments}
+                      >
+                        {selectedReport.additional_comments ? 'Editar Comentários' : 'Adicionar Comentários'}
+                      </Button>
+                    )}
+                  </Flex>
+                  {isEditingComments ? (
+                    <Box mt={2}>
+                      <Textarea
+                        value={additionalComments}
+                        onChange={(e) => setAdditionalComments(e.target.value)}
+                        placeholder="Digite seus comentários adicionais..."
+                        size="sm"
+                        rows={4}
+                      />
+                      <Flex mt={2} justifyContent="flex-end" gap={2}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={handleCancelEditingComments}
+                          bg="gray.100"
+                          color="black"
+                          _hover={{ bg: "gray.200" }}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button
+                          size="sm"
+                          bg="#FFDB01"
+                          color="black"
+                          _hover={{ bg: "#e5c501" }}
+                          onClick={handleSaveAdditionalComments}
+                          isLoading={isLoading}
+                        >
+                          Salvar
+                        </Button>
+                      </Flex>
+                    </Box>
+                  ) : (
+                    <Text whiteSpace="pre-wrap" mt={2}>
+                      {selectedReport.additional_comments || 'Nenhum comentário adicional'}
+                    </Text>
+                  )}
                 </Box>
               </Stack>
             )}
