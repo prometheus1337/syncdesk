@@ -157,6 +157,14 @@ export function ReportsDashboard() {
     });
   }
 
+  function formatDateOnly(date: string) {
+    return new Date(date).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  }
+
   function getRoleBadgeColor(role: string) {
     switch (role) {
       case 'admin':
@@ -235,7 +243,7 @@ export function ReportsDashboard() {
               w="100%"
             >
               {filter.startDate || filter.endDate ? (
-                `${filter.startDate ? formatDate(filter.startDate) : 'Início'} até ${filter.endDate ? formatDate(filter.endDate) : 'Fim'}`
+                `${filter.startDate ? formatDateOnly(filter.startDate) : 'Início'} até ${filter.endDate ? formatDateOnly(filter.endDate) : 'Fim'}`
               ) : (
                 'Filtrar por Data'
               )}
