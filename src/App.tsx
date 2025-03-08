@@ -5,6 +5,7 @@ import { RefundDashboard } from './components/RefundDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { DocsHub } from './components/DocsHub';
 import { DocsViewer } from './components/DocsViewer';
+import { ReportsDashboard } from './components/ReportsDashboard';
 import LoginPage from './components/LoginPage';
 import { Layout } from './components/Layout';
 
@@ -57,7 +58,7 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<Navigate to="/login" />} />
+            <Route path="/" element={<Navigate to="/refunds" />} />
             <Route path="/login" element={<LoginPage />} />
             <Route
               path="/admin"
@@ -88,6 +89,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <DocsViewer />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/reports"
+              element={
+                <PrivateRoute>
+                  <ReportsDashboard />
                 </PrivateRoute>
               }
             />

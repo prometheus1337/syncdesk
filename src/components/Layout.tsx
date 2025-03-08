@@ -74,6 +74,9 @@ export function Layout({ children }: { children: ReactNode }) {
       links.push({ href: '/refunds', label: 'Reembolsos' });
     }
     
+    // Adicionar link para relatórios para todos os usuários
+    links.push({ href: '/reports', label: 'Relatórios' });
+    
     // Adicionar link para visualização da documentação para todos os usuários
     links.push({ href: '/docs/view', label: 'Documentação' });
     
