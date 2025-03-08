@@ -9,12 +9,7 @@ import {
   Heading,
   Text,
   Stack,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
+  Grid,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -26,6 +21,9 @@ import {
   Textarea,
   useToast,
   Badge,
+  Input,
+  Select,
+  SimpleGrid,
 } from '@chakra-ui/react';
 import { AddIcon } from '@chakra-ui/icons';
 import { supabase } from '../lib/supabase';
@@ -40,11 +38,22 @@ interface Report {
   updated_at: string;
 }
 
+interface Filter {
+  startDate: string;
+  endDate: string;
+  role: string;
+}
+
 export function ReportsDashboard() {
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [newReportContent, setNewReportContent] = useState('');
+  const [filter, setFilter] = useState<Filter>({
+    startDate: '',
+    endDate: '',
+    role: '',
+  });
   const { isOpen: isCreateOpen, onOpen: onCreateOpen, onClose: onCreateClose } = useDisclosure();
   const { isOpen: isViewOpen, onOpen: onViewOpen, onClose: onViewClose } = useDisclosure();
   const toast = useToast();
@@ -52,14 +61,32 @@ export function ReportsDashboard() {
 
   useEffect(() => {
     fetchReports();
-  }, []);
+  }, [filter]);
 
   async function fetchReports() {
     setIsLoading(true);
-    const { data, error } = await supabase
+    let query = supabase
       .from('reports')
       .select('*')
       .order('created_at', { ascending: false });
+
+    // Se não for admin, mostrar apenas os próprios relatórios
+    if (appUser?.role !== 'admin') {
+      query = query.eq('user_id', appUser?.id);
+    }
+
+    // Aplicar filtros
+    if (filter.startDate) {
+      query = query.gte('created_at', filter.startDate);
+    }
+    if (filter.endDate) {
+      query = query.lte('created_at', `${filter.endDate}T23:59:59`);
+    }
+    if (filter.role && appUser?.role === 'admin') {
+      query = query.eq('user_role', filter.role);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       toast({
@@ -172,60 +199,84 @@ export function ReportsDashboard() {
             </Box>
             <Button
               leftIcon={<AddIcon />}
-              colorScheme="blue"
+              bg="#FFDB01"
+              color="black"
+              _hover={{ bg: "#e5c501" }}
               onClick={onCreateOpen}
               size="sm"
             >
               Novo Relatório
             </Button>
           </Flex>
+
+          <Grid templateColumns={appUser.role === 'admin' ? "repeat(3, 1fr)" : "repeat(2, 1fr)"} gap={4}>
+            <Input
+              type="date"
+              value={filter.startDate}
+              onChange={(e) => setFilter({ ...filter, startDate: e.target.value })}
+              placeholder="Data inicial"
+            />
+            <Input
+              type="date"
+              value={filter.endDate}
+              onChange={(e) => setFilter({ ...filter, endDate: e.target.value })}
+              placeholder="Data final"
+            />
+            {appUser.role === 'admin' && (
+              <Select
+                value={filter.role}
+                onChange={(e) => setFilter({ ...filter, role: e.target.value })}
+                placeholder="Todos os cargos"
+              >
+                <option value="admin">Administrador</option>
+                <option value="support">Suporte</option>
+              </Select>
+            )}
+          </Grid>
         </Stack>
       </CardHeader>
 
       <CardBody>
-        <Table variant="simple" size="sm">
-          <Thead>
-            <Tr>
-              <Th>Data</Th>
-              <Th>Cargo</Th>
-              <Th>Conteúdo</Th>
-              <Th>Ações</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {reports.map((report) => (
-              <Tr key={report.id}>
-                <Td whiteSpace="nowrap">{formatDate(report.created_at)}</Td>
-                <Td>
-                  <Badge colorScheme={getRoleBadgeColor(report.user_role)}>
-                    {translateRole(report.user_role)}
-                  </Badge>
-                </Td>
-                <Td>
-                  <Text noOfLines={2}>{report.content}</Text>
-                </Td>
-                <Td>
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
+          {reports.map((report) => (
+            <Card key={report.id} variant="outline" cursor="pointer" onClick={() => handleViewReport(report)}>
+              <CardBody>
+                <Stack spacing={3}>
+                  <Flex justifyContent="space-between" alignItems="center">
+                    <Badge colorScheme={getRoleBadgeColor(report.user_role)}>
+                      {translateRole(report.user_role)}
+                    </Badge>
+                    <Text fontSize="sm" color="gray.500">
+                      {formatDate(report.created_at)}
+                    </Text>
+                  </Flex>
+                  <Text noOfLines={3}>{report.content}</Text>
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => handleViewReport(report)}
+                    bg="#FFDB01"
+                    color="black"
+                    _hover={{ bg: "#e5c501" }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewReport(report);
+                    }}
                   >
-                    Visualizar
+                    Ver mais
                   </Button>
-                </Td>
-              </Tr>
-            ))}
-            {reports.length === 0 && (
-              <Tr>
-                <Td colSpan={4} textAlign="center" py={8}>
-                  <Text color="gray.500">
-                    Nenhum relatório encontrado
-                  </Text>
-                </Td>
-              </Tr>
-            )}
-          </Tbody>
-        </Table>
+                </Stack>
+              </CardBody>
+            </Card>
+          ))}
+        </SimpleGrid>
+
+        {reports.length === 0 && (
+          <Box textAlign="center" py={8}>
+            <Text color="gray.500">
+              Nenhum relatório encontrado
+            </Text>
+          </Box>
+        )}
       </CardBody>
 
       {/* Modal de criação de relatório */}
@@ -250,11 +301,20 @@ export function ReportsDashboard() {
             </Stack>
           </ModalBody>
           <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onCreateClose}>
+            <Button 
+              variant="ghost" 
+              mr={3} 
+              onClick={onCreateClose}
+              bg="gray.100"
+              color="black"
+              _hover={{ bg: "gray.200" }}
+            >
               Cancelar
             </Button>
             <Button
-              colorScheme="blue"
+              bg="#FFDB01"
+              color="black"
+              _hover={{ bg: "#e5c501" }}
               onClick={handleCreateReport}
               isLoading={isLoading}
               isDisabled={!newReportContent.trim()}
@@ -292,7 +352,12 @@ export function ReportsDashboard() {
             )}
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="blue" onClick={onViewClose}>
+            <Button 
+              bg="#FFDB01"
+              color="black"
+              _hover={{ bg: "#e5c501" }}
+              onClick={onViewClose}
+            >
               Fechar
             </Button>
           </ModalFooter>
