@@ -28,8 +28,10 @@ import {
   Th,
   Td,
   Spinner,
+  FormControl,
+  FormLabel,
 } from '@chakra-ui/react';
-import { CalendarIcon } from '@chakra-ui/icons';
+import { CalendarIcon, AddIcon } from '@chakra-ui/icons';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -71,6 +73,14 @@ interface PurchaseQueryResult {
   created_at: string;
 }
 
+interface NewStudent {
+  name: string;
+  email: string;
+  phone: string;
+  credits_amount: number;
+  price_paid: number;
+}
+
 export function EssayDashboard() {
   const [students, setStudents] = useState<EssayStudent[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<EssayStudent | null>(null);
@@ -80,9 +90,17 @@ export function EssayDashboard() {
     startDate: '',
     endDate: '',
   });
+  const [newStudent, setNewStudent] = useState<NewStudent>({
+    name: '',
+    email: '',
+    phone: '',
+    credits_amount: 0,
+    price_paid: 0,
+  });
   
   const { isOpen: isViewOpen, onOpen: onViewOpen, onClose: onViewClose } = useDisclosure();
   const { isOpen: isFilterOpen, onOpen: onFilterOpen, onClose: onFilterClose } = useDisclosure();
+  const { isOpen: isCreateOpen, onOpen: onCreateOpen, onClose: onCreateClose } = useDisclosure();
   const toast = useToast();
   const { appUser } = useAuth();
 
@@ -202,6 +220,80 @@ export function EssayDashboard() {
     onFilterClose();
   }
 
+  async function handleCreateStudent() {
+    setIsLoading(true);
+    
+    // Primeiro, criar o aluno
+    const { data: studentData, error: studentError } = await supabase
+      .from('essay_students')
+      .insert([{
+        name: newStudent.name,
+        email: newStudent.email,
+        phone: newStudent.phone,
+      }])
+      .select()
+      .single();
+
+    if (studentError) {
+      toast({
+        title: 'Erro ao criar aluno',
+        description: studentError.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    // Depois, registrar a compra inicial
+    const { error: purchaseError } = await supabase
+      .from('essay_purchases')
+      .insert([{
+        student_id: studentData.id,
+        credits_amount: newStudent.credits_amount,
+        price_paid: newStudent.price_paid,
+        payment_method: 'Não especificado',
+        status: 'completed',
+      }]);
+
+    if (purchaseError) {
+      toast({
+        title: 'Erro ao registrar compra',
+        description: purchaseError.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } else {
+      toast({
+        title: 'Aluno cadastrado com sucesso',
+        status: 'success',
+        duration: 2000,
+      });
+      setNewStudent({
+        name: '',
+        email: '',
+        phone: '',
+        credits_amount: 0,
+        price_paid: 0,
+      });
+      onCreateClose();
+      fetchStudents();
+    }
+    
+    setIsLoading(false);
+  }
+
+  function validateForm() {
+    return (
+      newStudent.name.trim() !== '' &&
+      newStudent.email.trim() !== '' &&
+      newStudent.credits_amount > 0 &&
+      newStudent.price_paid > 0
+    );
+  }
+
   if (!appUser || !['admin', 'essay_director'].includes(appUser.role)) {
     return (
       <Card>
@@ -223,6 +315,16 @@ export function EssayDashboard() {
                 Gerencie os alunos e créditos de redação
               </Text>
             </Box>
+            <Button
+              leftIcon={<AddIcon />}
+              bg="#FFDB01"
+              color="black"
+              _hover={{ bg: "#e5c501" }}
+              onClick={onCreateOpen}
+              size="sm"
+            >
+              Adicionar Aluno
+            </Button>
           </Flex>
 
           <Grid templateColumns="repeat(1, 1fr)" gap={4}>
@@ -408,6 +510,87 @@ export function EssayDashboard() {
               onClick={handleApplyDateFilter}
             >
               Aplicar
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Modal de criação de aluno */}
+      <Modal isOpen={isCreateOpen} onClose={onCreateClose} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Adicionar Novo Aluno</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Stack spacing={4}>
+              <FormControl isRequired>
+                <FormLabel>Nome</FormLabel>
+                <Input
+                  value={newStudent.name}
+                  onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
+                  placeholder="Nome completo do aluno"
+                />
+              </FormControl>
+              <FormControl isRequired>
+                <FormLabel>Email</FormLabel>
+                <Input
+                  type="email"
+                  value={newStudent.email}
+                  onChange={(e) => setNewStudent({ ...newStudent, email: e.target.value })}
+                  placeholder="Email do aluno"
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Telefone</FormLabel>
+                <Input
+                  value={newStudent.phone}
+                  onChange={(e) => setNewStudent({ ...newStudent, phone: e.target.value })}
+                  placeholder="(00) 00000-0000"
+                />
+              </FormControl>
+              <FormControl isRequired>
+                <FormLabel>Quantidade de Créditos</FormLabel>
+                <Input
+                  type="number"
+                  value={newStudent.credits_amount}
+                  onChange={(e) => setNewStudent({ ...newStudent, credits_amount: parseInt(e.target.value) })}
+                  placeholder="Quantidade de créditos"
+                  min={1}
+                />
+              </FormControl>
+              <FormControl isRequired>
+                <FormLabel>Valor Pago</FormLabel>
+                <Input
+                  type="number"
+                  value={newStudent.price_paid}
+                  onChange={(e) => setNewStudent({ ...newStudent, price_paid: parseFloat(e.target.value) })}
+                  placeholder="Valor pago pelo pacote"
+                  min={0}
+                  step={0.01}
+                />
+              </FormControl>
+            </Stack>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="ghost"
+              mr={3}
+              onClick={onCreateClose}
+              bg="gray.100"
+              color="black"
+              _hover={{ bg: "gray.200" }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              bg="#FFDB01"
+              color="black"
+              _hover={{ bg: "#e5c501" }}
+              onClick={handleCreateStudent}
+              isLoading={isLoading}
+              isDisabled={!validateForm()}
+            >
+              Cadastrar
             </Button>
           </ModalFooter>
         </ModalContent>
