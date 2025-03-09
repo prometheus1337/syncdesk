@@ -8,6 +8,7 @@ import { DocsViewer } from './components/DocsViewer';
 import { ReportsDashboard } from './components/ReportsDashboard';
 import LoginPage from './components/LoginPage';
 import { Layout } from './components/Layout';
+import { EssayDashboard } from './components/EssayDashboard';
 
 const theme = extendTheme({
   styles: {
@@ -97,6 +98,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <ReportsDashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/essays"
+              element={
+                <PrivateRoute>
+                  <EssayDashboard />
                 </PrivateRoute>
               }
             />

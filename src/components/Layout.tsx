@@ -67,11 +67,15 @@ export function Layout({ children }: { children: ReactNode }) {
     const links = [];
     
     if (appUser?.role === 'admin') {
-      links.push({ href: '/admin', label: 'Gerenciar Usuários' });
-      links.push({ href: '/docs', label: 'Gerenciar Docs' });
+      links.push({ href: '/admin', label: 'Admin' });
     }
-    if (appUser?.role === 'admin' || appUser?.role === 'support') {
+
+    if (['admin', 'support'].includes(appUser?.role || '')) {
       links.push({ href: '/refunds', label: 'Reembolsos' });
+    }
+
+    if (['admin', 'essay_director'].includes(appUser?.role || '')) {
+      links.push({ href: '/essays', label: 'Redações' });
     }
     
     // Adicionar link para relatórios para todos os usuários
