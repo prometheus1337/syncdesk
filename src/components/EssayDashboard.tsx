@@ -47,6 +47,8 @@ interface EssayStudent {
 
 interface EssayPurchase {
   id: string;
+  student_name: string;
+  student_email: string;
   credits_amount: number;
   price_paid: number;
   payment_method: string;
@@ -63,20 +65,16 @@ interface Filter {
 
 interface PurchaseQueryResult {
   student_id: string;
-  name: {
-    name: string;
-    email: string;
-    phone: string;
-  };
+  student_name: string;
+  student_email: string;
   credits_amount: number;
   price_paid: number;
   created_at: string;
 }
 
-interface NewStudent {
-  name: string;
-  email: string;
-  phone: string;
+interface NewPurchase {
+  student_name: string;
+  student_email: string;
   credits_amount: number;
   price_paid: number;
 }
@@ -90,10 +88,9 @@ export function EssayDashboard() {
     startDate: '',
     endDate: '',
   });
-  const [newStudent, setNewStudent] = useState<NewStudent>({
-    name: '',
-    email: '',
-    phone: '',
+  const [newPurchase, setNewPurchase] = useState<NewPurchase>({
+    student_name: '',
+    student_email: '',
     credits_amount: 0,
     price_paid: 0,
   });
@@ -112,7 +109,8 @@ export function EssayDashboard() {
     setIsLoading(true);
     let query = `
       student_id,
-      name:essay_students(name, email, phone),
+      student_name,
+      student_email,
       credits_amount,
       price_paid,
       created_at
@@ -135,11 +133,11 @@ export function EssayDashboard() {
       return;
     }
 
-    // Agrupa as compras por aluno
+    // Agrupa as compras por aluno (usando email como chave)
     const studentsMap = new Map<string, EssayStudent>();
     
     (data as PurchaseQueryResult[] | null)?.forEach(purchase => {
-      const student = studentsMap.get(purchase.student_id);
+      const student = studentsMap.get(purchase.student_email);
       if (student) {
         student.total_credits += purchase.credits_amount;
         student.total_spent += purchase.price_paid;
@@ -148,11 +146,11 @@ export function EssayDashboard() {
           student.last_purchase = purchase.created_at;
         }
       } else {
-        studentsMap.set(purchase.student_id, {
+        studentsMap.set(purchase.student_email, {
           id: purchase.student_id,
-          name: purchase.name.name,
-          email: purchase.name.email,
-          phone: purchase.name.phone,
+          name: purchase.student_name,
+          email: purchase.student_email,
+          phone: '',
           total_credits: purchase.credits_amount,
           total_spent: purchase.price_paid,
           last_purchase: purchase.created_at,
@@ -164,12 +162,12 @@ export function EssayDashboard() {
     setIsLoading(false);
   }
 
-  async function fetchStudentPurchases(studentId: string) {
+  async function fetchStudentPurchases(studentEmail: string) {
     setIsLoading(true);
     const { data, error } = await supabase
       .from('essay_purchases')
       .select('*')
-      .eq('student_id', studentId)
+      .eq('student_email', studentEmail)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -188,7 +186,7 @@ export function EssayDashboard() {
 
   function handleViewStudent(student: EssayStudent) {
     setSelectedStudent(student);
-    fetchStudentPurchases(student.id);
+    fetchStudentPurchases(student.email);
     onViewOpen();
   }
 
@@ -220,61 +218,37 @@ export function EssayDashboard() {
     onFilterClose();
   }
 
-  async function handleCreateStudent() {
+  async function handleCreatePurchase() {
     setIsLoading(true);
     
-    // Primeiro, criar o aluno
-    const { data: studentData, error: studentError } = await supabase
-      .from('essay_students')
-      .insert([{
-        name: newStudent.name,
-        email: newStudent.email,
-        phone: newStudent.phone,
-      }])
-      .select()
-      .single();
-
-    if (studentError) {
-      toast({
-        title: 'Erro ao criar aluno',
-        description: studentError.message,
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-      setIsLoading(false);
-      return;
-    }
-
-    // Depois, registrar a compra inicial
-    const { error: purchaseError } = await supabase
+    const { error } = await supabase
       .from('essay_purchases')
       .insert([{
-        student_id: studentData.id,
-        credits_amount: newStudent.credits_amount,
-        price_paid: newStudent.price_paid,
+        student_name: newPurchase.student_name,
+        student_email: newPurchase.student_email,
+        credits_amount: newPurchase.credits_amount,
+        price_paid: newPurchase.price_paid,
         payment_method: 'Não especificado',
         status: 'completed',
       }]);
 
-    if (purchaseError) {
+    if (error) {
       toast({
         title: 'Erro ao registrar compra',
-        description: purchaseError.message,
+        description: error.message,
         status: 'error',
         duration: 3000,
         isClosable: true,
       });
     } else {
       toast({
-        title: 'Aluno cadastrado com sucesso',
+        title: 'Compra registrada com sucesso',
         status: 'success',
         duration: 2000,
       });
-      setNewStudent({
-        name: '',
-        email: '',
-        phone: '',
+      setNewPurchase({
+        student_name: '',
+        student_email: '',
         credits_amount: 0,
         price_paid: 0,
       });
@@ -287,10 +261,10 @@ export function EssayDashboard() {
 
   function validateForm() {
     return (
-      newStudent.name.trim() !== '' &&
-      newStudent.email.trim() !== '' &&
-      newStudent.credits_amount > 0 &&
-      newStudent.price_paid > 0
+      newPurchase.student_name.trim() !== '' &&
+      newPurchase.student_email.trim() !== '' &&
+      newPurchase.credits_amount > 0 &&
+      newPurchase.price_paid > 0
     );
   }
 
@@ -323,7 +297,7 @@ export function EssayDashboard() {
               onClick={onCreateOpen}
               size="sm"
             >
-              Adicionar Aluno
+              Nova Compra
             </Button>
           </Flex>
 
@@ -515,45 +489,37 @@ export function EssayDashboard() {
         </ModalContent>
       </Modal>
 
-      {/* Modal de criação de aluno */}
+      {/* Modal de criação de compra */}
       <Modal isOpen={isCreateOpen} onClose={onCreateClose} size="xl">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Adicionar Novo Aluno</ModalHeader>
+          <ModalHeader>Registrar Nova Compra</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <Stack spacing={4}>
               <FormControl isRequired>
-                <FormLabel>Nome</FormLabel>
+                <FormLabel>Nome do Aluno</FormLabel>
                 <Input
-                  value={newStudent.name}
-                  onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
+                  value={newPurchase.student_name}
+                  onChange={(e) => setNewPurchase({ ...newPurchase, student_name: e.target.value })}
                   placeholder="Nome completo do aluno"
                 />
               </FormControl>
               <FormControl isRequired>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>Email do Aluno</FormLabel>
                 <Input
                   type="email"
-                  value={newStudent.email}
-                  onChange={(e) => setNewStudent({ ...newStudent, email: e.target.value })}
+                  value={newPurchase.student_email}
+                  onChange={(e) => setNewPurchase({ ...newPurchase, student_email: e.target.value })}
                   placeholder="Email do aluno"
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel>Telefone</FormLabel>
-                <Input
-                  value={newStudent.phone}
-                  onChange={(e) => setNewStudent({ ...newStudent, phone: e.target.value })}
-                  placeholder="(00) 00000-0000"
                 />
               </FormControl>
               <FormControl isRequired>
                 <FormLabel>Quantidade de Créditos</FormLabel>
                 <Input
                   type="number"
-                  value={newStudent.credits_amount}
-                  onChange={(e) => setNewStudent({ ...newStudent, credits_amount: parseInt(e.target.value) })}
+                  value={newPurchase.credits_amount}
+                  onChange={(e) => setNewPurchase({ ...newPurchase, credits_amount: parseInt(e.target.value) })}
                   placeholder="Quantidade de créditos"
                   min={1}
                 />
@@ -562,8 +528,8 @@ export function EssayDashboard() {
                 <FormLabel>Valor Pago</FormLabel>
                 <Input
                   type="number"
-                  value={newStudent.price_paid}
-                  onChange={(e) => setNewStudent({ ...newStudent, price_paid: parseFloat(e.target.value) })}
+                  value={newPurchase.price_paid}
+                  onChange={(e) => setNewPurchase({ ...newPurchase, price_paid: parseFloat(e.target.value) })}
                   placeholder="Valor pago pelo pacote"
                   min={0}
                   step={0.01}
@@ -586,11 +552,11 @@ export function EssayDashboard() {
               bg="#FFDB01"
               color="black"
               _hover={{ bg: "#e5c501" }}
-              onClick={handleCreateStudent}
+              onClick={handleCreatePurchase}
               isLoading={isLoading}
               isDisabled={!validateForm()}
             >
-              Cadastrar
+              Registrar
             </Button>
           </ModalFooter>
         </ModalContent>
