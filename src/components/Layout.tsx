@@ -111,12 +111,6 @@ export function Layout({ children }: { children: ReactNode }) {
           label: 'Logs de Créditos',
           icon: <TimeIcon />
         });
-
-        links.push({ 
-          href: '/images', 
-          label: 'Gerador de Imagens',
-          icon: <ImageIcon />
-        });
       }
     }
     
