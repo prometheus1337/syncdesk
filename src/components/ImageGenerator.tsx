@@ -14,15 +14,16 @@ import {
   CardBody,
   Progress,
   useToast,
+  Image,
 } from '@chakra-ui/react';
-
-const REPLICATE_API = 'https://api.replicate.com/v1/predictions';
+import { supabase } from '../lib/supabaseClient';
 
 export function ImageGenerator() {
   const [prompt, setPrompt] = useState('');
   const [aspectRatio, setAspectRatio] = useState('1:1');
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const toast = useToast();
 
   useEffect(() => {
@@ -45,75 +46,29 @@ export function ImageGenerator() {
     };
   }, [isGenerating]);
 
-  useEffect(() => {
-    if (progress >= 100) {
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
-    }
-  }, [progress]);
-
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
 
     setIsGenerating(true);
     setProgress(0);
+    setImageUrl(null);
 
     try {
-      // Cria a predição
-      const createResponse = await fetch(REPLICATE_API, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Token ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        mode: 'no-cors',
-        body: JSON.stringify({
-          version: "prometheus1337/pvo-ai-md:46bbd3d415fa5ec4d2f1a931a0e9c686da9131da6235b81be3d1bb4dca700290",
-          input: {
-            prompt,
-            model: "dev",
-            go_fast: false,
-            lora_scale: 1,
-            megapixels: "1",
-            num_outputs: 1,
-            aspect_ratio: aspectRatio,
-            output_format: "webp",
-            guidance_scale: 3,
-            output_quality: 80,
-            prompt_strength: 0.8,
-            extra_lora_scale: 1,
-            num_inference_steps: 28
-          }
-        })
+      const { data, error } = await supabase.functions.invoke('generate-image', {
+        body: { prompt, aspectRatio }
       });
 
-      if (!createResponse.ok) {
-        throw new Error(`HTTP error! status: ${createResponse.status}`);
+      if (error) throw error;
+
+      if (data.error) {
+        throw new Error(data.error);
       }
 
-      const prediction = await createResponse.json();
-      
-      // Aguarda a conclusão da geração
-      let result = prediction;
-      while (result.status !== 'succeeded' && result.status !== 'failed') {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const statusResponse = await fetch(`${REPLICATE_API}/${prediction.id}`, {
-          headers: {
-            'Authorization': `Token ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
-          },
-          mode: 'no-cors'
-        });
-        result = await statusResponse.json();
-      }
-
-      if (result.status === 'failed') {
-        throw new Error('Falha ao gerar imagem');
-      }
-
-      if (!result.output?.[0]) {
+      if (!data.output?.[0]) {
         throw new Error('Nenhuma imagem foi gerada');
       }
+
+      setImageUrl(data.output[0]);
 
       toast({
         title: 'Imagem gerada com sucesso!',
@@ -133,6 +88,7 @@ export function ImageGenerator() {
       });
     } finally {
       setIsGenerating(false);
+      setProgress(100);
     }
   };
 
@@ -203,6 +159,22 @@ export function ImageGenerator() {
                 >
                   Gerar Imagem
                 </Button>
+
+                {imageUrl && (
+                  <Box 
+                    w="100%" 
+                    borderRadius="md" 
+                    overflow="hidden"
+                    boxShadow="md"
+                  >
+                    <Image 
+                      src={imageUrl} 
+                      alt={prompt}
+                      w="100%"
+                      h="auto"
+                    />
+                  </Box>
+                )}
               </VStack>
             </CardBody>
           </Card>
