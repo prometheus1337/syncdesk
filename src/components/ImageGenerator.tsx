@@ -51,12 +51,12 @@ export function ImageGenerator() {
 
     try {
       // Criar a predição
+      console.log('Iniciando requisição para criar predição...');
       const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
           'Content-Type': 'application/json',
-          'Prefer': 'wait'
         },
         body: JSON.stringify({
           version: "46bbd3d415fa5ec4d2f1a931a0e9c686da9131da6235b81be3d1bb4dca700290",
@@ -78,65 +78,72 @@ export function ImageGenerator() {
         })
       });
 
+      console.log('Status da resposta:', createResponse.status);
+      const responseText = await createResponse.text();
+      console.log('Resposta bruta:', responseText);
+
       if (!createResponse.ok) {
-        const error = await createResponse.json();
-        throw new Error(error.detail || 'Erro ao gerar imagem');
+        throw new Error(`Erro na API: ${createResponse.status} - ${responseText}`);
       }
 
-      const result = await createResponse.json();
-      console.log('Resultado:', result);
+      let result;
+      try {
+        result = JSON.parse(responseText);
+        console.log('Resultado parseado:', result);
+      } catch (parseError) {
+        console.error('Erro ao fazer parse da resposta:', parseError);
+        throw new Error('Resposta inválida da API');
+      }
 
-      if (!result.output) {
-        // Se não tiver output imediato, vamos verificar o status
-        let statusUrl = result.urls?.get;
-        if (!statusUrl) {
-          throw new Error('URL de status não encontrada');
+      if (!result) {
+        throw new Error('Resposta vazia da API');
+      }
+
+      if (!result.urls?.get) {
+        throw new Error('URL de status não encontrada na resposta');
+      }
+
+      // Loop para verificar o status até completar
+      const statusUrl = result.urls.get;
+      console.log('URL de status:', statusUrl);
+
+      while (true) {
+        console.log('Verificando status...');
+        const statusResponse = await fetch(statusUrl, {
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_REPLICATE_API_TOKEN}`
+          }
+        });
+
+        if (!statusResponse.ok) {
+          const statusError = await statusResponse.text();
+          throw new Error(`Erro ao verificar status: ${statusResponse.status} - ${statusError}`);
         }
 
-        // Loop para verificar o status até completar
-        while (true) {
-          const statusResponse = await fetch(statusUrl, {
-            headers: {
-              'Authorization': `Bearer ${import.meta.env.VITE_REPLICATE_API_TOKEN}`
-            }
-          });
+        const statusResult = await statusResponse.json();
+        console.log('Status atual:', statusResult);
 
-          if (!statusResponse.ok) {
-            throw new Error('Erro ao verificar status');
+        if (statusResult.status === 'succeeded') {
+          if (!statusResult.output?.[0]) {
+            throw new Error('Resposta sem URL da imagem');
           }
 
-          const statusResult = await statusResponse.json();
-          console.log('Status:', statusResult);
+          const newImage: GeneratedImage = {
+            url: statusResult.output[0],
+            prompt,
+            createdAt: new Date(),
+          };
 
-          if (statusResult.status === 'succeeded') {
-            if (!statusResult.output?.[0]) {
-              throw new Error('Resposta sem URL da imagem');
-            }
-
-            const newImage: GeneratedImage = {
-              url: statusResult.output[0],
-              prompt,
-              createdAt: new Date(),
-            };
-
-            setGeneratedImages(prev => [newImage, ...prev]);
-            break;
-          } else if (statusResult.status === 'failed') {
-            throw new Error('Falha ao gerar imagem');
-          }
-
-          // Aguarda 1 segundo antes de verificar novamente
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          setGeneratedImages(prev => [newImage, ...prev]);
+          break;
+        } else if (statusResult.status === 'failed') {
+          throw new Error(`Falha ao gerar imagem: ${statusResult.error || 'Erro desconhecido'}`);
+        } else if (statusResult.status === 'canceled') {
+          throw new Error('Geração de imagem cancelada');
         }
-      } else {
-        // Se já tiver output, usa diretamente
-        const newImage: GeneratedImage = {
-          url: result.output[0],
-          prompt,
-          createdAt: new Date(),
-        };
 
-        setGeneratedImages(prev => [newImage, ...prev]);
+        // Aguarda 1 segundo antes de verificar novamente
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
 
       toast({
@@ -147,7 +154,7 @@ export function ImageGenerator() {
         isClosable: true,
       });
     } catch (error: any) {
-      console.error('Erro:', error);
+      console.error('Erro detalhado:', error);
       toast({
         title: 'Erro ao gerar imagem',
         description: error.message || 'Ocorreu um erro ao gerar a imagem. Por favor, tente novamente.',
