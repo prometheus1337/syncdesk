@@ -182,10 +182,11 @@ export function EssayCreditLogs() {
       .from('essay_credit_logs')
       .insert([{
         student_email: newLog.student_email,
+        student_name: selectedStudent?.name,
         credits_change: newLog.credits_change,
         operation_type: newLog.operation_type,
         motive: newLog.motive || null,
-        created_by: appUser?.id || '',
+        created_by: appUser?.email || 'API',
       }]);
 
     if (error) {
