@@ -53,6 +53,7 @@ export function ImageGenerator() {
       // Criar a predição
       const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
         method: 'POST',
+        mode: 'no-cors',
         headers: {
           'Authorization': `Bearer ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
           'Content-Type': 'application/json',
