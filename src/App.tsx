@@ -10,6 +10,7 @@ import LoginPage from './components/LoginPage';
 import { Layout } from './components/Layout';
 import { EssayDashboard } from './components/EssayDashboard';
 import { EssayCreditLogs } from './components/EssayCreditLogs';
+import { ImageGenerator } from './components/ImageGenerator';
 
 const theme = extendTheme({
   styles: {
@@ -120,6 +121,11 @@ function App() {
             />
             <Route path="/docs/admin" element={<DocsHub />} />
             <Route path="/docs/edit/:docId" element={<DocsHub />} />
+            <Route path="/images" element={
+              <PrivateRoute requiredRole="admin">
+                <ImageGenerator />
+              </PrivateRoute>
+            } />
           </Routes>
         </Router>
       </AuthProvider>

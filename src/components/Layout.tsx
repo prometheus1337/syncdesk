@@ -24,6 +24,7 @@ import {
   SettingsIcon,
   EditIcon,
   TimeIcon,
+  AddIcon,
 } from '@chakra-ui/icons';
 import { useAuth } from '../contexts/AuthContext';
 import { FaFileAlt, FaChartBar } from 'react-icons/fa';
@@ -95,6 +96,12 @@ export function Layout({ children }: { children: ReactNode }) {
           href: '/admin', 
           label: 'Administração',
           icon: <SettingsIcon />
+        });
+
+        links.push({ 
+          href: '/images', 
+          label: 'Gerador de Imagens',
+          icon: <AddIcon />
         });
       }
 
