@@ -16,7 +16,6 @@ import {
   useToast,
 } from '@chakra-ui/react';
 
-const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
 const REPLICATE_API = 'https://api.replicate.com/v1/predictions';
 
 export function ImageGenerator() {
@@ -62,13 +61,13 @@ export function ImageGenerator() {
 
     try {
       // Cria a predição
-      const createResponse = await fetch(`${CORS_PROXY}${REPLICATE_API}`, {
+      const createResponse = await fetch(REPLICATE_API, {
         method: 'POST',
         headers: {
           'Authorization': `Token ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
           'Content-Type': 'application/json',
-          'Origin': window.location.origin
         },
+        mode: 'no-cors',
         body: JSON.stringify({
           version: "prometheus1337/pvo-ai-md:46bbd3d415fa5ec4d2f1a931a0e9c686da9131da6235b81be3d1bb4dca700290",
           input: {
@@ -99,11 +98,11 @@ export function ImageGenerator() {
       let result = prediction;
       while (result.status !== 'succeeded' && result.status !== 'failed') {
         await new Promise(resolve => setTimeout(resolve, 1000));
-        const statusResponse = await fetch(`${CORS_PROXY}${REPLICATE_API}/${prediction.id}`, {
+        const statusResponse = await fetch(`${REPLICATE_API}/${prediction.id}`, {
           headers: {
             'Authorization': `Token ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
-            'Origin': window.location.origin
-          }
+          },
+          mode: 'no-cors'
         });
         result = await statusResponse.json();
       }
