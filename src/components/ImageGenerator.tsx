@@ -54,20 +54,18 @@ export function ImageGenerator() {
       console.log('Iniciando geração de imagem...');
       
       const { data: result, error } = await supabase.functions.invoke('generate-image', {
-        body: {
-          prompt,
-          aspect_ratio: aspectRatio,
-        },
+        body: { prompt, aspect_ratio: aspectRatio },
+        headers: { 'Content-Type': 'application/json' }
       });
 
       console.log('Resposta da função:', { result, error });
 
       if (error) {
         console.error('Erro detalhado da função:', error);
-        throw error;
+        throw new Error(error.message || 'Erro ao gerar imagem');
       }
 
-      if (!result?.output) {
+      if (!result?.output?.[0]) {
         console.error('Resposta sem output:', result);
         throw new Error('Falha na geração da imagem: resposta inválida');
       }

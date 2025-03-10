@@ -5,16 +5,15 @@ interface RequestBody {
   aspect_ratio: string;
 }
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
 serve(async (req) => {
-  // Habilitar CORS
   if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      },
-    });
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
@@ -53,6 +52,7 @@ serve(async (req) => {
     }
 
     const prediction = await createResponse.json();
+    console.log('Predição criada:', prediction);
 
     // Aguardar a conclusão da geração
     let result = prediction;
@@ -69,6 +69,7 @@ serve(async (req) => {
       }
 
       result = await pollResponse.json();
+      console.log('Status atual:', result.status);
     }
 
     if (result.status === 'failed') {
@@ -76,18 +77,16 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify(result), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
+    console.error('Erro:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
   }
 }); 
