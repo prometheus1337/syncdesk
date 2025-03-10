@@ -62,12 +62,19 @@ export function ImageGenerator() {
 
       if (error) {
         console.error('Erro detalhado da função:', error);
-        throw new Error(error.message || 'Erro ao gerar imagem');
+        throw new Error(
+          error.message || 
+          (error as any)?.context?.message || 
+          'Erro ao gerar imagem'
+        );
       }
 
       if (!result?.output?.[0]) {
         console.error('Resposta sem output:', result);
-        throw new Error('Falha na geração da imagem: resposta inválida');
+        throw new Error(
+          result?.error || 
+          'Falha na geração da imagem: resposta inválida'
+        );
       }
 
       const newImage: GeneratedImage = {
@@ -87,9 +94,14 @@ export function ImageGenerator() {
       });
     } catch (error: any) {
       console.error('Erro completo:', error);
+      const errorMessage = error.message || 
+        error.details || 
+        error.toString() ||
+        'Ocorreu um erro ao gerar a imagem. Por favor, tente novamente.';
+      
       toast({
         title: 'Erro ao gerar imagem',
-        description: error.message || 'Ocorreu um erro ao gerar a imagem. Por favor, tente novamente.',
+        description: errorMessage,
         status: 'error',
         duration: 5000,
         isClosable: true,

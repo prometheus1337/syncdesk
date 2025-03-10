@@ -1,29 +1,50 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+// Follow this setup guide to integrate the Deno language server with your editor:
+// https://deno.land/manual/getting_started/setup_your_environment
+// This enables autocomplete, go to definition, etc.
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+
+console.log("Hello from Functions!")
 
 interface RequestBody {
   prompt: string;
   aspect_ratio: string;
 }
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
-
 serve(async (req) => {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  }
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { prompt, aspect_ratio } = await req.json() as RequestBody;
+    // Log do corpo da requisição
+    const body = await req.json()
+    console.log('Corpo da requisição:', body)
 
-    // Criar a predição
+    const { prompt, aspect_ratio } = body as RequestBody
+    
+    if (!prompt || !aspect_ratio) {
+      throw new Error('Prompt e aspect_ratio são obrigatórios')
+    }
+
+    // Log do token (apenas os primeiros caracteres)
+    const token = Deno.env.get('REPLICATE_API_TOKEN')
+    console.log('Token disponível:', !!token, token ? `(começa com ${token.slice(0, 4)}...)` : '(não encontrado)')
+
+    if (!token) {
+      throw new Error('Token do Replicate não configurado')
+    }
+
+    console.log('Iniciando chamada ao Replicate...')
     const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('REPLICATE_API_TOKEN')}`,
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -44,49 +65,85 @@ serve(async (req) => {
           num_inference_steps: 28
         }
       })
-    });
+    })
 
+    // Log da resposta inicial
+    console.log('Status da resposta inicial:', createResponse.status)
+    
     if (!createResponse.ok) {
-      const error = await createResponse.json();
-      throw new Error(error.detail || 'Erro ao criar predição');
+      const error = await createResponse.json()
+      console.error('Erro do Replicate:', error)
+      throw new Error(error.detail || `Erro ao criar predição: ${createResponse.status}`)
     }
 
-    const prediction = await createResponse.json();
-    console.log('Predição criada:', prediction);
+    const prediction = await createResponse.json()
+    console.log('Predição criada:', prediction)
 
-    // Aguardar a conclusão da geração
-    let result = prediction;
-    while (result.status !== 'succeeded' && result.status !== 'failed') {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    let result = prediction
+    let attempts = 0
+    const maxAttempts = 30 // 30 segundos
+
+    while (result.status !== 'succeeded' && result.status !== 'failed' && attempts < maxAttempts) {
+      attempts++
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      console.log(`Tentativa ${attempts}: Verificando status...`)
       const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
         headers: {
-          'Authorization': `Bearer ${Deno.env.get('REPLICATE_API_TOKEN')}`,
+          'Authorization': `Bearer ${token}`,
         },
-      });
+      })
 
       if (!pollResponse.ok) {
-        throw new Error('Erro ao verificar status da geração');
+        console.error('Erro ao verificar status:', pollResponse.status)
+        throw new Error(`Erro ao verificar status da geração: ${pollResponse.status}`)
       }
 
-      result = await pollResponse.json();
-      console.log('Status atual:', result.status);
+      result = await pollResponse.json()
+      console.log('Status atual:', result.status)
+    }
+
+    if (attempts >= maxAttempts) {
+      throw new Error('Tempo limite excedido ao gerar imagem')
     }
 
     if (result.status === 'failed') {
-      throw new Error(result.error || 'Falha na geração da imagem');
+      throw new Error(result.error || 'Falha na geração da imagem')
     }
 
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  } catch (error) {
-    console.error('Erro:', error);
+    if (!result.output?.[0]) {
+      throw new Error('Resposta sem URL da imagem')
+    }
+
+    console.log('Geração concluída com sucesso')
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify(result),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    )
+  } catch (error) {
+    console.error('Erro detalhado:', error)
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        details: error.toString(),
+        stack: error.stack
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
-    );
+    )
   }
-}); 
+})
+
+/* To invoke locally:
+
+  1. Run `supabase start` (see: https://supabase.com/docs/reference/cli/supabase-start)
+  2. Make an HTTP request:
+
+  curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/generate-image' \
+    --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' \
+    --header 'Content-Type: application/json' \
+    --data '{"name":"Functions"}'
+
+*/
