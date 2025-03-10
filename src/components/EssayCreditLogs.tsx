@@ -201,7 +201,7 @@ export function EssayCreditLogs() {
         credits_amount: newLog.credits_amount,
         operation_type: newLog.operation_type,
         motive: newLog.motive || null,
-        created_by: appUser?.email || '',
+        created_by: appUser?.id || '',
       }]);
 
     if (error) {
