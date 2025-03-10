@@ -26,6 +26,8 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { FaFileAlt, FaChartBar } from 'react-icons/fa';
 import { ImageIcon } from './icons/ImageIcon';
+import { EditIcon } from './icons/EditIcon';
+import { TimeIcon } from './icons/TimeIcon';
 
 // Importar o logo SVG
 import LogoSVGFile from '../assets/logo.svg';
@@ -98,6 +100,18 @@ export function Layout({ children }: { children: ReactNode }) {
       }
 
       if (appUser.role === 'admin' || appUser.role === 'essay_director') {
+        links.push({ 
+          href: '/essays', 
+          label: 'Redações',
+          icon: <EditIcon />
+        });
+
+        links.push({ 
+          href: '/essay-logs', 
+          label: 'Logs de Créditos',
+          icon: <TimeIcon />
+        });
+
         links.push({ 
           href: '/images', 
           label: 'Gerador de Imagens',

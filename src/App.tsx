@@ -37,7 +37,7 @@ const theme = extendTheme({
   },
 });
 
-function PrivateRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole?: 'admin' | 'support' }) {
+function PrivateRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole?: 'admin' | 'support' | 'essay_director' }) {
   const { appUser, loading } = useAuth();
 
   if (loading) {
@@ -106,7 +106,7 @@ function App() {
             <Route
               path="/essays"
               element={
-                <PrivateRoute>
+                <PrivateRoute requiredRole="essay_director">
                   <EssayDashboard />
                 </PrivateRoute>
               }
