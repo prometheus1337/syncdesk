@@ -16,7 +16,7 @@ import {
 } from '@chakra-ui/react';
 
 // Token será injetado em tempo de build
-const REPLICATE_TOKEN = process.env.VITE_REPLICATE_API_TOKEN;
+const REPLICATE_TOKEN = import.meta.env.VITE_REPLICATE_API_TOKEN;
 
 export function ImageGenerator() {
   const [prompt, setPrompt] = useState('');
