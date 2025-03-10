@@ -46,17 +46,20 @@ interface EssayStudent {
   last_purchase: string;
 }
 
-interface EssayPurchase {
+interface CreditLog {
   id: string;
-  student_name: string;
   student_email: string;
-  credits_amount: number;
-  price_paid: number;
-  payment_method: string;
+  student_name?: string;
+  credits_change: number;
+  operation_type: 'add' | 'remove';
+  motive?: string;
   created_at: string;
-  status: string;
-  payment_id: string;
-  invoice_url: string;
+  created_by: string;
+  price_paid?: number;
+  payment_method?: string;
+  payment_id?: string;
+  invoice_url?: string;
+  status?: string;
 }
 
 interface Filter {
@@ -75,7 +78,7 @@ interface NewPurchase {
 export function EssayDashboard() {
   const [students, setStudents] = useState<EssayStudent[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<EssayStudent | null>(null);
-  const [purchases, setPurchases] = useState<EssayPurchase[]>([]);
+  const [creditLogs, setCreditLogs] = useState<CreditLog[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filter, setFilter] = useState<Filter>({
     startDate: '',
@@ -103,104 +106,95 @@ export function EssayDashboard() {
   async function fetchStudents() {
     setIsLoading(true);
     
-    // Primeiro, busca todas as compras
-    const { data: purchaseData, error: purchaseError } = await supabase
-      .from('essay_purchases')
-      .select('student_email, student_name, student_phone, credits_amount, price_paid, created_at');
+    try {
+      // Busca todos os logs de créditos
+      let query = supabase
+        .from('essay_credit_logs')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    if (purchaseError) {
-      toast({
-        title: 'Erro ao buscar alunos',
-        description: purchaseError.message,
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-      setIsLoading(false);
-      return;
-    }
+      // Aplica filtros de data se existirem
+      if (filter.startDate) {
+        query = query.gte('created_at', filter.startDate);
+      }
+      if (filter.endDate) {
+        query = query.lte('created_at', filter.endDate);
+      }
 
-    // Depois, busca todos os logs de créditos
-    const { data: logsData, error: logsError } = await supabase
-      .from('essay_credit_logs')
-      .select('student_email, credits_amount, operation_type');
+      const { data: logsData, error: logsError } = await query;
 
-    if (logsError) {
-      toast({
-        title: 'Erro ao buscar logs',
-        description: logsError.message,
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-      setIsLoading(false);
-      return;
-    }
+      if (logsError) throw logsError;
 
-    // Agrupa os dados por email do aluno
-    const studentsMap = new Map<string, EssayStudent>();
-    
-    // Processa as compras
-    purchaseData?.forEach(purchase => {
-      const student = studentsMap.get(purchase.student_email);
-      if (student) {
-        student.total_credits += purchase.credits_amount;
-        student.total_spent += purchase.price_paid;
-        // Atualiza last_purchase apenas se for mais recente
-        if (new Date(purchase.created_at) > new Date(student.last_purchase)) {
-          student.last_purchase = purchase.created_at;
-        }
-      } else {
-        studentsMap.set(purchase.student_email, {
+      // Mapa para armazenar os dados dos alunos
+      const studentsMap = new Map<string, EssayStudent>();
+
+      // Processa todos os logs
+      logsData?.forEach(log => {
+        const student = studentsMap.get(log.student_email) || {
           id: crypto.randomUUID(),
-          name: purchase.student_name,
-          email: purchase.student_email,
-          phone: purchase.student_phone || '',
-          total_credits: purchase.credits_amount,
-          total_spent: purchase.price_paid,
-          last_purchase: purchase.created_at,
-        });
-      }
-    });
+          name: log.student_name || log.student_email,
+          email: log.student_email,
+          phone: '',
+          total_credits: 0,
+          total_spent: 0,
+          last_purchase: log.created_at,
+        };
 
-    // Processa os logs
-    logsData?.forEach(log => {
-      const student = studentsMap.get(log.student_email);
-      if (student) {
+        // Atualiza os créditos baseado no tipo de operação
         student.total_credits += log.operation_type === 'add' ? 
-          log.credits_amount : -log.credits_amount;
-      }
-    });
+          log.credits_change : -log.credits_change;
 
-    setStudents(Array.from(studentsMap.values()));
-    setIsLoading(false);
+        // Atualiza o total gasto se for uma compra (log com price_paid)
+        if (log.price_paid) {
+          student.total_spent += log.price_paid;
+          // Atualiza last_purchase apenas se for mais recente
+          if (new Date(log.created_at) > new Date(student.last_purchase)) {
+            student.last_purchase = log.created_at;
+          }
+        }
+        
+        studentsMap.set(log.student_email, student);
+      });
+
+      setStudents(Array.from(studentsMap.values()));
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao buscar dados',
+        description: error.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
-  async function fetchStudentPurchases(studentEmail: string) {
+  async function fetchStudentLogs(studentEmail: string) {
     setIsLoading(true);
     const { data, error } = await supabase
-      .from('essay_purchases')
+      .from('essay_credit_logs')
       .select('*')
       .eq('student_email', studentEmail)
       .order('created_at', { ascending: false });
 
     if (error) {
       toast({
-        title: 'Erro ao buscar compras',
+        title: 'Erro ao buscar logs',
         description: error.message,
         status: 'error',
         duration: 3000,
         isClosable: true,
       });
     } else {
-      setPurchases(data);
+      setCreditLogs(data);
     }
     setIsLoading(false);
   }
 
   function handleViewStudent(student: EssayStudent) {
     setSelectedStudent(student);
-    fetchStudentPurchases(student.email);
+    fetchStudentLogs(student.email);
     onViewOpen();
   }
 
@@ -236,12 +230,14 @@ export function EssayDashboard() {
     setIsLoading(true);
     
     const { error } = await supabase
-      .from('essay_purchases')
+      .from('essay_credit_logs')
       .insert([{
         student_name: newPurchase.student_name,
         student_email: newPurchase.student_email,
-        student_phone: newPurchase.student_phone,
-        credits_amount: newPurchase.credits_amount,
+        credits_change: newPurchase.credits_amount,
+        operation_type: 'add',
+        motive: 'purchase',
+        created_by: appUser?.email || 'API',
         price_paid: newPurchase.price_paid,
         payment_method: 'Não especificado',
         status: 'completed',
@@ -366,7 +362,6 @@ export function EssayDashboard() {
                   <Th>Data de Criação</Th>
                   <Th>Nome</Th>
                   <Th>Email</Th>
-                  <Th>Telefone</Th>
                   <Th>Créditos</Th>
                   <Th>Total Investido</Th>
                   <Th>Ações</Th>
@@ -378,7 +373,6 @@ export function EssayDashboard() {
                     <Td>{formatDate(student.last_purchase)}</Td>
                     <Td>{student.name}</Td>
                     <Td>{student.email}</Td>
-                    <Td>{student.phone || '-'}</Td>
                     <Td>{student.total_credits}</Td>
                     <Td>{formatCurrency(student.total_spent)}</Td>
                     <Td>
@@ -426,10 +420,6 @@ export function EssayDashboard() {
                   <Text>{selectedStudent.email}</Text>
                 </Box>
                 <Box>
-                  <Text fontWeight="bold">Telefone:</Text>
-                  <Text>{selectedStudent.phone || 'Não informado'}</Text>
-                </Box>
-                <Box>
                   <Text fontWeight="bold">Total de Créditos:</Text>
                   <Text>{selectedStudent.total_credits}</Text>
                 </Box>
@@ -438,23 +428,29 @@ export function EssayDashboard() {
                   <Text>{formatCurrency(selectedStudent.total_spent)}</Text>
                 </Box>
                 <Box>
-                  <Text fontWeight="bold" mb={2}>Histórico de Compras:</Text>
+                  <Text fontWeight="bold" mb={2}>Histórico de Operações:</Text>
                   <Table size="sm">
                     <Thead>
                       <Tr>
                         <Th>Data</Th>
+                        <Th>Tipo</Th>
                         <Th>Créditos</Th>
                         <Th>Valor</Th>
-                        <Th>Método</Th>
+                        <Th>Motivo</Th>
                       </Tr>
                     </Thead>
                     <Tbody>
-                      {purchases.map((purchase) => (
-                        <Tr key={purchase.id}>
-                          <Td>{formatDate(purchase.created_at)}</Td>
-                          <Td>{purchase.credits_amount}</Td>
-                          <Td>{formatCurrency(purchase.price_paid)}</Td>
-                          <Td>{purchase.payment_method}</Td>
+                      {creditLogs.map((log) => (
+                        <Tr key={log.id}>
+                          <Td>{formatDate(log.created_at)}</Td>
+                          <Td>
+                            <Text color={log.operation_type === 'add' ? 'green.500' : 'red.500'}>
+                              {log.operation_type === 'add' ? 'Adição' : 'Redução'}
+                            </Text>
+                          </Td>
+                          <Td>{log.credits_change}</Td>
+                          <Td>{log.price_paid ? formatCurrency(log.price_paid) : '-'}</Td>
+                          <Td>{log.motive || '-'}</Td>
                         </Tr>
                       ))}
                     </Tbody>
