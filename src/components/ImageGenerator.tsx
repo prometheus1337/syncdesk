@@ -82,12 +82,12 @@ export function ImageGenerator() {
     setIsGenerating(true);
 
     try {
-      const response = await fetch('https://api.replicate.com/v1/predictions', {
+      // Primeiro, criar a predição
+      const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
           'Content-Type': 'application/json',
-          'Prefer': 'wait',
         },
         body: JSON.stringify({
           version: "46bbd3d415fa5ec4d2f1a931a0e9c686da9131da6235b81be3d1bb4dca700290",
@@ -109,17 +109,39 @@ export function ImageGenerator() {
         })
       });
 
-      const prediction = await response.json();
+      if (!createResponse.ok) {
+        const errorData = await createResponse.json();
+        throw new Error(`Erro na API do Replicate: ${errorData.detail || 'Erro desconhecido'}`);
+      }
+
+      const prediction = await createResponse.json();
       
-      if (prediction.error) {
-        throw new Error(prediction.error);
+      // Aguardar a conclusão da geração
+      let result = prediction;
+      while (result.status !== 'succeeded' && result.status !== 'failed') {
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Esperar 1 segundo
+        const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
+          },
+        });
+        
+        if (!pollResponse.ok) {
+          throw new Error('Erro ao verificar status da geração');
+        }
+        
+        result = await pollResponse.json();
+      }
+
+      if (result.status === 'failed') {
+        throw new Error(result.error || 'Falha na geração da imagem');
       }
 
       // Salvar a imagem gerada no Supabase
       const { data: imageData, error: imageError } = await supabase
         .from('generated_images')
         .insert({
-          url: prediction.output[0],
+          url: result.output[0],
           prompt,
           created_by: appUser?.id,
         })
@@ -138,11 +160,12 @@ export function ImageGenerator() {
         isClosable: true,
       });
     } catch (error: any) {
+      console.error('Erro detalhado:', error);
       toast({
         title: 'Erro ao gerar imagem',
-        description: error.message,
+        description: error.message || 'Ocorreu um erro ao gerar a imagem. Por favor, tente novamente.',
         status: 'error',
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
       });
     } finally {
