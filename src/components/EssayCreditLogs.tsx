@@ -100,32 +100,58 @@ export function EssayCreditLogs() {
   async function fetchStudents() {
     setIsLoading(true);
     
-    // Primeiro, busca todos os alunos
-    const { data: studentsData, error: studentsError } = await supabase
-      .from('essay_students')
-      .select('*');
+    try {
+      // Busca todas as compras
+      const { data: purchaseData, error: purchaseError } = await supabase
+        .from('essay_purchases')
+        .select('student_email, student_name, credits_amount');
 
-    if (studentsError) {
+      if (purchaseError) throw purchaseError;
+
+      // Busca todos os logs de créditos
+      const { data: logsData, error: logsError } = await supabase
+        .from('essay_credit_logs')
+        .select('student_email, credits_change, operation_type');
+
+      if (logsError) throw logsError;
+
+      // Mapa para armazenar os dados dos alunos
+      const studentMap = new Map<string, Student>();
+
+      // Processa as compras primeiro
+      purchaseData?.forEach(purchase => {
+        const student = studentMap.get(purchase.student_email) || {
+          email: purchase.student_email,
+          name: purchase.student_name,
+          total_credits: 0,
+        };
+        student.total_credits += purchase.credits_amount;
+        studentMap.set(purchase.student_email, student);
+      });
+
+      // Processa os logs depois
+      logsData?.forEach(log => {
+        const student = studentMap.get(log.student_email);
+        if (student) {
+          // Adiciona ou remove créditos baseado no tipo de operação
+          student.total_credits += log.operation_type === 'add' ? 
+            log.credits_change : -log.credits_change;
+          studentMap.set(log.student_email, student);
+        }
+      });
+
+      setStudents(Array.from(studentMap.values()));
+    } catch (error: any) {
       toast({
-        title: 'Erro ao buscar alunos',
-        description: studentsError.message,
+        title: 'Erro ao buscar dados',
+        description: error.message,
         status: 'error',
         duration: 3000,
         isClosable: true,
       });
+    } finally {
       setIsLoading(false);
-      return;
     }
-
-    // Converte para o formato esperado
-    const formattedStudents = studentsData.map(student => ({
-      email: student.email,
-      name: student.name,
-      total_credits: student.total_credits
-    }));
-
-    setStudents(formattedStudents);
-    setIsLoading(false);
   }
 
   async function fetchLogs() {
@@ -167,7 +193,7 @@ export function EssayCreditLogs() {
         credits_change: newLog.credits_change,
         operation_type: newLog.operation_type,
         motive: newLog.motive || null,
-        created_by: appUser?.email || 'API',
+        created_by: appUser?.id || '',
       }]);
 
     if (error) {
