@@ -2,19 +2,11 @@
 // https://deno.land/manual/getting_started/setup_your_environment
 // This enables autocomplete, go to definition, etc.
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
-console.log("Hello from Functions!")
-
-interface RequestBody {
-  prompt: string;
-  aspect_ratio: string;
-}
-
-serve(async (req) => {
+Deno.serve(async (req) => {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
   }
 
   if (req.method === 'OPTIONS') {
@@ -22,25 +14,17 @@ serve(async (req) => {
   }
 
   try {
-    // Log do corpo da requisição
-    const body = await req.json()
-    console.log('Corpo da requisição:', body)
-
-    const { prompt, aspect_ratio } = body as RequestBody
+    const { prompt, aspect_ratio } = await req.json()
     
     if (!prompt || !aspect_ratio) {
       throw new Error('Prompt e aspect_ratio são obrigatórios')
     }
 
-    // Log do token (apenas os primeiros caracteres)
     const token = Deno.env.get('REPLICATE_API_TOKEN')
-    console.log('Token disponível:', !!token, token ? `(começa com ${token.slice(0, 4)}...)` : '(não encontrado)')
-
     if (!token) {
       throw new Error('Token do Replicate não configurado')
     }
 
-    console.log('Iniciando chamada ao Replicate...')
     const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
@@ -51,12 +35,12 @@ serve(async (req) => {
         version: "46bbd3d415fa5ec4d2f1a931a0e9c686da9131da6235b81be3d1bb4dca700290",
         input: {
           prompt,
+          aspect_ratio,
           model: "dev",
           go_fast: false,
           lora_scale: 1,
           megapixels: "1",
           num_outputs: 1,
-          aspect_ratio,
           output_format: "webp",
           guidance_scale: 3,
           output_quality: 80,
@@ -67,27 +51,20 @@ serve(async (req) => {
       })
     })
 
-    // Log da resposta inicial
-    console.log('Status da resposta inicial:', createResponse.status)
-    
     if (!createResponse.ok) {
       const error = await createResponse.json()
-      console.error('Erro do Replicate:', error)
       throw new Error(error.detail || `Erro ao criar predição: ${createResponse.status}`)
     }
 
     const prediction = await createResponse.json()
-    console.log('Predição criada:', prediction)
-
     let result = prediction
-    let attempts = 0
-    const maxAttempts = 30 // 30 segundos
 
-    while (result.status !== 'succeeded' && result.status !== 'failed' && attempts < maxAttempts) {
-      attempts++
+    // Aguardar até 30 segundos pela geração
+    for (let i = 0; i < 30; i++) {
+      if (result.status === 'succeeded' || result.status === 'failed') break
+
       await new Promise(resolve => setTimeout(resolve, 1000))
       
-      console.log(`Tentativa ${attempts}: Verificando status...`)
       const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -95,16 +72,10 @@ serve(async (req) => {
       })
 
       if (!pollResponse.ok) {
-        console.error('Erro ao verificar status:', pollResponse.status)
         throw new Error(`Erro ao verificar status da geração: ${pollResponse.status}`)
       }
 
       result = await pollResponse.json()
-      console.log('Status atual:', result.status)
-    }
-
-    if (attempts >= maxAttempts) {
-      throw new Error('Tempo limite excedido ao gerar imagem')
     }
 
     if (result.status === 'failed') {
@@ -115,19 +86,13 @@ serve(async (req) => {
       throw new Error('Resposta sem URL da imagem')
     }
 
-    console.log('Geração concluída com sucesso')
     return new Response(
       JSON.stringify(result),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   } catch (error) {
-    console.error('Erro detalhado:', error)
     return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        details: error.toString(),
-        stack: error.stack
-      }),
+      JSON.stringify({ error: error.message }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
