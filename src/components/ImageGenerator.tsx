@@ -16,7 +16,8 @@ import {
   useToast,
   Image,
 } from '@chakra-ui/react';
-import { supabase } from '../lib/supabaseClient';
+
+const GENERATE_IMAGE_URL = 'https://vjokrgwwlhioqeqwlasz.supabase.co/functions/v1/generate-image';
 
 export function ImageGenerator() {
   const [prompt, setPrompt] = useState('');
@@ -54,11 +55,19 @@ export function ImageGenerator() {
     setImageUrl(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('generate-image', {
-        body: { prompt, aspectRatio }
+      const response = await fetch(GENERATE_IMAGE_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt, aspectRatio })
       });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
 
       if (data.error) {
         throw new Error(data.error);
