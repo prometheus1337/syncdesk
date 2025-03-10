@@ -31,21 +31,11 @@ serve(async (req) => {
         'Prefer': 'wait',
       },
       body: JSON.stringify({
+        model: "stability-ai/sdxl",
         version: "46bbd3d415fa5ec4d2f1a931a0e9c686da9131da6235b81be3d1bb4dca700290",
         input: {
           prompt,
-          model: "dev",
-          go_fast: false,
-          lora_scale: 1,
-          megapixels: "1",
-          num_outputs: 1,
-          aspect_ratio: aspectRatio,
-          output_format: "webp",
-          guidance_scale: 3,
-          output_quality: 80,
-          prompt_strength: 0.8,
-          extra_lora_scale: 1,
-          num_inference_steps: 28
+          aspect_ratio: aspectRatio
         }
       }),
     });

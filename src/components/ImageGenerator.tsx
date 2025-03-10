@@ -48,15 +48,15 @@ export function ImageGenerator() {
 
       if (error) throw error;
 
-      if (data.status === 'succeeded') {
+      if (data.status === 'succeeded' && data.output) {
         setProgress(100);
-        setImageUrl(data.output[0]);
+        setImageUrl(data.output);
         
         // Salvar a imagem gerada no banco
         const { error: dbError } = await supabase
           .from('generated_images')
           .insert({
-            url: data.output[0],
+            url: data.output,
             prompt: prompt,
           });
 
