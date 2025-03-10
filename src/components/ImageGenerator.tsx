@@ -14,6 +14,7 @@ import {
   CardBody,
   Progress,
 } from '@chakra-ui/react';
+import { supabase } from '../lib/supabaseClient';
 
 export function ImageGenerator() {
   const [prompt, setPrompt] = useState('');
@@ -56,18 +57,37 @@ export function ImageGenerator() {
     setProgress(0);
 
     try {
+      // Criar registro no Supabase
+      const { data: imageRecord, error: supabaseError } = await supabase
+        .from('ai_images')
+        .insert({
+          prompt,
+          aspect_ratio: aspectRatio,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (supabaseError) {
+        throw supabaseError;
+      }
+
+      // Enviar para webhook com o ID do registro
       await fetch('https://webhook-processor-production-242a.up.railway.app/webhook/37d2c776-745f-478b-9a41-12c1139f3059', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          id: imageRecord.id,
           prompt,
           aspectRatio,
         })
       });
     } catch (error) {
-      console.error('Erro ao enviar webhook:', error);
+      console.error('Erro ao processar requisição:', error);
+      setIsGenerating(false);
+      setProgress(0);
     }
   };
 
