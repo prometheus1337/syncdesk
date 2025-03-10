@@ -13,18 +13,16 @@ import {
   Card,
   CardBody,
   Progress,
+  useToast,
 } from '@chakra-ui/react';
-import Replicate from 'replicate';
-
-const replicate = new Replicate({
-  auth: import.meta.env.VITE_REPLICATE_API_TOKEN,
-});
+import { supabase } from '../lib/supabaseClient';
 
 export function ImageGenerator() {
   const [prompt, setPrompt] = useState('');
   const [aspectRatio, setAspectRatio] = useState('1:1');
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
+  const toast = useToast();
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -61,30 +59,53 @@ export function ImageGenerator() {
     setProgress(0);
 
     try {
-      const output = await replicate.run(
-        "prometheus1337/pvo-ai-md:46bbd3d415fa5ec4d2f1a931a0e9c686da9131da6235b81be3d1bb4dca700290",
-        {
-          input: {
-            prompt,
-            model: "dev",
-            go_fast: false,
-            lora_scale: 1,
-            megapixels: "1",
-            num_outputs: 1,
-            aspect_ratio: aspectRatio,
-            output_format: "webp",
-            guidance_scale: 3,
-            output_quality: 80,
-            prompt_strength: 0.8,
-            extra_lora_scale: 1,
-            num_inference_steps: 28
-          }
-        }
-      ) as string[];
+      const { data, error } = await supabase.functions.invoke('generate-image', {
+        body: { prompt, aspectRatio }
+      });
 
-      console.log('Imagem gerada:', output[0]);
+      if (error) throw error;
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (!data.output?.[0]) {
+        throw new Error('Nenhuma imagem foi gerada');
+      }
+
+      // Salva a imagem gerada no banco
+      const { error: insertError } = await supabase
+        .from('generated_images')
+        .insert([
+          {
+            prompt,
+            url: data.output[0],
+            aspect_ratio: aspectRatio,
+          }
+        ]);
+
+      if (insertError) {
+        console.error('Erro ao salvar imagem:', insertError);
+      }
+
+      toast({
+        title: 'Imagem gerada com sucesso!',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+
     } catch (error) {
       console.error('Erro ao gerar imagem:', error);
+      toast({
+        title: 'Erro ao gerar imagem',
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsGenerating(false);
     }
   };
 
