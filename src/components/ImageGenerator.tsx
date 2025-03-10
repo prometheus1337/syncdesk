@@ -53,7 +53,6 @@ export function ImageGenerator() {
       // Criar a predição
       const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
         method: 'POST',
-        mode: 'no-cors',
         headers: {
           'Authorization': `Bearer ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
           'Content-Type': 'application/json',
@@ -62,8 +61,8 @@ export function ImageGenerator() {
         body: JSON.stringify({
           version: "46bbd3d415fa5ec4d2f1a931a0e9c686da9131da6235b81be3d1bb4dca700290",
           input: {
-            prompt,
             model: "dev",
+            prompt: prompt,
             go_fast: false,
             lora_scale: 1,
             megapixels: "1",
@@ -85,18 +84,60 @@ export function ImageGenerator() {
       }
 
       const result = await createResponse.json();
+      console.log('Resultado:', result);
 
-      if (!result.output?.[0]) {
-        throw new Error('Resposta sem URL da imagem');
+      if (!result.output) {
+        // Se não tiver output imediato, vamos verificar o status
+        let statusUrl = result.urls?.get;
+        if (!statusUrl) {
+          throw new Error('URL de status não encontrada');
+        }
+
+        // Loop para verificar o status até completar
+        while (true) {
+          const statusResponse = await fetch(statusUrl, {
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_REPLICATE_API_TOKEN}`
+            }
+          });
+
+          if (!statusResponse.ok) {
+            throw new Error('Erro ao verificar status');
+          }
+
+          const statusResult = await statusResponse.json();
+          console.log('Status:', statusResult);
+
+          if (statusResult.status === 'succeeded') {
+            if (!statusResult.output?.[0]) {
+              throw new Error('Resposta sem URL da imagem');
+            }
+
+            const newImage: GeneratedImage = {
+              url: statusResult.output[0],
+              prompt,
+              createdAt: new Date(),
+            };
+
+            setGeneratedImages(prev => [newImage, ...prev]);
+            break;
+          } else if (statusResult.status === 'failed') {
+            throw new Error('Falha ao gerar imagem');
+          }
+
+          // Aguarda 1 segundo antes de verificar novamente
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      } else {
+        // Se já tiver output, usa diretamente
+        const newImage: GeneratedImage = {
+          url: result.output[0],
+          prompt,
+          createdAt: new Date(),
+        };
+
+        setGeneratedImages(prev => [newImage, ...prev]);
       }
-
-      const newImage: GeneratedImage = {
-        url: result.output[0],
-        prompt,
-        createdAt: new Date(),
-      };
-
-      setGeneratedImages(prev => [newImage, ...prev]);
 
       toast({
         title: 'Sucesso',
