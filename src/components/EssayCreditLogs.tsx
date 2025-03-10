@@ -19,6 +19,11 @@ import {
   useDisclosure,
   useToast,
   Input,
+  InputGroup,
+  InputLeftElement,
+  List,
+  ListItem,
+  VStack,
   Table,
   Thead,
   Tbody,
@@ -29,9 +34,8 @@ import {
   FormControl,
   FormLabel,
   Select,
-  Textarea,
 } from '@chakra-ui/react';
-import { AddIcon } from '@chakra-ui/icons';
+import { AddIcon, SearchIcon } from '@chakra-ui/icons';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -58,6 +62,17 @@ interface NewCreditLog {
   motive?: string;
 }
 
+const CREDIT_MOTIVES = {
+  add: [
+    { value: 'bonus', label: 'Bônus' },
+    { value: 'refund', label: 'Devolução de crédito' }
+  ],
+  remove: [
+    { value: 'expired', label: 'Crédito expirado' },
+    { value: 'essay_sent', label: 'Redação enviada' }
+  ]
+};
+
 export function EssayCreditLogs() {
   const [logs, setLogs] = useState<CreditLog[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -69,6 +84,9 @@ export function EssayCreditLogs() {
     operation_type: 'add',
     motive: '',
   });
+  const [studentSearch, setStudentSearch] = useState('');
+  const [showStudentList, setShowStudentList] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   const { isOpen: isCreateOpen, onOpen: onCreateOpen, onClose: onCreateClose } = useDisclosure();
   const toast = useToast();
@@ -148,7 +166,15 @@ export function EssayCreditLogs() {
     setIsLoading(true);
     const { data, error } = await supabase
       .from('essay_credit_logs')
-      .select('*')
+      .select(`
+        id,
+        student_email,
+        credits_amount,
+        operation_type,
+        motive,
+        created_at,
+        created_by
+      `)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -175,7 +201,7 @@ export function EssayCreditLogs() {
         credits_amount: newLog.credits_amount,
         operation_type: newLog.operation_type,
         motive: newLog.motive || null,
-        created_by: appUser?.email,
+        created_by: appUser?.email || '',
       }]);
 
     if (error) {
@@ -219,7 +245,8 @@ export function EssayCreditLogs() {
   function validateForm() {
     return (
       newLog.student_email.trim() !== '' &&
-      newLog.credits_amount > 0
+      newLog.credits_amount > 0 &&
+      newLog.motive?.trim() !== ''
     );
   }
 
@@ -230,6 +257,28 @@ export function EssayCreditLogs() {
       (log.motive || '').toLowerCase().includes(searchLower)
     );
   });
+
+  const filteredStudents = students.filter(student => {
+    const searchLower = studentSearch.toLowerCase();
+    return (
+      student.name.toLowerCase().includes(searchLower) ||
+      student.email.toLowerCase().includes(searchLower)
+    );
+  });
+
+  function handleSelectStudent(student: Student) {
+    setSelectedStudent(student);
+    setNewLog(prev => ({ ...prev, student_email: student.email }));
+    setShowStudentList(false);
+  }
+
+  function handleOperationTypeChange(value: 'add' | 'remove') {
+    setNewLog(prev => ({ 
+      ...prev, 
+      operation_type: value,
+      motive: '' // Limpa o motivo quando muda o tipo de operação
+    }));
+  }
 
   if (!appUser || !['admin', 'essay_director'].includes(appUser.role)) {
     return (
@@ -329,28 +378,78 @@ export function EssayCreditLogs() {
             <Stack spacing={4}>
               <FormControl isRequired>
                 <FormLabel>Aluno</FormLabel>
-                <Select
-                  value={newLog.student_email}
-                  onChange={(e) => setNewLog({ ...newLog, student_email: e.target.value })}
-                  placeholder="Selecione um aluno"
-                >
-                  {students.map((student) => (
-                    <option key={student.email} value={student.email}>
-                      {student.name} ({student.email}) - {student.total_credits} créditos
-                    </option>
-                  ))}
-                </Select>
+                <VStack align="stretch" spacing={2}>
+                  <InputGroup>
+                    <InputLeftElement pointerEvents="none">
+                      <SearchIcon color="gray.400" />
+                    </InputLeftElement>
+                    <Input
+                      value={studentSearch}
+                      onChange={(e) => {
+                        setStudentSearch(e.target.value);
+                        setShowStudentList(true);
+                      }}
+                      placeholder="Buscar aluno por nome ou email"
+                      onClick={() => setShowStudentList(true)}
+                    />
+                  </InputGroup>
+                  {selectedStudent && (
+                    <Box p={2} bg="gray.50" borderRadius="md">
+                      <Text fontWeight="bold">{selectedStudent.name}</Text>
+                      <Text fontSize="sm" color="gray.600">
+                        {selectedStudent.email} - {selectedStudent.total_credits} créditos
+                      </Text>
+                    </Box>
+                  )}
+                  {showStudentList && studentSearch && (
+                    <Box
+                      border="1px"
+                      borderColor="gray.200"
+                      borderRadius="md"
+                      maxH="200px"
+                      overflowY="auto"
+                      position="relative"
+                      bg="white"
+                      zIndex={1}
+                      boxShadow="sm"
+                    >
+                      <List spacing={0}>
+                        {filteredStudents.map((student) => (
+                          <ListItem
+                            key={student.email}
+                            p={2}
+                            cursor="pointer"
+                            _hover={{ bg: 'gray.50' }}
+                            onClick={() => handleSelectStudent(student)}
+                          >
+                            <Text fontWeight="bold">{student.name}</Text>
+                            <Text fontSize="sm" color="gray.600">
+                              {student.email} - {student.total_credits} créditos
+                            </Text>
+                          </ListItem>
+                        ))}
+                        {filteredStudents.length === 0 && (
+                          <ListItem p={2}>
+                            <Text color="gray.500">Nenhum aluno encontrado</Text>
+                          </ListItem>
+                        )}
+                      </List>
+                    </Box>
+                  )}
+                </VStack>
               </FormControl>
+
               <FormControl isRequired>
                 <FormLabel>Tipo de Operação</FormLabel>
                 <Select
                   value={newLog.operation_type}
-                  onChange={(e) => setNewLog({ ...newLog, operation_type: e.target.value as 'add' | 'remove' })}
+                  onChange={(e) => handleOperationTypeChange(e.target.value as 'add' | 'remove')}
                 >
-                  <option value="add">Adicionar Créditos</option>
                   <option value="remove">Remover Créditos</option>
+                  <option value="add">Adicionar Créditos</option>
                 </Select>
               </FormControl>
+
               <FormControl isRequired>
                 <FormLabel>Quantidade de Créditos</FormLabel>
                 <Input
@@ -360,13 +459,20 @@ export function EssayCreditLogs() {
                   min={1}
                 />
               </FormControl>
-              <FormControl>
-                <FormLabel>Motivo (opcional)</FormLabel>
-                <Textarea
-                  value={newLog.motive}
+
+              <FormControl isRequired>
+                <FormLabel>Motivo</FormLabel>
+                <Select
+                  value={newLog.motive || ''}
                   onChange={(e) => setNewLog({ ...newLog, motive: e.target.value })}
-                  placeholder="Descreva o motivo da operação"
-                />
+                  placeholder="Selecione um motivo"
+                >
+                  {CREDIT_MOTIVES[newLog.operation_type].map(motive => (
+                    <option key={motive.value} value={motive.value}>
+                      {motive.label}
+                    </option>
+                  ))}
+                </Select>
               </FormControl>
             </Stack>
           </ModalBody>

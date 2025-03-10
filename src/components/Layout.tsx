@@ -18,8 +18,16 @@ import {
   Text,
   Image,
 } from '@chakra-ui/react';
-import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons';
+import { 
+  HamburgerIcon, 
+  CloseIcon, 
+  SettingsIcon, 
+  RepeatIcon, 
+  EditIcon,
+  TimeIcon,
+} from '@chakra-ui/icons';
 import { useAuth } from '../contexts/AuthContext';
+import { FaFileAlt, FaChartBar } from 'react-icons/fa';
 
 // Importar o logo SVG
 import LogoSVGFile from '../assets/logo.svg';
@@ -27,9 +35,10 @@ import LogoSVGFile from '../assets/logo.svg';
 interface NavLinkProps {
   children: ReactNode;
   href: string;
+  icon?: ReactNode;
 }
 
-function NavLink({ children, href }: NavLinkProps) {
+function NavLink({ children, href, icon }: NavLinkProps) {
   return (
     <RouterLink to={href} style={{ textDecoration: 'none' }}>
       <Box
@@ -47,7 +56,10 @@ function NavLink({ children, href }: NavLinkProps) {
           boxShadow: 'none',
         }}
       >
-        {children}
+        <Flex align="center" gap={2}>
+          {icon}
+          {children}
+        </Flex>
       </Box>
     </RouterLink>
   );
@@ -67,23 +79,47 @@ export function Layout({ children }: { children: ReactNode }) {
     const links = [];
     
     if (appUser?.role === 'admin') {
-      links.push({ href: '/admin', label: 'Admin' });
+      links.push({ 
+        href: '/admin', 
+        label: 'Admin',
+        icon: <SettingsIcon />
+      });
     }
 
     if (['admin', 'support'].includes(appUser?.role || '')) {
-      links.push({ href: '/refunds', label: 'Reembolsos' });
+      links.push({ 
+        href: '/refunds', 
+        label: 'Reembolsos',
+        icon: <RepeatIcon />
+      });
     }
 
     if (['admin', 'essay_director'].includes(appUser?.role || '')) {
-      links.push({ href: '/essays', label: 'Redações' });
-      links.push({ href: '/essay-logs', label: 'Logs de Créditos' });
+      links.push({ 
+        href: '/essays', 
+        label: 'Redações',
+        icon: <EditIcon />
+      });
+      links.push({ 
+        href: '/essay-logs', 
+        label: 'Logs de Créditos',
+        icon: <TimeIcon />
+      });
     }
     
     // Adicionar link para relatórios para todos os usuários
-    links.push({ href: '/reports', label: 'Relatórios' });
+    links.push({ 
+      href: '/reports', 
+      label: 'Relatórios',
+      icon: <FaChartBar />
+    });
     
     // Adicionar link para visualização da documentação para todos os usuários
-    links.push({ href: '/docs/view', label: 'Documentação' });
+    links.push({ 
+      href: '/docs/view', 
+      label: 'Documentação',
+      icon: <FaFileAlt />
+    });
     
     return links;
   };
@@ -125,7 +161,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <Flex alignItems={'center'}>
               <HStack spacing={4} mr={4} display={{ base: 'none', md: 'flex' }}>
                 {getNavLinks().map((link) => (
-                  <NavLink key={link.href} href={link.href}>
+                  <NavLink key={link.href} href={link.href} icon={link.icon}>
                     {link.label}
                   </NavLink>
                 ))}
@@ -190,7 +226,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <Box pb={4} display={{ md: 'none' }}>
               <Stack as={'nav'} spacing={4}>
                 {getNavLinks().map((link) => (
-                  <NavLink key={link.href} href={link.href}>
+                  <NavLink key={link.href} href={link.href} icon={link.icon}>
                     {link.label}
                   </NavLink>
                 ))}
