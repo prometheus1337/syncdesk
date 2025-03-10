@@ -80,7 +80,7 @@ export function ImageGenerator() {
             num_inference_steps: 28
           }
         }
-      );
+      ) as string[];
 
       console.log('Imagem gerada:', output[0]);
     } catch (error) {
