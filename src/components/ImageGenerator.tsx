@@ -82,7 +82,8 @@ export function ImageGenerator() {
     setIsGenerating(true);
 
     try {
-      // Chamar a função serverless do Supabase
+      console.log('Iniciando geração de imagem...');
+      
       const { data: result, error } = await supabase.functions.invoke('generate-image', {
         body: {
           prompt,
@@ -90,10 +91,20 @@ export function ImageGenerator() {
         },
       });
 
-      if (error) throw error;
-      if (!result.output) throw new Error('Falha na geração da imagem');
+      console.log('Resposta da função:', { result, error });
 
-      // Salvar a imagem gerada no Supabase
+      if (error) {
+        console.error('Erro detalhado da função:', error);
+        throw error;
+      }
+
+      if (!result?.output) {
+        console.error('Resposta sem output:', result);
+        throw new Error('Falha na geração da imagem: resposta inválida');
+      }
+
+      console.log('Salvando imagem no banco...');
+
       const { data: imageData, error: imageError } = await supabase
         .from('generated_images')
         .insert({
@@ -104,7 +115,12 @@ export function ImageGenerator() {
         .select()
         .single();
 
-      if (imageError) throw imageError;
+      if (imageError) {
+        console.error('Erro ao salvar imagem:', imageError);
+        throw imageError;
+      }
+
+      console.log('Imagem salva com sucesso:', imageData);
 
       setGeneratedImages([imageData, ...generatedImages]);
 
@@ -116,7 +132,7 @@ export function ImageGenerator() {
         isClosable: true,
       });
     } catch (error: any) {
-      console.error('Erro detalhado:', error);
+      console.error('Erro completo:', error);
       toast({
         title: 'Erro ao gerar imagem',
         description: error.message || 'Ocorreu um erro ao gerar a imagem. Por favor, tente novamente.',

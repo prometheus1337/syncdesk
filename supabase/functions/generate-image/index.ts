@@ -1,4 +1,4 @@
-import { serve } from 'https://deno.fresh.runtime.dev';
+import { serve } from "http/server.ts";
 
 interface RequestBody {
   prompt: string;
