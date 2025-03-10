@@ -70,12 +70,25 @@ const theme = extendTheme({
     },
     Table: {
       baseStyle: (props: ThemeComponentProps) => ({
+        table: {
+          bg: props.colorMode === 'dark' ? 'gray.700' : 'white',
+          color: props.colorMode === 'dark' ? 'white' : 'gray.800',
+        },
         th: {
+          bg: props.colorMode === 'dark' ? 'gray.800' : 'gray.50',
           borderColor: props.colorMode === 'dark' ? 'gray.600' : 'gray.200',
           color: props.colorMode === 'dark' ? 'gray.200' : 'gray.600',
         },
         td: {
           borderColor: props.colorMode === 'dark' ? 'gray.600' : 'gray.200',
+        },
+        tr: {
+          _hover: {
+            bg: props.colorMode === 'dark' ? 'gray.600' : 'gray.50',
+          },
+        },
+        caption: {
+          color: props.colorMode === 'dark' ? 'gray.400' : 'gray.600',
         },
       }),
     },
