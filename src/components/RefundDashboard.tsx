@@ -1,48 +1,50 @@
 import { useEffect, useState } from 'react';
 import {
-  Box,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Badge,
-  useDisclosure,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
-  Text,
-  useToast,
-  Switch,
-  Flex,
-  Input,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
+  Box,
   Button,
-  Image,
-  useColorModeValue,
-  Stack,
+  Card,
+  CardBody,
+  CardHeader,
+  Divider,
+  Flex,
   FormControl,
   FormLabel,
-  Tooltip,
-  TableContainer,
-  InputGroup,
-  InputLeftElement,
-  IconButton,
-  useBoolean,
-  Heading,
   Grid,
   GridItem,
+  Heading,
+  IconButton,
+  Image,
+  Input,
+  InputGroup,
+  InputLeftElement,
   Link,
-  Divider,
-  Textarea,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
   ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  Stack,
+  Switch,
+  Table,
+  TableContainer,
+  Tbody,
+  Td,
+  Text,
+  Textarea,
+  Th,
+  Thead,
+  Tooltip,
+  Tr,
+  useBoolean,
+  useDisclosure,
+  useToast,
 } from '@chakra-ui/react';
 import { SearchIcon, RepeatIcon, ChevronDownIcon, ExternalLinkIcon, EditIcon, CheckIcon, CloseIcon } from '@chakra-ui/icons';
 import { supabase } from '../lib/supabase';
@@ -100,13 +102,6 @@ export function RefundDashboard() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
   const { appUser } = useAuth();
-  const bgColor = useColorModeValue('white', 'gray.700');
-  const textColor = useColorModeValue('gray.800', 'white');
-  const mutedTextColor = useColorModeValue('gray.500', 'gray.400');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
-  const hoverBgColor = useColorModeValue('gray.50', 'gray.600');
-  const menuBgColor = useColorModeValue('white', 'gray.700');
-  const menuBorderColor = useColorModeValue('gray.200', 'gray.600');
 
   useEffect(() => {
     fetchRefunds();
@@ -315,21 +310,25 @@ export function RefundDashboard() {
 
   if (!appUser || (appUser.role !== 'admin' && appUser.role !== 'support')) {
     return (
-      <Box p={6}>
-        <Text>Acesso negado. Apenas administradores e suporte podem acessar esta página.</Text>
-      </Box>
+      <Card>
+        <CardBody>
+          <Text>Acesso negado. Apenas administradores e suporte podem acessar esta página.</Text>
+        </CardBody>
+      </Card>
     );
   }
 
   return (
-    <Box p={6}>
-      <Box bg={bgColor} borderRadius="lg" boxShadow="sm" overflow="hidden" borderWidth="1px" borderColor={borderColor}>
-        <Box p={6}>
-          <Text fontSize="xl" fontWeight="semibold" mb={4} color={textColor}>
-            Gerencie os reembolsos e chargebacks
-          </Text>
-
-          <Flex gap={4} mb={6} flexWrap="wrap">
+    <Card width="100%" maxW="1600px" mx="auto" variant="outline">
+      <CardHeader>
+        <Stack spacing={4}>
+          <Box>
+            <Heading size="md">Reembolsos</Heading>
+            <Text color="gray.500" mt={1}>
+              Gerencie os reembolsos e chargebacks
+            </Text>
+          </Box>
+          <Flex gap={4} wrap="wrap">
             <InputGroup flex="1" minW="300px">
               <InputLeftElement pointerEvents="none">
                 <SearchIcon color="gray.300" />
@@ -345,45 +344,117 @@ export function RefundDashboard() {
             
             <Box width="200px" position="relative">
               <Menu autoSelect={false} closeOnSelect={true}>
-                <MenuButton
-                  as={Button}
+                <MenuButton 
+                  as={Button} 
                   width="100%"
                   textAlign="left"
                   variant="outline"
                   size="md"
-                  borderColor={borderColor}
-                  color={textColor}
-                  bg={menuBgColor}
-                  _hover={{ borderColor: menuBorderColor }}
-                  _focus={{ outline: "none", boxShadow: "none" }}
+                  borderColor="gray.400"
+                  color="black"
+                  _hover={{ borderColor: "gray.500", outline: "none", boxShadow: "none" }}
+                  _focus={{ outline: "none", boxShadow: "none", border: "1px solid", borderColor: "gray.400" }}
+                  _active={{ outline: "none", boxShadow: "none", border: "1px solid", borderColor: "gray.400" }}
+                  paddingRight="30px"
+                  paddingLeft="10px"
+                  height="40px"
+                  style={{ outline: "none" }}
+                  css={`
+                    &:hover, &:focus, &:active {
+                      outline: none !important;
+                      box-shadow: none !important;
+                    }
+                  `}
+                  tabIndex={-1}
                 >
-                  <Text isTruncated>
+                  <Text isTruncated width="100%" color="black">
                     {filter.type ? (filter.type === 'refund' ? 'Reembolso' : 'Chargeback') : 'Todos os tipos'}
                   </Text>
                 </MenuButton>
-                <MenuList
-                  bg={menuBgColor}
-                  borderColor={menuBorderColor}
-                  boxShadow="lg"
+                <Box 
+                  position="absolute" 
+                  right="8px" 
+                  top="50%" 
+                  transform="translateY(-50%)" 
+                  pointerEvents="none"
+                  zIndex={2}
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  width="20px"
+                  height="20px"
+                  bg="white"
                 >
-                  <MenuItem
+                  <ChevronDownIcon color="black" />
+                </Box>
+                <MenuList 
+                  zIndex={3}
+                  borderRadius="md"
+                  boxShadow="0px 4px 12px rgba(0, 0, 0, 0.15)"
+                  _focus={{ outline: "none", boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.15)" }}
+                  style={{ outline: "none" }}
+                  className="no-outline"
+                  css={`
+                    &:hover, &:focus, &:active {
+                      outline: none !important;
+                      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15) !important;
+                    }
+                    
+                    button {
+                      outline: none !important;
+                      box-shadow: none !important;
+                    }
+                    
+                    button:hover, button:focus, button:active {
+                      outline: none !important;
+                      box-shadow: none !important;
+                    }
+                  `}
+                  sx={{
+                    "& button:focus": { outline: "none", boxShadow: "none" },
+                    "& button": { 
+                      bg: "white", 
+                      color: "black",
+                      _hover: { bg: "gray.50", outline: "none", boxShadow: "none" },
+                      _focus: { outline: "none", boxShadow: "none" },
+                      _active: { outline: "none", boxShadow: "none" },
+                      style: { outline: "none" }
+                    }
+                  }}
+                >
+                  <MenuItem 
                     onClick={() => setFilter({ ...filter, type: '' })}
-                    _hover={{ bg: hoverBgColor }}
-                    color={textColor}
+                    _focus={{ bg: "gray.50", outline: "none", boxShadow: "none" }}
+                    _active={{ bg: "gray.50", outline: "none", boxShadow: "none" }}
+                    _hover={{ bg: "gray.50", outline: "none", boxShadow: "none" }}
+                    style={{ outline: "none" }}
+                    tabIndex={-1}
+                    className="no-outline"
+                    role="menuitem"
                   >
                     Todos os tipos
                   </MenuItem>
-                  <MenuItem
+                  <MenuItem 
                     onClick={() => setFilter({ ...filter, type: 'refund' })}
-                    _hover={{ bg: hoverBgColor }}
-                    color={textColor}
+                    _focus={{ bg: "gray.50", outline: "none", boxShadow: "none" }}
+                    _active={{ bg: "gray.50", outline: "none", boxShadow: "none" }}
+                    _hover={{ bg: "gray.50", outline: "none", boxShadow: "none" }}
+                    style={{ outline: "none" }}
+                    tabIndex={-1}
+                    className="no-outline"
+                    role="menuitem"
                   >
                     Reembolso
                   </MenuItem>
-                  <MenuItem
+                  <MenuItem 
                     onClick={() => setFilter({ ...filter, type: 'chargeback' })}
-                    _hover={{ bg: hoverBgColor }}
-                    color={textColor}
+                    _focus={{ bg: "gray.50", outline: "none", boxShadow: "none" }}
+                    _active={{ bg: "gray.50", outline: "none", boxShadow: "none" }}
+                    _hover={{ bg: "gray.50", outline: "none", boxShadow: "none" }}
+                    style={{ outline: "none" }}
+                    tabIndex={-1}
+                    className="no-outline"
+                    role="menuitem"
                   >
                     Chargeback
                   </MenuItem>
@@ -1001,143 +1072,149 @@ export function RefundDashboard() {
               />
             </Tooltip>
           </Flex>
-        </Box>
-      </Box>
-
-      <TableContainer overflowX="auto" maxW="100%">
-        <Table variant="simple" size="sm" width="100%">
-          <Thead>
-            <Tr>
-              <Th color={mutedTextColor}>DATA DE CRIAÇÃO</Th>
-              <Th color={mutedTextColor}>CLIENTE</Th>
-              <Th color={mutedTextColor}>EMAIL</Th>
-              <Th color={mutedTextColor}>VALOR</Th>
-              <Th color={mutedTextColor}>TIPO</Th>
-              <Th color={mutedTextColor}>STATUS</Th>
-              <Th color={mutedTextColor}>PLATAFORMA</Th>
-              <Th color={mutedTextColor}>ACESSO REVOGADO</Th>
-              <Th color={mutedTextColor}>CONCLUÍDO</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {refunds.map((refund) => (
-              <Tr 
-                key={refund.id}
-                bg={refund.concluido ? useColorModeValue('green.50', 'green.900') : 'transparent'}
-                _hover={{ bg: hoverBgColor, cursor: "pointer" }}
-                onClick={() => handleRowClick(refund)}
-              >
-                <Td color={textColor}>{formatDate(refund.created_at)}</Td>
-                <Td color={textColor}>{refund.customer_name}</Td>
-                <Td color={textColor}>{refund.customer_email}</Td>
-                <Td color={textColor}>{formatCurrency(refund.amount)}</Td>
-                <Td>
-                  <Badge
-                    colorScheme={refund.type === 'refund' ? 'green' : 'red'}
-                    rounded="full"
-                    px={2}
-                  >
-                    {refund.type === 'refund' ? 'Reembolso' : 'Chargeback'}
-                  </Badge>
-                </Td>
-                <Td>
-                  <Badge
-                    colorScheme={refund.concluido ? 'green' : 'yellow'}
-                    rounded="full"
-                    px={2}
-                  >
-                    {refund.concluido ? 'Concluído' : 'Pendente'}
-                  </Badge>
-                </Td>
-                <Td>
-                  <Tooltip label={refund.platform || 'Indefinido'}>
-                    <Box 
-                      p={1} 
-                      borderRadius="md" 
-                      bg="white" 
-                      border="1px solid"
-                      borderColor="gray.200"
-                      display="flex" 
-                      alignItems="center" 
-                      justifyContent="center"
-                      width="40px"
-                      height="40px"
-                      overflow="hidden"
-                    >
-                      {refund.platform ? (
-                        <Image 
-                          src={
-                            refund.platform === 'Hubla' 
-                              ? hublaLogo 
-                              : refund.platform === 'Hotmart' 
-                              ? hotmartLogo 
-                              : kiwifyLogo
-                          } 
-                          alt={refund.platform} 
-                          boxSize="24px"
-                          objectFit="contain"
-                          bg="transparent"
-                          mixBlendMode="multiply"
-                        />
-                      ) : (
-                        <Text fontSize="xs" fontWeight="medium" color="gray.500">
-                          Indefinido
-                        </Text>
-                      )}
-                    </Box>
-                  </Tooltip>
-                </Td>
-                <Td>
-                  <FormControl display="flex" alignItems="center" onClick={(e) => e.stopPropagation()}>
-                    <Switch
-                      id={`access-revoked-${refund.id}`}
-                      isChecked={refund.access_revoked}
-                      onChange={(e) => handleAccessRevokedChange(refund.id, e.target.checked)}
-                      colorScheme="red"
-                      size="sm"
-                    />
-                    <FormLabel htmlFor={`access-revoked-${refund.id}`} mb="0" ml="2" fontSize="sm">
-                      {refund.access_revoked ? 'Sim' : 'Não'}
-                    </FormLabel>
-                  </FormControl>
-                </Td>
-                <Td>
-                  <FormControl display="flex" alignItems="center" onClick={(e) => e.stopPropagation()}>
-                    <Switch
-                      id={`concluido-${refund.id}`}
-                      isChecked={refund.concluido}
-                      onChange={(e) => handleConcluidoChange(refund.id, e.target.checked)}
-                      colorScheme="green"
-                      size="sm"
-                    />
-                    <FormLabel htmlFor={`concluido-${refund.id}`} mb="0" ml="2" fontSize="sm">
-                      {refund.concluido ? 'Sim' : 'Não'}
-                    </FormLabel>
-                  </FormControl>
-                </Td>
-              </Tr>
-            ))}
-            {refunds.length === 0 && (
+        </Stack>
+      </CardHeader>
+      <CardBody>
+        <TableContainer overflowX="auto" maxW="100%">
+          <Table variant="simple" size="sm" width="100%">
+            <Thead>
               <Tr>
-                <Td colSpan={8} textAlign="center" py={8}>
-                  <Text color="gray.500">
-                    Nenhum reembolso encontrado
-                  </Text>
-                </Td>
+                <Th>Data de Criação</Th>
+                <Th>Cliente</Th>
+                <Th>Email</Th>
+                <Th>Valor</Th>
+                <Th>Tipo</Th>
+                <Th>Status</Th>
+                <Th>Plataforma</Th>
+                <Th>Acesso Revogado</Th>
+                <Th>Concluído</Th>
+                <Th>Data Conclusão</Th>
               </Tr>
-            )}
-          </Tbody>
-        </Table>
-      </TableContainer>
+            </Thead>
+            <Tbody>
+              {refunds.map((refund) => (
+                <Tr 
+                  key={refund.id}
+                  bg={refund.concluido ? "green.50" : "transparent"}
+                  _hover={{ bg: "gray.50", cursor: "pointer" }}
+                  onClick={() => handleRowClick(refund)}
+                >
+                  <Td py={2}>{formatDate(refund.created_at)}</Td>
+                  <Td py={2}>{refund.customer_name}</Td>
+                  <Td py={2}>{refund.customer_email}</Td>
+                  <Td py={2}>{formatCurrency(refund.amount)}</Td>
+                  <Td py={2}>
+                    <Badge
+                      colorScheme={refund.type === 'refund' ? 'green' : 'red'}
+                      rounded="full"
+                      px={2}
+                    >
+                      {refund.type === 'refund' ? 'Reembolso' : 'Chargeback'}
+                    </Badge>
+                  </Td>
+                  <Td py={2}>
+                    <Badge
+                      colorScheme={refund.concluido ? 'green' : 'yellow'}
+                      rounded="full"
+                      px={2}
+                    >
+                      {refund.concluido ? 'Concluído' : 'Pendente'}
+                    </Badge>
+                  </Td>
+                  <Td py={2}>
+                    <Tooltip label={refund.platform || 'Indefinido'}>
+                      <Box 
+                        p={1} 
+                        borderRadius="md" 
+                        bg="white" 
+                        border="1px solid"
+                        borderColor="gray.200"
+                        display="flex" 
+                        alignItems="center" 
+                        justifyContent="center"
+                        width="40px"
+                        height="40px"
+                        overflow="hidden"
+                      >
+                        {refund.platform ? (
+                          <Image 
+                            src={
+                              refund.platform === 'Hubla' 
+                                ? hublaLogo 
+                                : refund.platform === 'Hotmart' 
+                                ? hotmartLogo 
+                                : kiwifyLogo
+                            } 
+                            alt={refund.platform} 
+                            boxSize="24px"
+                            objectFit="contain"
+                            bg="transparent"
+                            mixBlendMode="multiply"
+                          />
+                        ) : (
+                          <Text fontSize="xs" fontWeight="medium" color="gray.500">
+                            Indefinido
+                          </Text>
+                        )}
+                      </Box>
+                    </Tooltip>
+                  </Td>
+                  <Td py={2}>
+                    <FormControl display="flex" alignItems="center" onClick={(e) => e.stopPropagation()}>
+                      <Switch
+                        id={`access-revoked-${refund.id}`}
+                        isChecked={refund.access_revoked}
+                        onChange={(e) => handleAccessRevokedChange(refund.id, e.target.checked)}
+                        colorScheme="red"
+                        size="sm"
+                      />
+                      <FormLabel htmlFor={`access-revoked-${refund.id}`} mb="0" ml="2" fontSize="sm">
+                        {refund.access_revoked ? 'Sim' : 'Não'}
+                      </FormLabel>
+                    </FormControl>
+                  </Td>
+                  <Td py={2}>
+                    <FormControl display="flex" alignItems="center" onClick={(e) => e.stopPropagation()}>
+                      <Switch
+                        id={`concluido-${refund.id}`}
+                        isChecked={refund.concluido}
+                        onChange={(e) => handleConcluidoChange(refund.id, e.target.checked)}
+                        colorScheme="green"
+                        size="sm"
+                      />
+                      <FormLabel htmlFor={`concluido-${refund.id}`} mb="0" ml="2" fontSize="sm">
+                        {refund.concluido ? 'Sim' : 'Não'}
+                      </FormLabel>
+                    </FormControl>
+                  </Td>
+                  <Td py={2}>{formatDate(refund.close_date)}</Td>
+                </Tr>
+              ))}
+              {refunds.length === 0 && (
+                <Tr>
+                  <Td colSpan={8} textAlign="center" py={8}>
+                    <Text color="gray.500">
+                      Nenhum reembolso encontrado
+                    </Text>
+                  </Td>
+                </Tr>
+              )}
+            </Tbody>
+          </Table>
+        </TableContainer>
+      </CardBody>
 
+      {/* Modal de detalhes do reembolso */}
       <Modal isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
-        <ModalContent bg={bgColor}>
-          <ModalHeader color={textColor}>
+        <ModalContent>
+          <ModalHeader>
             Detalhes do Reembolso
             <Badge
               ml={2}
-              colorScheme={selectedRefund?.type === 'refund' ? 'green' : 'red'}
+              colorScheme={
+                selectedRefund?.type === 'refund' ? 'green' : 'red'
+              }
               rounded="full"
               px={2}
             >
@@ -1152,8 +1229,8 @@ export function RefundDashboard() {
               {selectedRefund?.concluido ? 'Concluído' : 'Pendente'}
             </Badge>
           </ModalHeader>
-          <ModalCloseButton color={textColor} />
-          <ModalBody pb={6}>
+          <ModalCloseButton />
+          <ModalBody>
             {selectedRefund && (
               <Stack spacing={4}>
                 <Heading size="md" mb={2}>Informações do Cliente</Heading>
@@ -1440,6 +1517,6 @@ export function RefundDashboard() {
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </Box>
+    </Card>
   );
 } 

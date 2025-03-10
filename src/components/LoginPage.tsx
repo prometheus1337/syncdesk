@@ -13,7 +13,6 @@ import {
   Card,
   CardBody,
   Spinner,
-  useColorModeValue,
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -26,12 +25,6 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const { appUser, loading: authLoading } = useAuth();
-
-  const bgColor = useColorModeValue('white', 'gray.700');
-  const textColor = useColorModeValue('gray.800', 'white');
-  const mutedTextColor = useColorModeValue('gray.500', 'gray.400');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
-  const pageBgColor = useColorModeValue('gray.50', 'gray.800');
 
   if (authLoading) {
     return (
@@ -78,10 +71,10 @@ export default function LoginPage() {
       display="flex"
       alignItems="center"
       justifyContent="center"
-      bg={pageBgColor}
+      bg="gray.50"
     >
       <Container maxW="md">
-        <Card variant="outline" bg={bgColor}>
+        <Card variant="outline">
           <CardBody>
             <VStack spacing={6} align="stretch">
               <Box textAlign="center">
@@ -92,10 +85,10 @@ export default function LoginPage() {
                   mb={4}
                   width="100px"
                 />
-                <Text fontSize="2xl" fontWeight="bold" mb={1} color={textColor}>
+                <Text fontSize="2xl" fontWeight="bold" mb={1}>
                   Bem-vindo ao Syncdesk
                 </Text>
-                <Text color={mutedTextColor}>
+                <Text color="gray.500">
                   Faça login para continuar
                 </Text>
               </Box>
@@ -103,31 +96,29 @@ export default function LoginPage() {
               <form onSubmit={handleSubmit}>
                 <VStack spacing={4}>
                   <FormControl isRequired>
-                    <FormLabel color={textColor}>Email</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <Input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Digite seu email"
-                      bg={bgColor}
-                      color={textColor}
-                      borderColor={borderColor}
-                      _hover={{ borderColor: useColorModeValue('gray.300', 'gray.500') }}
+                      bg="white"
+                      borderColor="gray.200"
+                      _hover={{ borderColor: "gray.300" }}
                       _focus={{ borderColor: "blue.500", boxShadow: "none" }}
                     />
                   </FormControl>
 
                   <FormControl isRequired>
-                    <FormLabel color={textColor}>Senha</FormLabel>
+                    <FormLabel>Senha</FormLabel>
                     <Input
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Digite sua senha"
-                      bg={bgColor}
-                      color={textColor}
-                      borderColor={borderColor}
-                      _hover={{ borderColor: useColorModeValue('gray.300', 'gray.500') }}
+                      bg="white"
+                      borderColor="gray.200"
+                      _hover={{ borderColor: "gray.300" }}
                       _focus={{ borderColor: "blue.500", boxShadow: "none" }}
                     />
                   </FormControl>

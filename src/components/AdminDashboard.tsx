@@ -28,7 +28,6 @@ import {
   Flex,
   Spacer,
   ModalFooter,
-  useColorModeValue,
 } from '@chakra-ui/react';
 import { DeleteIcon, EditIcon, AddIcon } from '@chakra-ui/icons';
 import { supabase } from '../lib/supabase';
@@ -52,11 +51,6 @@ export function AdminDashboard() {
   const toast = useToast();
   const { appUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const bgColor = useColorModeValue('white', 'gray.700');
-  const textColor = useColorModeValue('gray.800', 'white');
-  const mutedTextColor = useColorModeValue('gray.500', 'gray.400');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
-  const hoverBgColor = useColorModeValue('gray.50', 'gray.600');
 
   useEffect(() => {
     fetchUsers();
@@ -123,19 +117,19 @@ export function AdminDashboard() {
   }
 
   return (
-    <Box minH="100vh" bg={useColorModeValue('gray.50', 'gray.800')} p={6}>
+    <Box minH="100vh" bg="gray.50" p={6}>
       <Box maxW="1200px" mx="auto">
         <Box mb="8">
           <Heading
             as="h1"
             fontSize="24px"
             fontWeight="500"
-            color={textColor}
+            color="gray.700"
             mb="2"
           >
             Gerenciamento de Usuários
           </Heading>
-          <Text color={mutedTextColor}>
+          <Text color="gray.500">
             Gerencie os usuários do sistema e suas permissões
           </Text>
         </Box>
@@ -156,23 +150,23 @@ export function AdminDashboard() {
           </Button>
         </Flex>
 
-        <Box bg={bgColor} borderRadius="md" boxShadow="sm" overflow="hidden" borderWidth="1px" borderColor={borderColor}>
+        <Box bg="white" borderRadius="md" boxShadow="sm" overflow="hidden">
           <TableContainer>
             <Table variant="simple">
-              <Thead bg={useColorModeValue('gray.50', 'gray.800')}>
+              <Thead bg="gray.50">
                 <Tr>
-                  <Th color={mutedTextColor}>NOME</Th>
-                  <Th color={mutedTextColor}>EMAIL</Th>
-                  <Th color={mutedTextColor}>FUNÇÃO</Th>
-                  <Th color={mutedTextColor}>CRIADO EM</Th>
-                  <Th color={mutedTextColor}>AÇÕES</Th>
+                  <Th color="gray.600">NOME</Th>
+                  <Th color="gray.600">EMAIL</Th>
+                  <Th color="gray.600">FUNÇÃO</Th>
+                  <Th color="gray.600">CRIADO EM</Th>
+                  <Th color="gray.600">AÇÕES</Th>
                 </Tr>
               </Thead>
               <Tbody>
                 {users.map((user) => (
-                  <Tr key={user.id} _hover={{ bg: hoverBgColor }}>
-                    <Td color={textColor}>{user.full_name}</Td>
-                    <Td color={textColor}>{user.email}</Td>
+                  <Tr key={user.id}>
+                    <Td>{user.full_name}</Td>
+                    <Td>{user.email}</Td>
                     <Td>
                       <Badge
                         colorScheme={getRoleBadgeColor(user.role)}
@@ -184,19 +178,18 @@ export function AdminDashboard() {
                         {translateRole(user.role)}
                       </Badge>
                     </Td>
-                    <Td color={textColor}>{new Date(user.created_at).toLocaleDateString()}</Td>
+                    <Td>{new Date(user.created_at).toLocaleDateString()}</Td>
                     <Td>
                       <IconButton
                         aria-label="Editar usuário"
-                        icon={<EditIcon />}
+                        icon={<EditIcon color="black" />}
                         size="sm"
                         mr="2"
                         onClick={() => { setSelectedUser(user); onOpen(); }}
                         isLoading={isLoading}
-                        bg={bgColor}
-                        color={textColor}
-                        borderColor={borderColor}
-                        _hover={{ bg: hoverBgColor }}
+                        bg="white"
+                        borderColor="gray.200"
+                        _hover={{ bg: "gray.50" }}
                       />
                       <IconButton
                         aria-label="Excluir usuário"
@@ -216,23 +209,22 @@ export function AdminDashboard() {
 
         <Modal isOpen={isOpen} onClose={onClose}>
           <ModalOverlay />
-          <ModalContent bg={bgColor}>
-            <ModalHeader color={textColor}>
+          <ModalContent>
+            <ModalHeader>
               {selectedUser ? 'Editar Usuário' : 'Novo Usuário'}
             </ModalHeader>
-            <ModalCloseButton color={textColor} />
+            <ModalCloseButton />
             <ModalBody pb="6">
               <form onSubmit={selectedUser ? handleUpdateUser : handleCreateUser}>
                 <FormControl mb="4" isRequired>
-                  <FormLabel color={textColor}>Nome Completo</FormLabel>
+                  <FormLabel>Nome Completo</FormLabel>
                   <Input
                     name="full_name"
                     defaultValue={selectedUser?.full_name}
                     placeholder="Digite o nome completo"
-                    bg={bgColor}
-                    color={textColor}
-                    borderColor={borderColor}
-                    _hover={{ borderColor: useColorModeValue('gray.300', 'gray.500') }}
+                    bg="white"
+                    borderColor="gray.200"
+                    _hover={{ borderColor: "gray.300" }}
                     _focus={{ borderColor: "blue.500", boxShadow: "none" }}
                   />
                 </FormControl>
@@ -240,29 +232,27 @@ export function AdminDashboard() {
                 {!selectedUser && (
                   <>
                     <FormControl mb="4" isRequired>
-                      <FormLabel color={textColor}>Email</FormLabel>
+                      <FormLabel>Email</FormLabel>
                       <Input
                         name="email"
                         type="email"
                         placeholder="Digite o email"
-                        bg={bgColor}
-                        color={textColor}
-                        borderColor={borderColor}
-                        _hover={{ borderColor: useColorModeValue('gray.300', 'gray.500') }}
+                        bg="white"
+                        borderColor="gray.200"
+                        _hover={{ borderColor: "gray.300" }}
                         _focus={{ borderColor: "blue.500", boxShadow: "none" }}
                       />
                     </FormControl>
 
                     <FormControl mb="4" isRequired>
-                      <FormLabel color={textColor}>Senha</FormLabel>
+                      <FormLabel>Senha</FormLabel>
                       <Input
                         name="password"
                         type="password"
                         placeholder="Digite a senha"
-                        bg={bgColor}
-                        color={textColor}
-                        borderColor={borderColor}
-                        _hover={{ borderColor: useColorModeValue('gray.300', 'gray.500') }}
+                        bg="white"
+                        borderColor="gray.200"
+                        _hover={{ borderColor: "gray.300" }}
                         _focus={{ borderColor: "blue.500", boxShadow: "none" }}
                       />
                     </FormControl>
@@ -270,14 +260,13 @@ export function AdminDashboard() {
                 )}
 
                 <FormControl mb="6" isRequired>
-                  <FormLabel color={textColor}>Função</FormLabel>
+                  <FormLabel>Função</FormLabel>
                   <Select
                     name="role"
                     defaultValue={selectedUser?.role || 'commercial'}
-                    bg={bgColor}
-                    color={textColor}
-                    borderColor={borderColor}
-                    _hover={{ borderColor: useColorModeValue('gray.300', 'gray.500') }}
+                    bg="white"
+                    borderColor="gray.200"
+                    _hover={{ borderColor: "gray.300" }}
                     _focus={{ borderColor: "blue.500", boxShadow: "none" }}
                   >
                     <option value="admin">Administrador</option>
@@ -313,24 +302,20 @@ export function AdminDashboard() {
           </ModalContent>
         </Modal>
 
+        {/* Modal de senha do admin */}
         <Modal isOpen={isPasswordModalOpen} onClose={() => setIsPasswordModalOpen(false)}>
           <ModalOverlay />
-          <ModalContent bg={bgColor}>
-            <ModalHeader color={textColor}>Confirme sua senha</ModalHeader>
-            <ModalCloseButton color={textColor} />
+          <ModalContent>
+            <ModalHeader>Confirme sua senha</ModalHeader>
+            <ModalCloseButton />
             <ModalBody>
               <FormControl>
-                <FormLabel color={textColor}>Digite sua senha para continuar</FormLabel>
+                <FormLabel>Digite sua senha para continuar</FormLabel>
                 <Input
                   type="password"
                   value={adminPassword}
                   onChange={(e) => setAdminPassword(e.target.value)}
                   placeholder="Sua senha"
-                  bg={bgColor}
-                  color={textColor}
-                  borderColor={borderColor}
-                  _hover={{ borderColor: useColorModeValue('gray.300', 'gray.500') }}
-                  _focus={{ borderColor: "blue.500", boxShadow: "none" }}
                 />
               </FormControl>
             </ModalBody>
