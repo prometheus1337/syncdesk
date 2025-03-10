@@ -41,6 +41,7 @@ interface EssayStudent {
   name: string;
   email: string;
   phone: string;
+  created_at: string;
   total_credits: number;
   total_spent: number;
   last_purchase: string;
@@ -48,6 +49,7 @@ interface EssayStudent {
 
 interface CreditLog {
   id: string;
+  student_id: string;
   student_email: string;
   student_name?: string;
   credits_change: number;
@@ -107,56 +109,52 @@ export function EssayDashboard() {
     setIsLoading(true);
     
     try {
-      // Busca todos os logs de créditos
-      let query = supabase
-        .from('essay_credit_logs')
-        .select('*')
+      // Busca todos os alunos com seus logs
+      const { data: studentsData, error: studentsError } = await supabase
+        .from('essay_students')
+        .select(`
+          *,
+          essay_credit_logs (
+            credits_change,
+            operation_type,
+            created_at,
+            price_paid
+          )
+        `)
         .order('created_at', { ascending: false });
 
-      // Aplica filtros de data se existirem
-      if (filter.startDate) {
-        query = query.gte('created_at', filter.startDate);
-      }
-      if (filter.endDate) {
-        query = query.lte('created_at', filter.endDate);
-      }
+      if (studentsError) throw studentsError;
 
-      const { data: logsData, error: logsError } = await query;
+      // Processa os dados dos alunos
+      const processedStudents = studentsData.map(student => {
+        const logs = student.essay_credit_logs || [];
+        let total_credits = 0;
+        let total_spent = 0;
+        let last_purchase = student.created_at;
 
-      if (logsError) throw logsError;
+        logs.forEach((log: any) => {
+          // Calcula total de créditos
+          total_credits += log.operation_type === 'add' ? 
+            log.credits_change : -log.credits_change;
 
-      // Mapa para armazenar os dados dos alunos
-      const studentsMap = new Map<string, EssayStudent>();
-
-      // Processa todos os logs
-      logsData?.forEach(log => {
-        const student = studentsMap.get(log.student_email) || {
-          id: crypto.randomUUID(),
-          name: log.student_name || log.student_email,
-          email: log.student_email,
-          phone: '',
-          total_credits: 0,
-          total_spent: 0,
-          last_purchase: log.created_at,
-        };
-
-        // Atualiza os créditos baseado no tipo de operação
-        student.total_credits += log.operation_type === 'add' ? 
-          log.credits_change : -log.credits_change;
-
-        // Atualiza o total gasto se for uma compra (log com price_paid)
-        if (log.price_paid) {
-          student.total_spent += log.price_paid;
-          // Atualiza last_purchase apenas se for mais recente
-          if (new Date(log.created_at) > new Date(student.last_purchase)) {
-            student.last_purchase = log.created_at;
+          // Atualiza total gasto e última compra
+          if (log.price_paid) {
+            total_spent += log.price_paid;
+            if (new Date(log.created_at) > new Date(last_purchase)) {
+              last_purchase = log.created_at;
+            }
           }
-        }
-        
-        studentsMap.set(log.student_email, student);
+        });
+
+        return {
+          ...student,
+          total_credits,
+          total_spent,
+          last_purchase,
+        };
       });
 
-      setStudents(Array.from(studentsMap.values()));
+      setStudents(processedStudents);
     } catch (error: any) {
       toast({
         title: 'Erro ao buscar dados',
@@ -170,12 +168,12 @@ export function EssayDashboard() {
     }
   }
 
-  async function fetchStudentLogs(studentEmail: string) {
+  async function fetchStudentLogs(studentId: string) {
     setIsLoading(true);
     const { data, error } = await supabase
       .from('essay_credit_logs')
       .select('*')
-      .eq('student_email', studentEmail)
+      .eq('student_id', studentId)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -194,7 +192,7 @@ export function EssayDashboard() {
 
   function handleViewStudent(student: EssayStudent) {
     setSelectedStudent(student);
-    fetchStudentLogs(student.email);
+    fetchStudentLogs(student.id);
     onViewOpen();
   }
 
