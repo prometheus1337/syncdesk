@@ -22,30 +22,49 @@ serve(async (req) => {
 
   try {
     const { prompt, aspectRatio } = await req.json() as RequestBody;
+    console.log('Recebido:', { prompt, aspectRatio });
+
+    const token = Deno.env.get('REPLICATE_API_TOKEN');
+    if (!token) {
+      throw new Error('Token do Replicate não configurado');
+    }
+    console.log('Token encontrado');
 
     const response = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('REPLICATE_API_TOKEN')}`,
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: "stability-ai/sdxl",
-        version: "46bbd3d415fa5ec4d2f1a931a0e9c686da9131da6235b81be3d1bb4dca700290",
+        version: "39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
         input: {
           prompt,
-          aspect_ratio: aspectRatio
+          width: 1024,
+          height: 1024,
+          refine: "expert_ensemble_refiner",
+          scheduler: "K_EULER",
+          lora_scale: 0.6,
+          num_outputs: 1,
+          guidance_scale: 7.5,
+          apply_watermark: false,
+          high_noise_frac: 0.8,
+          negative_prompt: "",
+          prompt_strength: 0.8,
+          num_inference_steps: 25
         }
       }),
     });
 
+    console.log('Status da resposta:', response.status);
     if (!response.ok) {
       const error = await response.json();
       console.error('Erro Replicate:', error);
-      throw new Error(error.detail || 'Erro ao gerar imagem');
+      throw new Error(JSON.stringify(error) || 'Erro ao gerar imagem');
     }
 
     const prediction = await response.json();
+    console.log('Prediction inicial:', prediction);
     
     // Aguardar até a predição estar completa
     let result = prediction;
@@ -53,7 +72,7 @@ serve(async (req) => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${result.id}`, {
         headers: {
-          'Authorization': `Bearer ${Deno.env.get('REPLICATE_API_TOKEN')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
       
