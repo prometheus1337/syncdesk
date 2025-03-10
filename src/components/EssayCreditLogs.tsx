@@ -100,15 +100,15 @@ export function EssayCreditLogs() {
   async function fetchStudents() {
     setIsLoading(true);
     
-    // Primeiro, busca todas as compras
-    const { data: purchaseData, error: purchaseError } = await supabase
-      .from('essay_purchases')
-      .select('student_email, student_name, credits_amount');
+    // Primeiro, busca todos os alunos
+    const { data: studentsData, error: studentsError } = await supabase
+      .from('essay_students')
+      .select('*');
 
-    if (purchaseError) {
+    if (studentsError) {
       toast({
         title: 'Erro ao buscar alunos',
-        description: purchaseError.message,
+        description: studentsError.message,
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -117,48 +117,14 @@ export function EssayCreditLogs() {
       return;
     }
 
-    // Depois, busca todos os logs de créditos
-    const { data: logsData, error: logsError } = await supabase
-      .from('essay_credit_logs')
-      .select('student_email, credits_change, operation_type');
+    // Converte para o formato esperado
+    const formattedStudents = studentsData.map(student => ({
+      email: student.email,
+      name: student.name,
+      total_credits: student.total_credits
+    }));
 
-    if (logsError) {
-      toast({
-        title: 'Erro ao buscar logs',
-        description: logsError.message,
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-      setIsLoading(false);
-      return;
-    }
-
-    // Agrupa os dados por email do aluno
-    const studentMap = new Map<string, Student>();
-
-    // Processa as compras
-    purchaseData?.forEach(purchase => {
-      const student = studentMap.get(purchase.student_email) || {
-        email: purchase.student_email,
-        name: purchase.student_name,
-        total_credits: 0,
-      };
-      student.total_credits += purchase.credits_amount;
-      studentMap.set(purchase.student_email, student);
-    });
-
-    // Processa os logs
-    logsData?.forEach(log => {
-      const student = studentMap.get(log.student_email);
-      if (student) {
-        student.total_credits += log.operation_type === 'add' ? 
-          log.credits_change : -log.credits_change;
-        studentMap.set(log.student_email, student);
-      }
-    });
-
-    setStudents(Array.from(studentMap.values()));
+    setStudents(formattedStudents);
     setIsLoading(false);
   }
 
@@ -201,7 +167,7 @@ export function EssayCreditLogs() {
         credits_change: newLog.credits_change,
         operation_type: newLog.operation_type,
         motive: newLog.motive || null,
-        created_by: appUser?.id || '',
+        created_by: appUser?.email || 'API',
       }]);
 
     if (error) {
