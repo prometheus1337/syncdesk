@@ -5,8 +5,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://www.syncdesk.app',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 interface RequestBody {
@@ -56,8 +57,9 @@ serve(async (req) => {
     // Aguardar resultado
     let result = prediction;
     let attempts = 0;
-    const maxAttempts = 120; // 2 minutos
+    const maxAttempts = 40; // 40 verificações
     const startTime = Date.now();
+    const pollInterval = 3000; // 3 segundos entre verificações
 
     while (attempts < maxAttempts && result.status !== 'succeeded' && result.status !== 'failed') {
       const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
@@ -67,7 +69,7 @@ serve(async (req) => {
         console.log('Logs da predição:', result.logs);
       }
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, pollInterval));
 
       const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${result.id}`, {
         headers: {
