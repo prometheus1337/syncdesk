@@ -50,28 +50,48 @@ export function ImageGenerator() {
     setIsGenerating(true);
 
     try {
-      console.log('Iniciando requisição para gerar imagem...');
-      const response = await fetch('https://syncdesk.vercel.app/functions/v1/generate-image', {
+      // Criar a predição
+      const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
         method: 'POST',
+        mode: 'no-cors',
         headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
           'Content-Type': 'application/json',
+          'Prefer': 'wait'
         },
         body: JSON.stringify({
-          prompt,
-          aspectRatio,
+          version: "46bbd3d415fa5ec4d2f1a931a0e9c686da9131da6235b81be3d1bb4dca700290",
+          input: {
+            model: "dev",
+            prompt: prompt,
+            go_fast: false,
+            lora_scale: 1,
+            megapixels: "1",
+            num_outputs: 1,
+            aspect_ratio: aspectRatio,
+            output_format: "webp",
+            guidance_scale: 3,
+            output_quality: 80,
+            prompt_strength: 0.8,
+            extra_lora_scale: 1,
+            num_inference_steps: 28
+          }
         })
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Erro ao gerar imagem');
+      if (!createResponse.ok) {
+        const error = await createResponse.json();
+        throw new Error(error.detail || 'Erro ao gerar imagem');
       }
 
-      const result = await response.json();
-      console.log('Resultado:', result);
+      const result = await createResponse.json();
+
+      if (!result.output?.[0]) {
+        throw new Error('Resposta sem URL da imagem');
+      }
 
       const newImage: GeneratedImage = {
-        url: result.url,
+        url: result.output[0],
         prompt,
         createdAt: new Date(),
       };
