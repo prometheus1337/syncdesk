@@ -82,60 +82,16 @@ export function ImageGenerator() {
     setIsGenerating(true);
 
     try {
-      // Primeiro, criar a predição
-      const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
-          'Content-Type': 'application/json',
+      // Chamar a função serverless do Supabase
+      const { data: result, error } = await supabase.functions.invoke('generate-image', {
+        body: {
+          prompt,
+          aspect_ratio: aspectRatio,
         },
-        body: JSON.stringify({
-          version: "46bbd3d415fa5ec4d2f1a931a0e9c686da9131da6235b81be3d1bb4dca700290",
-          input: {
-            prompt,
-            model: "dev",
-            go_fast: false,
-            lora_scale: 1,
-            megapixels: "1",
-            num_outputs: 1,
-            aspect_ratio: aspectRatio,
-            output_format: "webp",
-            guidance_scale: 3,
-            output_quality: 80,
-            prompt_strength: 0.8,
-            extra_lora_scale: 1,
-            num_inference_steps: 28
-          }
-        })
       });
 
-      if (!createResponse.ok) {
-        const errorData = await createResponse.json();
-        throw new Error(`Erro na API do Replicate: ${errorData.detail || 'Erro desconhecido'}`);
-      }
-
-      const prediction = await createResponse.json();
-      
-      // Aguardar a conclusão da geração
-      let result = prediction;
-      while (result.status !== 'succeeded' && result.status !== 'failed') {
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Esperar 1 segundo
-        const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
-          },
-        });
-        
-        if (!pollResponse.ok) {
-          throw new Error('Erro ao verificar status da geração');
-        }
-        
-        result = await pollResponse.json();
-      }
-
-      if (result.status === 'failed') {
-        throw new Error(result.error || 'Falha na geração da imagem');
-      }
+      if (error) throw error;
+      if (!result.output) throw new Error('Falha na geração da imagem');
 
       // Salvar a imagem gerada no Supabase
       const { data: imageData, error: imageError } = await supabase
