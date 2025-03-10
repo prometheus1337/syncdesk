@@ -42,11 +42,17 @@ import { useAuth } from '../contexts/AuthContext';
 interface CreditLog {
   id: string;
   student_email: string;
+  student_name?: string;
   credits_change: number;
   operation_type: 'add' | 'remove';
   motive?: string;
   created_at: string;
   created_by: string;
+  price_paid?: number;
+  payment_method?: string;
+  payment_id?: string;
+  invoice_url?: string;
+  status?: string;
 }
 
 interface Student {
@@ -101,43 +107,29 @@ export function EssayCreditLogs() {
     setIsLoading(true);
     
     try {
-      // Busca todas as compras
-      const { data: purchaseData, error: purchaseError } = await supabase
-        .from('essay_purchases')
-        .select('student_email, student_name, credits_amount');
-
-      if (purchaseError) throw purchaseError;
-
       // Busca todos os logs de créditos
       const { data: logsData, error: logsError } = await supabase
         .from('essay_credit_logs')
-        .select('student_email, credits_change, operation_type');
+        .select('student_email, student_name, credits_change, operation_type');
 
       if (logsError) throw logsError;
 
       // Mapa para armazenar os dados dos alunos
       const studentMap = new Map<string, Student>();
 
-      // Processa as compras primeiro
-      purchaseData?.forEach(purchase => {
-        const student = studentMap.get(purchase.student_email) || {
-          email: purchase.student_email,
-          name: purchase.student_name,
+      // Processa todos os logs
+      logsData?.forEach(log => {
+        const student = studentMap.get(log.student_email) || {
+          email: log.student_email,
+          name: log.student_name || log.student_email,
           total_credits: 0,
         };
-        student.total_credits += purchase.credits_amount;
-        studentMap.set(purchase.student_email, student);
-      });
 
-      // Processa os logs depois
-      logsData?.forEach(log => {
-        const student = studentMap.get(log.student_email);
-        if (student) {
-          // Adiciona ou remove créditos baseado no tipo de operação
-          student.total_credits += log.operation_type === 'add' ? 
-            log.credits_change : -log.credits_change;
-          studentMap.set(log.student_email, student);
-        }
+        // Adiciona ou remove créditos baseado no tipo de operação
+        student.total_credits += log.operation_type === 'add' ? 
+          log.credits_change : -log.credits_change;
+        
+        studentMap.set(log.student_email, student);
       });
 
       setStudents(Array.from(studentMap.values()));
