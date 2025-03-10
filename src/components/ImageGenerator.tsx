@@ -15,6 +15,9 @@ import {
   CardBody,
 } from '@chakra-ui/react';
 
+// Token será injetado em tempo de build
+const REPLICATE_TOKEN = process.env.VITE_REPLICATE_API_TOKEN;
+
 export function ImageGenerator() {
   const [prompt, setPrompt] = useState('');
   const [aspectRatio, setAspectRatio] = useState('1:1');
@@ -35,6 +38,17 @@ export function ImageGenerator() {
       return;
     }
 
+    if (!REPLICATE_TOKEN) {
+      toast({
+        title: 'Erro',
+        description: 'Token da API não configurado',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     setIsLoading(true);
     setProgress(0);
     setImageUrl(null);
@@ -44,8 +58,9 @@ export function ImageGenerator() {
       const response = await fetch('https://api.replicate.com/v1/predictions', {
         method: 'POST',
         headers: {
-          'Authorization': `Token ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
+          'Authorization': `Bearer ${REPLICATE_TOKEN}`,
           'Content-Type': 'application/json',
+          'Prefer': 'wait',
         },
         body: JSON.stringify({
           version: "46bbd3d415fa5ec4d2f1a931a0e9c686da9131da6235b81be3d1bb4dca700290",
@@ -68,30 +83,12 @@ export function ImageGenerator() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
       }
 
-      const prediction = await response.json();
+      const result = await response.json();
       
-      // Aguardar a conclusão da geração
-      let result = prediction;
-      while (result.status !== 'succeeded' && result.status !== 'failed') {
-        setProgress((prev) => Math.min(prev + 10, 90));
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
-          headers: {
-            'Authorization': `Token ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
-          },
-        });
-        
-        if (!statusResponse.ok) {
-          throw new Error('Erro ao verificar status da geração');
-        }
-        
-        result = await statusResponse.json();
-      }
-
       if (result.status === 'succeeded') {
         setProgress(100);
         setImageUrl(result.output[0]);
