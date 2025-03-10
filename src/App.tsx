@@ -31,6 +31,11 @@ const theme = extendTheme({
       defaultProps: {
         colorScheme: 'blue',
       },
+      baseStyle: (props: ThemeComponentProps) => ({
+        _hover: {
+          bg: props.colorMode === 'dark' ? 'gray.600' : 'gray.100',
+        },
+      }),
     },
     Card: {
       baseStyle: {
@@ -40,6 +45,39 @@ const theme = extendTheme({
           bg: (props: ThemeComponentProps) => props.colorMode === 'dark' ? 'gray.700' : 'white',
         },
       },
+    },
+    Menu: {
+      baseStyle: (props: ThemeComponentProps) => ({
+        list: {
+          bg: props.colorMode === 'dark' ? 'gray.700' : 'white',
+          borderColor: props.colorMode === 'dark' ? 'gray.600' : 'gray.200',
+        },
+        item: {
+          bg: props.colorMode === 'dark' ? 'gray.700' : 'white',
+          _hover: {
+            bg: props.colorMode === 'dark' ? 'gray.600' : 'gray.100',
+          },
+          color: props.colorMode === 'dark' ? 'white' : 'gray.800',
+        },
+      }),
+    },
+    Modal: {
+      baseStyle: (props: ThemeComponentProps) => ({
+        dialog: {
+          bg: props.colorMode === 'dark' ? 'gray.700' : 'white',
+        },
+      }),
+    },
+    Table: {
+      baseStyle: (props: ThemeComponentProps) => ({
+        th: {
+          borderColor: props.colorMode === 'dark' ? 'gray.600' : 'gray.200',
+          color: props.colorMode === 'dark' ? 'gray.200' : 'gray.600',
+        },
+        td: {
+          borderColor: props.colorMode === 'dark' ? 'gray.600' : 'gray.200',
+        },
+      }),
     },
   },
 });
