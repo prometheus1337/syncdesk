@@ -15,7 +15,9 @@ import {
   Progress,
   useToast,
 } from '@chakra-ui/react';
-import { supabase } from '../lib/supabaseClient';
+
+const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
+const REPLICATE_API = 'https://api.replicate.com/v1/predictions';
 
 export function ImageGenerator() {
   const [prompt, setPrompt] = useState('');
@@ -34,7 +36,7 @@ export function ImageGenerator() {
             clearInterval(interval);
             return 100;
           }
-          return prev + (100/80); // Incrementa para completar em 8 segundos (80 * 100ms)
+          return prev + (100/80);
         });
       }, 100);
     }
@@ -59,33 +61,59 @@ export function ImageGenerator() {
     setProgress(0);
 
     try {
-      const { data, error } = await supabase.functions.invoke('generate-image', {
-        body: { prompt, aspectRatio }
+      // Cria a predição
+      const createResponse = await fetch(`${CORS_PROXY}${REPLICATE_API}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
+          'Content-Type': 'application/json',
+          'Origin': window.location.origin
+        },
+        body: JSON.stringify({
+          version: "prometheus1337/pvo-ai-md:46bbd3d415fa5ec4d2f1a931a0e9c686da9131da6235b81be3d1bb4dca700290",
+          input: {
+            prompt,
+            model: "dev",
+            go_fast: false,
+            lora_scale: 1,
+            megapixels: "1",
+            num_outputs: 1,
+            aspect_ratio: aspectRatio,
+            output_format: "webp",
+            guidance_scale: 3,
+            output_quality: 80,
+            prompt_strength: 0.8,
+            extra_lora_scale: 1,
+            num_inference_steps: 28
+          }
+        })
       });
 
-      if (error) throw error;
-
-      if (data.error) {
-        throw new Error(data.error);
+      if (!createResponse.ok) {
+        throw new Error(`HTTP error! status: ${createResponse.status}`);
       }
 
-      if (!data.output?.[0]) {
-        throw new Error('Nenhuma imagem foi gerada');
-      }
-
-      // Salva a imagem gerada no banco
-      const { error: insertError } = await supabase
-        .from('generated_images')
-        .insert([
-          {
-            prompt,
-            url: data.output[0],
-            aspect_ratio: aspectRatio,
+      const prediction = await createResponse.json();
+      
+      // Aguarda a conclusão da geração
+      let result = prediction;
+      while (result.status !== 'succeeded' && result.status !== 'failed') {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const statusResponse = await fetch(`${CORS_PROXY}${REPLICATE_API}/${prediction.id}`, {
+          headers: {
+            'Authorization': `Token ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
+            'Origin': window.location.origin
           }
-        ]);
+        });
+        result = await statusResponse.json();
+      }
 
-      if (insertError) {
-        console.error('Erro ao salvar imagem:', insertError);
+      if (result.status === 'failed') {
+        throw new Error('Falha ao gerar imagem');
+      }
+
+      if (!result.output?.[0]) {
+        throw new Error('Nenhuma imagem foi gerada');
       }
 
       toast({
