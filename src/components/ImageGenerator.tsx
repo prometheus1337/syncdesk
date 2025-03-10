@@ -14,9 +14,7 @@ import {
   Card,
   CardBody,
 } from '@chakra-ui/react';
-
-// Token será injetado em tempo de build
-const REPLICATE_TOKEN = import.meta.env.VITE_REPLICATE_API_TOKEN;
+import { supabase } from '../lib/supabase';
 
 export function ImageGenerator() {
   const [prompt, setPrompt] = useState('');
@@ -38,60 +36,34 @@ export function ImageGenerator() {
       return;
     }
 
-    if (!REPLICATE_TOKEN) {
-      toast({
-        title: 'Erro',
-        description: 'Token da API não configurado',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
     setIsLoading(true);
     setProgress(0);
     setImageUrl(null);
 
     try {
-      // Criar a predição
-      const response = await fetch('https://api.replicate.com/v1/predictions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${REPLICATE_TOKEN}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'wait',
-        },
-        body: JSON.stringify({
-          version: "46bbd3d415fa5ec4d2f1a931a0e9c686da9131da6235b81be3d1bb4dca700290",
-          input: {
-            prompt,
-            model: "dev",
-            go_fast: false,
-            lora_scale: 1,
-            megapixels: "1",
-            num_outputs: 1,
-            aspect_ratio: aspectRatio,
-            output_format: "webp",
-            guidance_scale: 3,
-            output_quality: 80,
-            prompt_strength: 0.8,
-            extra_lora_scale: 1,
-            num_inference_steps: 28
-          }
-        }),
+      // Chamar a função Edge do Supabase
+      const { data, error } = await supabase.functions.invoke('generate-image', {
+        body: { prompt, aspectRatio }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-      }
+      if (error) throw error;
 
-      const result = await response.json();
-      
-      if (result.status === 'succeeded') {
+      if (data.status === 'succeeded') {
         setProgress(100);
-        setImageUrl(result.output[0]);
+        setImageUrl(data.output[0]);
+        
+        // Salvar a imagem gerada no banco
+        const { error: dbError } = await supabase
+          .from('generated_images')
+          .insert({
+            url: data.output[0],
+            prompt: prompt,
+          });
+
+        if (dbError) {
+          console.error('Erro ao salvar imagem:', dbError);
+        }
+
         toast({
           title: 'Sucesso',
           description: 'Imagem gerada com sucesso!',
