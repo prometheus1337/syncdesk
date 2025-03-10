@@ -28,7 +28,6 @@ serve(async (req) => {
       headers: {
         'Authorization': `Bearer ${Deno.env.get('REPLICATE_API_TOKEN')}`,
         'Content-Type': 'application/json',
-        'Prefer': 'wait',
       },
       body: JSON.stringify({
         model: "stability-ai/sdxl",
@@ -42,10 +41,34 @@ serve(async (req) => {
 
     if (!response.ok) {
       const error = await response.json();
+      console.error('Erro Replicate:', error);
       throw new Error(error.detail || 'Erro ao gerar imagem');
     }
 
-    const result = await response.json();
+    const prediction = await response.json();
+    
+    // Aguardar até a predição estar completa
+    let result = prediction;
+    while (result.status !== 'succeeded' && result.status !== 'failed') {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${result.id}`, {
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('REPLICATE_API_TOKEN')}`,
+        },
+      });
+      
+      if (!statusResponse.ok) {
+        const error = await statusResponse.json();
+        console.error('Erro ao verificar status:', error);
+        throw new Error(error.detail || 'Erro ao verificar status da imagem');
+      }
+      
+      result = await statusResponse.json();
+    }
+
+    if (result.status === 'failed') {
+      throw new Error(result.error || 'Falha ao gerar imagem');
+    }
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
