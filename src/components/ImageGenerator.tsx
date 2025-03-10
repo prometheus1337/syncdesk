@@ -16,10 +16,11 @@ import {
   useToast,
   Image,
 } from '@chakra-ui/react';
-import { supabase } from '../lib/supabaseClient';
 
 // Modelo original do PVO AI
 const MODEL_VERSION = "prometheus1337/pvo-ai-md:46bbd3d415fa5ec4d2f1a931a0e9c686da9131da6235b81be3d1bb4dca700290";
+const FUNCTION_URL = 'https://vjokrgwwlhioqeqwlasz.supabase.co/functions/v1/generate-image';
+const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export function ImageGenerator() {
   const [prompt, setPrompt] = useState('');
@@ -59,8 +60,13 @@ export function ImageGenerator() {
     try {
       console.log('Iniciando geração de imagem:', { prompt, aspectRatio });
       
-      const { data, error } = await supabase.functions.invoke('generate-image', {
-        body: {
+      const response = await fetch(FUNCTION_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': ANON_KEY,
+        },
+        body: JSON.stringify({
           version: MODEL_VERSION,
           input: {
             prompt,
@@ -77,16 +83,29 @@ export function ImageGenerator() {
             extra_lora_scale: 1,
             num_inference_steps: 28
           }
-        }
+        })
       });
 
-      console.log('Resposta da API:', { data, error });
+      const responseText = await response.text();
+      console.log('Resposta da API:', { status: response.status, body: responseText });
 
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        throw new Error(`Erro na API: status ${response.status}, mensagem: ${responseText}`);
       }
 
-      if (!data?.output?.[0]) {
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        console.error('Erro ao parsear resposta:', e);
+        throw new Error('Resposta inválida do servidor');
+      }
+
+      if (data.error) {
+        throw new Error(`Erro do servidor: ${data.error}`);
+      }
+
+      if (!data.output?.[0]) {
         throw new Error('Nenhuma imagem foi gerada');
       }
 
