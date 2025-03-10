@@ -9,6 +9,7 @@ import { ReportsDashboard } from './components/ReportsDashboard';
 import LoginPage from './components/LoginPage';
 import { Layout } from './components/Layout';
 import { EssayDashboard } from './components/EssayDashboard';
+import { EssayCreditLogs } from './components/EssayCreditLogs';
 
 const theme = extendTheme({
   styles: {
@@ -106,6 +107,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <EssayDashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/essay-logs"
+              element={
+                <PrivateRoute>
+                  <EssayCreditLogs />
                 </PrivateRoute>
               }
             />

@@ -64,15 +64,6 @@ interface Filter {
   endDate: string;
 }
 
-interface PurchaseQueryResult {
-  student_id: string;
-  student_name: string;
-  student_email: string;
-  credits_amount: number;
-  price_paid: number;
-  created_at: string;
-}
-
 interface NewPurchase {
   student_name: string;
   student_email: string;
@@ -111,24 +102,16 @@ export function EssayDashboard() {
 
   async function fetchStudents() {
     setIsLoading(true);
-    let query = `
-      student_id,
-      student_name,
-      student_email,
-      credits_amount,
-      price_paid,
-      created_at
-    `;
-
-    let { data, error } = await supabase
+    
+    // Primeiro, busca todas as compras
+    const { data: purchaseData, error: purchaseError } = await supabase
       .from('essay_purchases')
-      .select(query)
-      .order('created_at', { ascending: false });
+      .select('student_email, student_name, student_phone, credits_amount, price_paid, created_at');
 
-    if (error) {
+    if (purchaseError) {
       toast({
         title: 'Erro ao buscar alunos',
-        description: error.message,
+        description: purchaseError.message,
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -137,10 +120,28 @@ export function EssayDashboard() {
       return;
     }
 
-    // Agrupa as compras por aluno (usando email como chave)
+    // Depois, busca todos os logs de créditos
+    const { data: logsData, error: logsError } = await supabase
+      .from('essay_credit_logs')
+      .select('student_email, credits_amount, operation_type');
+
+    if (logsError) {
+      toast({
+        title: 'Erro ao buscar logs',
+        description: logsError.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    // Agrupa os dados por email do aluno
     const studentsMap = new Map<string, EssayStudent>();
     
-    (data as PurchaseQueryResult[] | null)?.forEach(purchase => {
+    // Processa as compras
+    purchaseData?.forEach(purchase => {
       const student = studentsMap.get(purchase.student_email);
       if (student) {
         student.total_credits += purchase.credits_amount;
@@ -151,14 +152,23 @@ export function EssayDashboard() {
         }
       } else {
         studentsMap.set(purchase.student_email, {
-          id: purchase.student_id,
+          id: crypto.randomUUID(),
           name: purchase.student_name,
           email: purchase.student_email,
-          phone: '',
+          phone: purchase.student_phone || '',
           total_credits: purchase.credits_amount,
           total_spent: purchase.price_paid,
           last_purchase: purchase.created_at,
         });
+      }
+    });
+
+    // Processa os logs
+    logsData?.forEach(log => {
+      const student = studentsMap.get(log.student_email);
+      if (student) {
+        student.total_credits += log.operation_type === 'add' ? 
+          log.credits_amount : -log.credits_amount;
       }
     });
 

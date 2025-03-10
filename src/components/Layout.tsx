@@ -76,6 +76,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
     if (['admin', 'essay_director'].includes(appUser?.role || '')) {
       links.push({ href: '/essays', label: 'Redações' });
+      links.push({ href: '/essay-logs', label: 'Logs de Créditos' });
     }
     
     // Adicionar link para relatórios para todos os usuários
