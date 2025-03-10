@@ -20,8 +20,8 @@ import {
 const GENERATE_IMAGE_URL = 'https://vjokrgwwlhioqeqwlasz.supabase.co/functions/v1/generate-image';
 const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Modelo público do Stable Diffusion
-const MODEL_VERSION = "stability-ai/stable-diffusion:ac732df83cea7fff18b8472768c88ad041fa750ff7682a21affe81863cbe77e4";
+// Modelo básico do Stable Diffusion
+const MODEL_VERSION = "stability-ai/stable-diffusion:db21e45d3f7023abc2a46ee38a23973f6dce16bb082a930b0c49861f96d1e5bf";
 
 export function ImageGenerator() {
   const [prompt, setPrompt] = useState('');
