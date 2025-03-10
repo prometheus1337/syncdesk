@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -18,6 +18,7 @@ import {
   AspectRatio,
   IconButton,
   Flex,
+  Progress,
 } from '@chakra-ui/react';
 import { DownloadIcon } from '@chakra-ui/icons';
 import { Layout } from './Layout';
@@ -32,8 +33,37 @@ export function ImageGenerator() {
   const [prompt, setPrompt] = useState('');
   const [aspectRatio, setAspectRatio] = useState('1:1');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
   const toast = useToast();
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (isGenerating) {
+      interval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            return 100;
+          }
+          return prev + (100/80); // Incrementa para completar em 8 segundos (80 * 100ms)
+        });
+      }, 100);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isGenerating]);
+
+  useEffect(() => {
+    if (progress >= 100) {
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    }
+  }, [progress]);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -48,74 +78,21 @@ export function ImageGenerator() {
     }
 
     setIsGenerating(true);
+    setProgress(0);
 
     try {
-      // Criar a predição
-      const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
+      await fetch('https://webhook-processor-production-242a.up.railway.app/webhook/37d2c776-745f-478b-9a41-12c1139f3059', {
         method: 'POST',
-        mode: 'no-cors',
         headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
           'Content-Type': 'application/json',
-          'Prefer': 'wait'
         },
         body: JSON.stringify({
-          version: "46bbd3d415fa5ec4d2f1a931a0e9c686da9131da6235b81be3d1bb4dca700290",
-          input: {
-            model: "dev",
-            prompt: prompt,
-            go_fast: false,
-            lora_scale: 1,
-            megapixels: "1",
-            num_outputs: 1,
-            aspect_ratio: aspectRatio,
-            output_format: "webp",
-            guidance_scale: 3,
-            output_quality: 80,
-            prompt_strength: 0.8,
-            extra_lora_scale: 1,
-            num_inference_steps: 28
-          }
+          prompt,
+          aspectRatio,
         })
       });
-
-      if (!createResponse.ok) {
-        const error = await createResponse.json();
-        throw new Error(error.detail || 'Erro ao gerar imagem');
-      }
-
-      const result = await createResponse.json();
-
-      if (!result.output?.[0]) {
-        throw new Error('Resposta sem URL da imagem');
-      }
-
-      const newImage: GeneratedImage = {
-        url: result.output[0],
-        prompt,
-        createdAt: new Date(),
-      };
-
-      setGeneratedImages(prev => [newImage, ...prev]);
-
-      toast({
-        title: 'Sucesso',
-        description: 'Imagem gerada com sucesso!',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error: any) {
-      console.error('Erro detalhado:', error);
-      toast({
-        title: 'Erro ao gerar imagem',
-        description: error.message || 'Ocorreu um erro ao gerar a imagem. Por favor, tente novamente.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    } finally {
-      setIsGenerating(false);
+    } catch (error) {
+      console.error('Erro ao enviar webhook:', error);
     }
   };
 
@@ -165,6 +142,7 @@ export function ImageGenerator() {
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
                       placeholder="Descreva a imagem que você quer gerar..."
+                      isDisabled={isGenerating}
                     />
                   </FormControl>
 
@@ -173,12 +151,29 @@ export function ImageGenerator() {
                     <Select
                       value={aspectRatio}
                       onChange={(e) => setAspectRatio(e.target.value)}
+                      isDisabled={isGenerating}
                     >
                       <option value="1:1">Quadrado (1:1)</option>
                       <option value="16:9">Paisagem (16:9)</option>
                       <option value="9:16">Retrato (9:16)</option>
                     </Select>
                   </FormControl>
+
+                  {isGenerating && (
+                    <Box w="100%">
+                      <Text mb={2} textAlign="center">
+                        Gerando imagem... {Math.round(progress)}%
+                      </Text>
+                      <Progress 
+                        value={progress} 
+                        size="sm" 
+                        colorScheme="yellow" 
+                        borderRadius="full"
+                        isAnimated
+                        hasStripe
+                      />
+                    </Box>
+                  )}
 
                   <Button
                     onClick={handleGenerate}
@@ -188,6 +183,7 @@ export function ImageGenerator() {
                     color="black"
                     _hover={{ bg: "#e5c501" }}
                     width="full"
+                    isDisabled={isGenerating || !prompt.trim()}
                   >
                     Gerar Imagem
                   </Button>
