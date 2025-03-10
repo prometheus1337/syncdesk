@@ -17,6 +17,7 @@ import {
   Avatar,
   Text,
   Image,
+  Link,
 } from '@chakra-ui/react';
 import { 
   HamburgerIcon, 
@@ -28,6 +29,7 @@ import {
 } from '@chakra-ui/icons';
 import { useAuth } from '../contexts/AuthContext';
 import { FaFileAlt, FaChartBar } from 'react-icons/fa';
+import { ImageIcon } from './icons/ImageIcon';
 
 // Importar o logo SVG
 import LogoSVGFile from '../assets/logo.svg';
@@ -77,49 +79,36 @@ export function Layout({ children }: { children: ReactNode }) {
 
   const getNavLinks = () => {
     const links = [];
-    
-    if (appUser?.role === 'admin') {
-      links.push({ 
-        href: '/admin', 
-        label: 'Admin',
-        icon: <SettingsIcon />
-      });
-    }
 
-    if (['admin', 'support'].includes(appUser?.role || '')) {
-      links.push({ 
-        href: '/refunds', 
-        label: 'Reembolsos',
-        icon: <RepeatIcon />
+    if (appUser) {
+      links.push({
+        href: '/',
+        label: 'Dashboard',
+        icon: <FaChartBar />
       });
-    }
 
-    if (['admin', 'essay_director'].includes(appUser?.role || '')) {
-      links.push({ 
-        href: '/essays', 
-        label: 'Redações',
-        icon: <EditIcon />
+      links.push({
+        href: '/docs',
+        label: 'Documentos',
+        icon: <FaFileAlt />
       });
-      links.push({ 
-        href: '/essay-logs', 
-        label: 'Logs de Créditos',
-        icon: <TimeIcon />
-      });
+      
+      if (appUser.role === 'admin') {
+        links.push({ 
+          href: '/admin', 
+          label: 'Administração',
+          icon: <SettingsIcon />
+        });
+      }
+
+      if (appUser.role === 'admin' || appUser.role === 'essay_director') {
+        links.push({ 
+          href: '/images', 
+          label: 'Gerador de Imagens',
+          icon: <ImageIcon />
+        });
+      }
     }
-    
-    // Adicionar link para relatórios para todos os usuários
-    links.push({ 
-      href: '/reports', 
-      label: 'Relatórios',
-      icon: <FaChartBar />
-    });
-    
-    // Adicionar link para visualização da documentação para todos os usuários
-    links.push({ 
-      href: '/docs/view', 
-      label: 'Documentação',
-      icon: <FaFileAlt />
-    });
     
     return links;
   };
