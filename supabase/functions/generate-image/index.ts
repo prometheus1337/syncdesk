@@ -30,7 +30,8 @@ serve(async (req) => {
     }
     console.log('Token encontrado');
 
-    const response = await fetch('https://api.replicate.com/v1/deployments/prometheus1337/pvo-gen-ai/predictions', {
+    // Criar predição
+    const createResponse = await fetch('https://api.replicate.com/v1/deployments/prometheus1337/pvo-gen-ai/predictions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -43,43 +44,54 @@ serve(async (req) => {
       }),
     });
 
-    console.log('Status da resposta:', response.status);
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('Erro Replicate:', error);
-      throw new Error(JSON.stringify(error) || 'Erro ao gerar imagem');
+    if (!createResponse.ok) {
+      const error = await createResponse.json();
+      console.error('Erro ao criar predição:', error);
+      throw new Error(error.detail || 'Erro ao iniciar geração da imagem');
     }
 
-    const prediction = await response.json();
-    console.log('Prediction inicial:', prediction);
-    
-    // Aguardar até a predição estar completa
+    const prediction = await createResponse.json();
+    console.log('Predição criada:', prediction);
+
+    // Aguardar resultado
     let result = prediction;
-    while (result.status !== 'succeeded' && result.status !== 'failed') {
+    let attempts = 0;
+    const maxAttempts = 30; // 30 segundos
+
+    while (attempts < maxAttempts && result.status !== 'succeeded' && result.status !== 'failed') {
+      console.log(`Tentativa ${attempts + 1}/${maxAttempts}, status: ${result.status}`);
       await new Promise(resolve => setTimeout(resolve, 1000));
+
       const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${result.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
-      
+
       if (!statusResponse.ok) {
         const error = await statusResponse.json();
         console.error('Erro ao verificar status:', error);
         throw new Error(error.detail || 'Erro ao verificar status da imagem');
       }
-      
+
       result = await statusResponse.json();
+      attempts++;
     }
 
     if (result.status === 'failed') {
       throw new Error(result.error || 'Falha ao gerar imagem');
     }
 
+    if (attempts >= maxAttempts) {
+      throw new Error('Tempo limite excedido ao gerar imagem');
+    }
+
+    console.log('Resultado final:', result);
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
+    console.error('Erro:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
