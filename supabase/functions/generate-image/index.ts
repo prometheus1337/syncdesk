@@ -56,10 +56,17 @@ serve(async (req) => {
     // Aguardar resultado
     let result = prediction;
     let attempts = 0;
-    const maxAttempts = 30; // 30 segundos
+    const maxAttempts = 120; // 2 minutos
+    const startTime = Date.now();
 
     while (attempts < maxAttempts && result.status !== 'succeeded' && result.status !== 'failed') {
-      console.log(`Tentativa ${attempts + 1}/${maxAttempts}, status: ${result.status}`);
+      const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+      console.log(`Status: ${result.status}, Tentativa: ${attempts + 1}/${maxAttempts}, Tempo decorrido: ${elapsedTime}s`);
+      
+      if (result.logs) {
+        console.log('Logs da predição:', result.logs);
+      }
+
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${result.id}`, {
@@ -79,11 +86,13 @@ serve(async (req) => {
     }
 
     if (result.status === 'failed') {
+      console.error('Falha na predição:', result);
       throw new Error(result.error || 'Falha ao gerar imagem');
     }
 
     if (attempts >= maxAttempts) {
-      throw new Error('Tempo limite excedido ao gerar imagem');
+      console.error('Timeout - Último estado:', result);
+      throw new Error(`Tempo limite excedido ao gerar imagem. Último status: ${result.status}`);
     }
 
     console.log('Resultado final:', result);
