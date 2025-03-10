@@ -32,15 +32,30 @@ serve(async (req) => {
     console.log('Token encontrado');
 
     // Criar predição
-    const createResponse = await fetch('https://api.replicate.com/v1/deployments/prometheus1337/pvo-gen-ai/predictions', {
+    const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        version: "46bbd3d415fa5ec4d2f1a931a0e9c686da9131da6235b81be3d1bb4dca700290",
         input: {
-          prompt
+          model: "dev",
+          width: 512,
+          height: 512,
+          prompt,
+          go_fast: false,
+          lora_scale: 1,
+          megapixels: "1",
+          num_outputs: 1,
+          aspect_ratio: aspectRatio,
+          output_format: "webp",
+          guidance_scale: 3,
+          output_quality: 80,
+          prompt_strength: 0.8,
+          extra_lora_scale: 1,
+          num_inference_steps: 28
         }
       }),
     });
