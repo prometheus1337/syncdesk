@@ -17,15 +17,11 @@ import {
   Avatar,
   Text,
   Image,
-  Link,
 } from '@chakra-ui/react';
 import { 
   HamburgerIcon, 
   CloseIcon, 
-  SettingsIcon, 
-  RepeatIcon, 
-  EditIcon,
-  TimeIcon,
+  SettingsIcon,
 } from '@chakra-ui/icons';
 import { useAuth } from '../contexts/AuthContext';
 import { FaFileAlt, FaChartBar } from 'react-icons/fa';

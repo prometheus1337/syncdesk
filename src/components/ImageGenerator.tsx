@@ -19,7 +19,6 @@ import {
   Flex,
   AspectRatio,
   IconButton,
-  Link,
 } from '@chakra-ui/react';
 import { DownloadIcon } from '@chakra-ui/icons';
 import { supabase } from '../lib/supabase';
