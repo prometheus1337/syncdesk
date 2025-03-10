@@ -20,6 +20,9 @@ import {
 const GENERATE_IMAGE_URL = 'https://vjokrgwwlhioqeqwlasz.supabase.co/functions/v1/generate-image';
 const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// Modelo público do Stable Diffusion
+const MODEL_VERSION = "stability-ai/sdxl:c221b2b8ef527988fb59bf24a8b97c4561f1c671b11e0cedff1654753b5785cd";
+
 export function ImageGenerator() {
   const [prompt, setPrompt] = useState('');
   const [aspectRatio, setAspectRatio] = useState('1:1');
@@ -65,7 +68,11 @@ export function ImageGenerator() {
           'apikey': ANON_KEY,
           'Authorization': `Bearer ${ANON_KEY}`,
         },
-        body: JSON.stringify({ prompt, aspectRatio })
+        body: JSON.stringify({ 
+          prompt,
+          aspectRatio,
+          modelVersion: MODEL_VERSION
+        })
       });
 
       const responseText = await response.text();
