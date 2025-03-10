@@ -20,7 +20,6 @@ import {
   useDisclosure,
   useToast,
   Input,
-  SimpleGrid,
   Table,
   Thead,
   Tbody,
@@ -30,8 +29,10 @@ import {
   Spinner,
   FormControl,
   FormLabel,
+  InputGroup,
+  InputLeftElement,
 } from '@chakra-ui/react';
-import { CalendarIcon, AddIcon } from '@chakra-ui/icons';
+import { CalendarIcon, AddIcon, SearchIcon } from '@chakra-ui/icons';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -75,6 +76,7 @@ interface PurchaseQueryResult {
 interface NewPurchase {
   student_name: string;
   student_email: string;
+  student_phone: string;
   credits_amount: number;
   price_paid: number;
 }
@@ -88,9 +90,11 @@ export function EssayDashboard() {
     startDate: '',
     endDate: '',
   });
+  const [searchTerm, setSearchTerm] = useState('');
   const [newPurchase, setNewPurchase] = useState<NewPurchase>({
     student_name: '',
     student_email: '',
+    student_phone: '',
     credits_amount: 0,
     price_paid: 0,
   });
@@ -226,6 +230,7 @@ export function EssayDashboard() {
       .insert([{
         student_name: newPurchase.student_name,
         student_email: newPurchase.student_email,
+        student_phone: newPurchase.student_phone,
         credits_amount: newPurchase.credits_amount,
         price_paid: newPurchase.price_paid,
         payment_method: 'Não especificado',
@@ -249,6 +254,7 @@ export function EssayDashboard() {
       setNewPurchase({
         student_name: '',
         student_email: '',
+        student_phone: '',
         credits_amount: 0,
         price_paid: 0,
       });
@@ -267,6 +273,14 @@ export function EssayDashboard() {
       newPurchase.price_paid > 0
     );
   }
+
+  const filteredStudents = students.filter(student => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      student.name.toLowerCase().includes(searchLower) ||
+      student.email.toLowerCase().includes(searchLower)
+    );
+  });
 
   if (!appUser || !['admin', 'essay_director'].includes(appUser.role)) {
     return (
@@ -301,7 +315,17 @@ export function EssayDashboard() {
             </Button>
           </Flex>
 
-          <Grid templateColumns="repeat(1, 1fr)" gap={4}>
+          <Grid templateColumns={{ base: "1fr", md: "2fr 1fr" }} gap={4}>
+            <InputGroup>
+              <InputLeftElement pointerEvents="none">
+                <SearchIcon color="gray.400" />
+              </InputLeftElement>
+              <Input
+                placeholder="Buscar por nome ou email do aluno"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </InputGroup>
             <Button
               leftIcon={<CalendarIcon />}
               onClick={onFilterOpen}
@@ -325,50 +349,52 @@ export function EssayDashboard() {
             <Spinner size="xl" color="#FFDB01" />
           </Flex>
         ) : (
-          <>
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
-              {students.map((student) => (
-                <Card key={student.id} variant="outline" cursor="pointer" onClick={() => handleViewStudent(student)}>
-                  <CardBody>
-                    <Stack spacing={3}>
-                      <Flex justifyContent="space-between" alignItems="center">
-                        <Text fontWeight="bold">{student.name}</Text>
-                        <Text fontSize="sm" color="gray.500">
-                          {formatDate(student.last_purchase)}
-                        </Text>
-                      </Flex>
-                      <Text fontSize="sm" color="gray.600">{student.email}</Text>
-                      <Flex justifyContent="space-between" alignItems="center">
-                        <Text>Créditos: {student.total_credits}</Text>
-                        <Text>Total: {formatCurrency(student.total_spent)}</Text>
-                      </Flex>
+          <Box overflowX="auto">
+            <Table variant="simple">
+              <Thead>
+                <Tr>
+                  <Th>Data de Criação</Th>
+                  <Th>Nome</Th>
+                  <Th>Email</Th>
+                  <Th>Telefone</Th>
+                  <Th>Créditos</Th>
+                  <Th>Total Investido</Th>
+                  <Th>Ações</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {filteredStudents.map((student) => (
+                  <Tr key={student.id} _hover={{ bg: 'gray.50', cursor: 'pointer' }}>
+                    <Td>{formatDate(student.last_purchase)}</Td>
+                    <Td>{student.name}</Td>
+                    <Td>{student.email}</Td>
+                    <Td>{student.phone || '-'}</Td>
+                    <Td>{student.total_credits}</Td>
+                    <Td>{formatCurrency(student.total_spent)}</Td>
+                    <Td>
                       <Button
                         size="sm"
-                        variant="ghost"
                         bg="#FFDB01"
                         color="black"
                         _hover={{ bg: "#e5c501" }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewStudent(student);
-                        }}
+                        onClick={() => handleViewStudent(student)}
                       >
                         Ver detalhes
                       </Button>
-                    </Stack>
-                  </CardBody>
-                </Card>
-              ))}
-            </SimpleGrid>
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
 
-            {students.length === 0 && (
+            {filteredStudents.length === 0 && (
               <Box textAlign="center" py={8}>
                 <Text color="gray.500">
                   Nenhum aluno encontrado
                 </Text>
               </Box>
             )}
-          </>
+          </Box>
         )}
       </CardBody>
 
@@ -512,6 +538,14 @@ export function EssayDashboard() {
                   value={newPurchase.student_email}
                   onChange={(e) => setNewPurchase({ ...newPurchase, student_email: e.target.value })}
                   placeholder="Email do aluno"
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Telefone do Aluno</FormLabel>
+                <Input
+                  value={newPurchase.student_phone}
+                  onChange={(e) => setNewPurchase({ ...newPurchase, student_phone: e.target.value })}
+                  placeholder="(00) 00000-0000"
                 />
               </FormControl>
               <FormControl isRequired>
