@@ -21,7 +21,7 @@ const GENERATE_IMAGE_URL = 'https://vjokrgwwlhioqeqwlasz.supabase.co/functions/v
 const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Modelo público do Stable Diffusion
-const MODEL_VERSION = "stability-ai/sdxl:c221b2b8ef527988fb59bf24a8b97c4561f1c671b11e0cedff1654753b5785cd";
+const MODEL_VERSION = "stability-ai/stable-diffusion:ac732df83cea7fff18b8472768c88ad041fa750ff7682a21affe81863cbe77e4";
 
 export function ImageGenerator() {
   const [prompt, setPrompt] = useState('');
