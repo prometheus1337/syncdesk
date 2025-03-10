@@ -17,6 +17,7 @@ import {
   Avatar,
   Text,
   Image,
+  useColorMode,
 } from '@chakra-ui/react';
 import { 
   HamburgerIcon, 
@@ -25,6 +26,8 @@ import {
   RepeatIcon, 
   EditIcon,
   TimeIcon,
+  MoonIcon,
+  SunIcon,
 } from '@chakra-ui/icons';
 import { useAuth } from '../contexts/AuthContext';
 import { FaFileAlt, FaChartBar } from 'react-icons/fa';
@@ -69,6 +72,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { appUser, signOut } = useAuth();
   const navigate = useNavigate();
+  const { colorMode, toggleColorMode } = useColorMode();
 
   const handleSignOut = async () => {
     await signOut();
@@ -219,6 +223,14 @@ export function Layout({ children }: { children: ReactNode }) {
                   </MenuItem>
                 </MenuList>
               </Menu>
+              <IconButton
+                aria-label="Alternar tema"
+                icon={colorMode === 'dark' ? <SunIcon /> : <MoonIcon />}
+                onClick={toggleColorMode}
+                variant="ghost"
+                color={colorMode === 'dark' ? 'yellow.200' : 'gray.600'}
+                _hover={{ bg: colorMode === 'dark' ? 'gray.700' : 'gray.100' }}
+              />
             </Flex>
           </Flex>
 

@@ -1,4 +1,4 @@
-import { ChakraProvider, extendTheme } from '@chakra-ui/react';
+import { ChakraProvider, extendTheme, ThemeConfig, ThemeComponentProps } from '@chakra-ui/react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { RefundDashboard } from './components/RefundDashboard';
@@ -11,13 +11,20 @@ import { Layout } from './components/Layout';
 import { EssayDashboard } from './components/EssayDashboard';
 import { EssayCreditLogs } from './components/EssayCreditLogs';
 
+const config: ThemeConfig = {
+  initialColorMode: 'light',
+  useSystemColorMode: true,
+}
+
 const theme = extendTheme({
+  config,
   styles: {
-    global: {
+    global: (props: { colorMode: string }) => ({
       body: {
-        bg: 'gray.50',
+        bg: props.colorMode === 'dark' ? 'gray.800' : 'gray.50',
+        color: props.colorMode === 'dark' ? 'white' : 'gray.800',
       },
-    },
+    }),
   },
   components: {
     Button: {
@@ -30,6 +37,7 @@ const theme = extendTheme({
         container: {
           boxShadow: 'sm',
           rounded: 'lg',
+          bg: (props: ThemeComponentProps) => props.colorMode === 'dark' ? 'gray.700' : 'white',
         },
       },
     },
