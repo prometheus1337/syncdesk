@@ -18,6 +18,7 @@ import {
 } from '@chakra-ui/react';
 
 const GENERATE_IMAGE_URL = 'https://vjokrgwwlhioqeqwlasz.supabase.co/functions/v1/generate-image';
+const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export function ImageGenerator() {
   const [prompt, setPrompt] = useState('');
@@ -59,6 +60,7 @@ export function ImageGenerator() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${ANON_KEY}`,
         },
         body: JSON.stringify({ prompt, aspectRatio })
       });
