@@ -42,7 +42,7 @@ import { useAuth } from '../contexts/AuthContext';
 interface CreditLog {
   id: string;
   student_email: string;
-  credits_amount: number;
+  credits_change: number;
   operation_type: 'add' | 'remove';
   motive?: string;
   created_at: string;
@@ -57,7 +57,7 @@ interface Student {
 
 interface NewCreditLog {
   student_email: string;
-  credits_amount: number;
+  credits_change: number;
   operation_type: 'add' | 'remove';
   motive?: string;
 }
@@ -80,7 +80,7 @@ export function EssayCreditLogs() {
   const [searchTerm, setSearchTerm] = useState('');
   const [newLog, setNewLog] = useState<NewCreditLog>({
     student_email: '',
-    credits_amount: 0,
+    credits_change: 0,
     operation_type: 'add',
     motive: '',
   });
@@ -120,7 +120,7 @@ export function EssayCreditLogs() {
     // Depois, busca todos os logs de créditos
     const { data: logsData, error: logsError } = await supabase
       .from('essay_credit_logs')
-      .select('student_email, credits_amount, operation_type');
+      .select('student_email, credits_change, operation_type');
 
     if (logsError) {
       toast({
@@ -153,7 +153,7 @@ export function EssayCreditLogs() {
       const student = studentMap.get(log.student_email);
       if (student) {
         student.total_credits += log.operation_type === 'add' ? 
-          log.credits_amount : -log.credits_amount;
+          log.credits_change : -log.credits_change;
         studentMap.set(log.student_email, student);
       }
     });
@@ -169,7 +169,7 @@ export function EssayCreditLogs() {
       .select(`
         id,
         student_email,
-        credits_amount,
+        credits_change,
         operation_type,
         motive,
         created_at,
@@ -198,7 +198,7 @@ export function EssayCreditLogs() {
       .from('essay_credit_logs')
       .insert([{
         student_email: newLog.student_email,
-        credits_amount: newLog.credits_amount,
+        credits_change: newLog.credits_change,
         operation_type: newLog.operation_type,
         motive: newLog.motive || null,
         created_by: appUser?.id || '',
@@ -220,7 +220,7 @@ export function EssayCreditLogs() {
       });
       setNewLog({
         student_email: '',
-        credits_amount: 0,
+        credits_change: 0,
         operation_type: 'add',
         motive: '',
       });
@@ -245,7 +245,7 @@ export function EssayCreditLogs() {
   function validateForm() {
     return (
       newLog.student_email.trim() !== '' &&
-      newLog.credits_amount > 0 &&
+      newLog.credits_change > 0 &&
       newLog.motive?.trim() !== ''
     );
   }
@@ -349,7 +349,7 @@ export function EssayCreditLogs() {
                         {log.operation_type === 'add' ? 'Adição' : 'Redução'}
                       </Text>
                     </Td>
-                    <Td>{log.credits_amount}</Td>
+                    <Td>{log.credits_change}</Td>
                     <Td>{log.motive || '-'}</Td>
                     <Td>{log.created_by}</Td>
                   </Tr>
@@ -454,8 +454,8 @@ export function EssayCreditLogs() {
                 <FormLabel>Quantidade de Créditos</FormLabel>
                 <Input
                   type="number"
-                  value={newLog.credits_amount}
-                  onChange={(e) => setNewLog({ ...newLog, credits_amount: parseInt(e.target.value) })}
+                  value={newLog.credits_change}
+                  onChange={(e) => setNewLog({ ...newLog, credits_change: parseInt(e.target.value) })}
                   min={1}
                 />
               </FormControl>
