@@ -21,6 +21,7 @@ import {
 } from '@chakra-ui/react';
 import { DownloadIcon } from '@chakra-ui/icons';
 import { Layout } from './Layout';
+import { supabase } from '../lib/supabase';
 
 interface GeneratedImage {
   url: string;
@@ -52,60 +53,23 @@ export function ImageGenerator() {
     try {
       console.log('Iniciando geração de imagem...');
       
-      const response = await fetch('https://api.replicate.com/v1/predictions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
-          'Content-Type': 'application/json',
+      const { data: result, error } = await supabase.functions.invoke('generate-image', {
+        body: {
+          prompt,
+          aspect_ratio: aspectRatio,
         },
-        body: JSON.stringify({
-          version: "46bbd3d415fa5ec4d2f1a931a0e9c686da9131da6235b81be3d1bb4dca700290",
-          input: {
-            prompt,
-            model: "dev",
-            go_fast: false,
-            lora_scale: 1,
-            megapixels: "1",
-            num_outputs: 1,
-            aspect_ratio: aspectRatio,
-            output_format: "webp",
-            guidance_scale: 3,
-            output_quality: 80,
-            prompt_strength: 0.8,
-            extra_lora_scale: 1,
-            num_inference_steps: 28
-          }
-        })
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || 'Erro ao criar predição');
+      console.log('Resposta da função:', { result, error });
+
+      if (error) {
+        console.error('Erro detalhado da função:', error);
+        throw error;
       }
 
-      const prediction = await response.json();
-      console.log('Predição criada:', prediction);
-
-      // Aguardar a conclusão da geração
-      let result = prediction;
-      while (result.status !== 'succeeded' && result.status !== 'failed') {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
-          },
-        });
-
-        if (!pollResponse.ok) {
-          throw new Error('Erro ao verificar status da geração');
-        }
-
-        result = await pollResponse.json();
-        console.log('Status atual:', result.status);
-      }
-
-      if (result.status === 'failed') {
-        throw new Error(result.error || 'Falha na geração da imagem');
+      if (!result?.output) {
+        console.error('Resposta sem output:', result);
+        throw new Error('Falha na geração da imagem: resposta inválida');
       }
 
       const newImage: GeneratedImage = {
