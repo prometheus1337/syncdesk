@@ -56,30 +56,42 @@ export function ImageGenerator() {
     setImageUrl(null);
 
     try {
+      console.log('Iniciando geração de imagem:', { prompt, aspectRatio });
+      
       const response = await fetch(GENERATE_IMAGE_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'apikey': ANON_KEY,
+          'Authorization': `Bearer ${ANON_KEY}`,
         },
         body: JSON.stringify({ prompt, aspectRatio })
       });
 
+      const responseText = await response.text();
+      console.log('Resposta da API:', { status: response.status, body: responseText });
+
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        throw new Error(`Erro na API: status ${response.status}, mensagem: ${responseText}`);
       }
 
-      const data = await response.json();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        console.error('Erro ao parsear resposta:', e);
+        throw new Error('Resposta inválida do servidor');
+      }
 
       if (data.error) {
-        throw new Error(data.error);
+        throw new Error(`Erro do servidor: ${data.error}`);
       }
 
       if (!data.output?.[0]) {
         throw new Error('Nenhuma imagem foi gerada');
       }
 
+      console.log('Imagem gerada com sucesso:', data.output[0]);
       setImageUrl(data.output[0]);
 
       toast({
@@ -90,7 +102,7 @@ export function ImageGenerator() {
       });
 
     } catch (error) {
-      console.error('Erro ao gerar imagem:', error);
+      console.error('Erro detalhado:', error);
       toast({
         title: 'Erro ao gerar imagem',
         description: error instanceof Error ? error.message : 'Erro desconhecido',
