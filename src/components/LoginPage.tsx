@@ -1,179 +1,144 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import {
   Box,
   Button,
   FormControl,
   FormLabel,
   Input,
+  VStack,
   Text,
   useToast,
   Image,
-  Flex,
+  Container,
+  Card,
+  CardBody,
+  Spinner,
 } from '@chakra-ui/react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import logo from '../assets/logo.svg';
+import { supabase } from '../lib/supabase';
 
-function LoginPage() {
-  const [loading, setLoading] = useState(false);
+export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn, appUser, loading: authLoading } = useAuth();
   const toast = useToast();
+  const { appUser, loading: authLoading } = useAuth();
 
-  console.log('LoginPage: Renderizando. authLoading:', authLoading, 'appUser:', appUser ? 'existe' : 'não existe');
+  if (authLoading) {
+    return (
+      <Box height="100vh" display="flex" alignItems="center" justifyContent="center">
+        <Spinner size="xl" color="#FFDB01" />
+      </Box>
+    );
+  }
 
-  // Redirecionar se o usuário já estiver autenticado
-  useEffect(() => {
-    console.log('LoginPage useEffect: authLoading:', authLoading, 'appUser:', appUser ? 'existe' : 'não existe');
-    
-    if (appUser && !authLoading) {
-      console.log('LoginPage: Usuário já autenticado, redirecionando para /refunds');
-      navigate('/refunds', { replace: true });
-    }
-  }, [appUser, authLoading, navigate]);
+  if (appUser) {
+    navigate('/');
+    return null;
+  }
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
+    setIsLoading(true);
 
     try {
-      const formData = new FormData(e.currentTarget);
-      const email = formData.get('email') as string;
-      const password = formData.get('password') as string;
-      
-      console.log('LoginPage: Tentando fazer login com email:', email);
-      await signIn(email, password);
-      
-      console.log('LoginPage: Login bem-sucedido, aguardando atualização do appUser');
-      
-      // O redirecionamento será feito pelo useEffect quando appUser for atualizado
-      toast({
-        title: 'Login realizado com sucesso',
-        status: 'success',
-        duration: 2000,
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
+
+      if (error) throw error;
+
+      navigate('/');
     } catch (error: any) {
-      console.error('LoginPage: Erro ao fazer login:', error);
-      
       toast({
         title: 'Erro ao fazer login',
         description: error.message,
         status: 'error',
         duration: 3000,
+        isClosable: true,
       });
-      setLoading(false);
+    } finally {
+      setIsLoading(false);
     }
   }
 
-  // Se estiver carregando a autenticação, não mostra a tela de login ainda
-  if (authLoading) {
-    console.log('LoginPage: Exibindo tela de carregamento');
-    return (
-      <Box
-        width="100vw"
-        height="100vh"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        bg="gray.50"
-      >
-        <Text>Carregando...</Text>
-      </Box>
-    );
-  }
-
-  console.log('LoginPage: Exibindo formulário de login');
   return (
     <Box
-      width="100vw"
-      height="100vh"
-      bg="gray.50"
-      position="fixed"
-      top={0}
-      left={0}
-      right={0}
-      bottom={0}
+      minH="100vh"
       display="flex"
       alignItems="center"
       justifyContent="center"
+      bg="gray.50"
     >
-      <Box
-        bg="white"
-        p="8"
-        borderRadius="md"
-        boxShadow="0px 4px 10px rgba(0, 0, 0, 0.05)"
-        width="100%"
-        maxWidth="400px"
-        mx="4"
-      >
-        <Flex 
-          justifyContent="center" 
-          mb="4"
-        >
-          <Image 
-            src={logo} 
-            alt="PVO System Logo" 
-            maxWidth="180px" 
-            height="auto"
-          />
-        </Flex>
-        
-        <Text
-          color="gray.600"
-          fontSize="md"
-          mb="8"
-          textAlign="center"
-        >
-          Faça login para acessar o sistema
-        </Text>
+      <Container maxW="md">
+        <Card variant="outline">
+          <CardBody>
+            <VStack spacing={6} align="stretch">
+              <Box textAlign="center">
+                <Image
+                  src="/syncdeskfav.svg"
+                  alt="Logo"
+                  mx="auto"
+                  mb={4}
+                  width="100px"
+                />
+                <Text fontSize="2xl" fontWeight="bold" mb={1}>
+                  Bem-vindo ao Syncdesk
+                </Text>
+                <Text color="gray.500">
+                  Faça login para continuar
+                </Text>
+              </Box>
 
-        <form onSubmit={handleSubmit}>
-          <FormControl mb="4">
-            <FormLabel color="gray.700">Email</FormLabel>
-            <Input
-              name="email"
-              type="email"
-              placeholder="seu@email.com"
-              bg="white"
-              borderColor="gray.200"
-              _hover={{ borderColor: "gray.300" }}
-              _focus={{ borderColor: "gray.400", boxShadow: "none" }}
-              size="md"
-              required
-            />
-          </FormControl>
+              <form onSubmit={handleSubmit}>
+                <VStack spacing={4}>
+                  <FormControl isRequired>
+                    <FormLabel>Email</FormLabel>
+                    <Input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Digite seu email"
+                      bg="white"
+                      borderColor="gray.200"
+                      _hover={{ borderColor: "gray.300" }}
+                      _focus={{ borderColor: "blue.500", boxShadow: "none" }}
+                    />
+                  </FormControl>
 
-          <FormControl mb="6">
-            <FormLabel color="gray.700">Senha</FormLabel>
-            <Input
-              name="password"
-              type="password"
-              placeholder="********"
-              bg="white"
-              borderColor="gray.200"
-              _hover={{ borderColor: "gray.300" }}
-              _focus={{ borderColor: "gray.400", boxShadow: "none" }}
-              size="md"
-              required
-            />
-          </FormControl>
+                  <FormControl isRequired>
+                    <FormLabel>Senha</FormLabel>
+                    <Input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Digite sua senha"
+                      bg="white"
+                      borderColor="gray.200"
+                      _hover={{ borderColor: "gray.300" }}
+                      _focus={{ borderColor: "blue.500", boxShadow: "none" }}
+                    />
+                  </FormControl>
 
-          <Button
-            type="submit"
-            width="100%"
-            height="40px"
-            isLoading={loading}
-            bg="#FFDB01"
-            color="black"
-            _hover={{ bg: "#e5c501" }}
-            _active={{ bg: "#d4b701" }}
-          >
-            Entrar
-          </Button>
-        </form>
-      </Box>
+                  <Button
+                    type="submit"
+                    width="100%"
+                    bg="#FFDB01"
+                    color="black"
+                    _hover={{ bg: "#e5c501" }}
+                    isLoading={isLoading}
+                  >
+                    Entrar
+                  </Button>
+                </VStack>
+              </form>
+            </VStack>
+          </CardBody>
+        </Card>
+      </Container>
     </Box>
   );
-}
-
-export default LoginPage; 
+} 

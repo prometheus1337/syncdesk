@@ -37,7 +37,7 @@ interface AppUser {
   id: string;
   email: string;
   full_name: string;
-  role: 'admin' | 'support' | 'commercial';
+  role: 'admin' | 'support' | 'commercial' | 'essay_director';
   created_at: string;
 }
 
@@ -76,6 +76,34 @@ export function AdminDashboard() {
 
     setUsers(data || []);
     setIsLoading(false);
+  }
+
+  function getRoleBadgeColor(role: string) {
+    switch (role) {
+      case 'admin':
+        return 'red';
+      case 'support':
+        return 'green';
+      case 'essay_director':
+        return 'purple';
+      default:
+        return 'blue';
+    }
+  }
+
+  function translateRole(role: string) {
+    switch (role) {
+      case 'admin':
+        return 'Administrador';
+      case 'support':
+        return 'Suporte';
+      case 'commercial':
+        return 'Comercial';
+      case 'essay_director':
+        return 'Diretor de Redação';
+      default:
+        return role;
+    }
   }
 
   if (!appUser || appUser.role !== 'admin') {
@@ -141,19 +169,13 @@ export function AdminDashboard() {
                     <Td>{user.email}</Td>
                     <Td>
                       <Badge
-                        colorScheme={
-                          user.role === 'admin'
-                            ? 'red'
-                            : user.role === 'support'
-                            ? 'green'
-                            : 'blue'
-                        }
+                        colorScheme={getRoleBadgeColor(user.role)}
                         borderRadius="full"
                         px="2"
                         py="1"
                         fontSize="xs"
                       >
-                        {user.role}
+                        {translateRole(user.role)}
                       </Badge>
                     </Td>
                     <Td>{new Date(user.created_at).toLocaleDateString()}</Td>
@@ -250,6 +272,7 @@ export function AdminDashboard() {
                     <option value="admin">Administrador</option>
                     <option value="support">Suporte</option>
                     <option value="commercial">Comercial</option>
+                    <option value="essay_director">Diretor de Redação</option>
                   </Select>
                 </FormControl>
 
@@ -318,7 +341,7 @@ export function AdminDashboard() {
       email: formData.get('email') as string,
       password: formData.get('password') as string,
       full_name: formData.get('full_name') as string,
-      role: formData.get('role') as 'admin' | 'support' | 'commercial',
+      role: formData.get('role') as 'admin' | 'support' | 'commercial' | 'essay_director',
     };
 
     try {
@@ -403,7 +426,7 @@ export function AdminDashboard() {
     const formData = new FormData(e.currentTarget);
     const userData = {
       full_name: formData.get('full_name') as string,
-      role: formData.get('role') as 'admin' | 'support' | 'commercial',
+      role: formData.get('role') as 'admin' | 'support' | 'commercial' | 'essay_director',
     };
 
     try {
