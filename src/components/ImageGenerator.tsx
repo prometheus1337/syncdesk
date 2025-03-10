@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Button,
@@ -15,21 +15,17 @@ import {
   Heading,
   Card,
   CardBody,
-  Spinner,
-  Flex,
   AspectRatio,
   IconButton,
+  Flex,
 } from '@chakra-ui/react';
 import { DownloadIcon } from '@chakra-ui/icons';
-import { supabase } from '../lib/supabase';
-import { useAuth } from '../contexts/AuthContext';
+import { Layout } from './Layout';
 
 interface GeneratedImage {
-  id: string;
   url: string;
   prompt: string;
-  created_at: string;
-  created_by: string;
+  createdAt: Date;
 }
 
 export function ImageGenerator() {
@@ -37,35 +33,7 @@ export function ImageGenerator() {
   const [aspectRatio, setAspectRatio] = useState('1:1');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const toast = useToast();
-  const { appUser } = useAuth();
-
-  const fetchGeneratedImages = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('generated_images')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setGeneratedImages(data || []);
-    } catch (error: any) {
-      toast({
-        title: 'Erro ao carregar imagens',
-        description: error.message,
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchGeneratedImages();
-  }, []);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -84,45 +52,69 @@ export function ImageGenerator() {
     try {
       console.log('Iniciando geração de imagem...');
       
-      const { data: result, error } = await supabase.functions.invoke('generate-image', {
-        body: {
-          prompt,
-          aspect_ratio: aspectRatio,
+      const response = await fetch('https://api.replicate.com/v1/predictions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          version: "46bbd3d415fa5ec4d2f1a931a0e9c686da9131da6235b81be3d1bb4dca700290",
+          input: {
+            prompt,
+            model: "dev",
+            go_fast: false,
+            lora_scale: 1,
+            megapixels: "1",
+            num_outputs: 1,
+            aspect_ratio: aspectRatio,
+            output_format: "webp",
+            guidance_scale: 3,
+            output_quality: 80,
+            prompt_strength: 0.8,
+            extra_lora_scale: 1,
+            num_inference_steps: 28
+          }
+        })
       });
 
-      console.log('Resposta da função:', { result, error });
-
-      if (error) {
-        console.error('Erro detalhado da função:', error);
-        throw error;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Erro ao criar predição');
       }
 
-      if (!result?.output) {
-        console.error('Resposta sem output:', result);
-        throw new Error('Falha na geração da imagem: resposta inválida');
+      const prediction = await response.json();
+      console.log('Predição criada:', prediction);
+
+      // Aguardar a conclusão da geração
+      let result = prediction;
+      while (result.status !== 'succeeded' && result.status !== 'failed') {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_REPLICATE_API_TOKEN}`,
+          },
+        });
+
+        if (!pollResponse.ok) {
+          throw new Error('Erro ao verificar status da geração');
+        }
+
+        result = await pollResponse.json();
+        console.log('Status atual:', result.status);
       }
 
-      console.log('Salvando imagem no banco...');
-
-      const { data: imageData, error: imageError } = await supabase
-        .from('generated_images')
-        .insert({
-          url: result.output[0],
-          prompt,
-          created_by: appUser?.id,
-        })
-        .select()
-        .single();
-
-      if (imageError) {
-        console.error('Erro ao salvar imagem:', imageError);
-        throw imageError;
+      if (result.status === 'failed') {
+        throw new Error(result.error || 'Falha na geração da imagem');
       }
 
-      console.log('Imagem salva com sucesso:', imageData);
+      const newImage: GeneratedImage = {
+        url: result.output[0],
+        prompt,
+        createdAt: new Date(),
+      };
 
-      setGeneratedImages([imageData, ...generatedImages]);
+      setGeneratedImages(prev => [newImage, ...prev]);
 
       toast({
         title: 'Sucesso',
@@ -169,72 +161,68 @@ export function ImageGenerator() {
   };
 
   return (
-    <Box minH="100vh" bg="gray.50" p={6}>
-      <Container maxW="6xl">
-        <VStack spacing={8} align="stretch">
-          <Box>
-            <Heading as="h1" size="lg" mb={2}>
-              Gerador de Imagens AI
-            </Heading>
-            <Text color="gray.600">
-              Gere imagens únicas usando inteligência artificial
-            </Text>
-          </Box>
+    <Layout>
+      <Box minH="100vh" bg="gray.50" p={6}>
+        <Container maxW="6xl">
+          <VStack spacing={8} align="stretch">
+            <Box>
+              <Heading as="h1" size="lg" mb={2}>
+                Gerador de Imagens AI
+              </Heading>
+              <Text color="gray.600">
+                Gere imagens únicas usando inteligência artificial
+              </Text>
+            </Box>
 
-          <Card>
-            <CardBody>
-              <VStack spacing={4}>
-                <FormControl isRequired>
-                  <FormLabel>Prompt</FormLabel>
-                  <Input
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="Descreva a imagem que você quer gerar..."
-                  />
-                </FormControl>
+            <Card>
+              <CardBody>
+                <VStack spacing={4}>
+                  <FormControl isRequired>
+                    <FormLabel>Prompt</FormLabel>
+                    <Input
+                      value={prompt}
+                      onChange={(e) => setPrompt(e.target.value)}
+                      placeholder="Descreva a imagem que você quer gerar..."
+                    />
+                  </FormControl>
 
-                <FormControl>
-                  <FormLabel>Proporção</FormLabel>
-                  <Select
-                    value={aspectRatio}
-                    onChange={(e) => setAspectRatio(e.target.value)}
+                  <FormControl>
+                    <FormLabel>Proporção</FormLabel>
+                    <Select
+                      value={aspectRatio}
+                      onChange={(e) => setAspectRatio(e.target.value)}
+                    >
+                      <option value="1:1">Quadrado (1:1)</option>
+                      <option value="16:9">Paisagem (16:9)</option>
+                      <option value="9:16">Retrato (9:16)</option>
+                    </Select>
+                  </FormControl>
+
+                  <Button
+                    onClick={handleGenerate}
+                    isLoading={isGenerating}
+                    loadingText="Gerando..."
+                    bg="#FFDB01"
+                    color="black"
+                    _hover={{ bg: "#e5c501" }}
+                    width="full"
                   >
-                    <option value="1:1">Quadrado (1:1)</option>
-                    <option value="16:9">Paisagem (16:9)</option>
-                    <option value="9:16">Retrato (9:16)</option>
-                  </Select>
-                </FormControl>
+                    Gerar Imagem
+                  </Button>
+                </VStack>
+              </CardBody>
+            </Card>
 
-                <Button
-                  onClick={handleGenerate}
-                  isLoading={isGenerating}
-                  loadingText="Gerando..."
-                  bg="#FFDB01"
-                  color="black"
-                  _hover={{ bg: "#e5c501" }}
-                  width="full"
-                >
-                  Gerar Imagem
-                </Button>
-              </VStack>
-            </CardBody>
-          </Card>
-
-          <Box>
-            <Heading as="h2" size="md" mb={4}>
-              Imagens Geradas
-            </Heading>
-            {isLoading ? (
-              <Flex justify="center" p={8}>
-                <Spinner size="xl" color="#FFDB01" />
-              </Flex>
-            ) : (
+            <Box>
+              <Heading as="h2" size="md" mb={4}>
+                Imagens Geradas
+              </Heading>
               <Grid
                 templateColumns="repeat(auto-fill, minmax(250px, 1fr))"
                 gap={6}
               >
-                {generatedImages.map((image) => (
-                  <Card key={image.id} overflow="hidden">
+                {generatedImages.map((image, index) => (
+                  <Card key={index} overflow="hidden">
                     <AspectRatio ratio={1}>
                       <Image
                         src={image.url}
@@ -248,7 +236,7 @@ export function ImageGenerator() {
                       </Text>
                       <Flex justify="space-between" align="center">
                         <Text fontSize="xs" color="gray.500">
-                          {new Date(image.created_at).toLocaleDateString()}
+                          {image.createdAt.toLocaleDateString()}
                         </Text>
                         <IconButton
                           aria-label="Download"
@@ -261,10 +249,10 @@ export function ImageGenerator() {
                   </Card>
                 ))}
               </Grid>
-            )}
-          </Box>
-        </VStack>
-      </Container>
-    </Box>
+            </Box>
+          </VStack>
+        </Container>
+      </Box>
+    </Layout>
   );
 } 
