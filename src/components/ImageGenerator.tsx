@@ -20,8 +20,8 @@ import {
 const GENERATE_IMAGE_URL = 'https://vjokrgwwlhioqeqwlasz.supabase.co/functions/v1/generate-image';
 const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Modelo básico do Stable Diffusion
-const MODEL_VERSION = "stability-ai/stable-diffusion:db21e45d3f7023abc2a46ee38a23973f6dce16bb082a930b0c49861f96d1e5bf";
+// Modelo original do PVO AI
+const MODEL_VERSION = "prometheus1337/pvo-ai-md:46bbd3d415fa5ec4d2f1a931a0e9c686da9131da6235b81be3d1bb4dca700290";
 
 export function ImageGenerator() {
   const [prompt, setPrompt] = useState('');
@@ -68,10 +68,23 @@ export function ImageGenerator() {
           'apikey': ANON_KEY,
           'Authorization': `Bearer ${ANON_KEY}`,
         },
-        body: JSON.stringify({ 
-          prompt,
-          aspectRatio,
-          modelVersion: MODEL_VERSION
+        body: JSON.stringify({
+          version: MODEL_VERSION,
+          input: {
+            prompt,
+            model: "dev",
+            go_fast: false,
+            lora_scale: 1,
+            megapixels: "1",
+            num_outputs: 1,
+            aspect_ratio: aspectRatio,
+            output_format: "webp",
+            guidance_scale: 3,
+            output_quality: 80,
+            prompt_strength: 0.8,
+            extra_lora_scale: 1,
+            num_inference_steps: 28
+          }
         })
       });
 
