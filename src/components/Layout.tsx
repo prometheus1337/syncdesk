@@ -205,7 +205,7 @@ export function Layout({ children }: { children: ReactNode }) {
                   >
                     <Avatar
                       size={'sm'}
-                      name={appUser?.full_name}
+                      name={appUser?.name}
                       bg="#FFDB01"
                       color="black"
                     />
@@ -213,7 +213,7 @@ export function Layout({ children }: { children: ReactNode }) {
                       display={{ base: 'none', md: 'block' }}
                       color="black"
                     >
-                      {appUser?.full_name}
+                      {appUser?.name}
                     </Text>
                   </HStack>
                 </MenuButton>

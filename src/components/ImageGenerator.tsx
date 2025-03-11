@@ -5,14 +5,11 @@ import {
   FormControl,
   FormLabel,
   Input,
-  VStack,
-  useToast,
   Select,
-  Progress,
+  Stack,
   Image,
+  useToast,
   Text,
-  Card,
-  CardBody,
   Grid,
   GridItem,
   Slider,
@@ -24,53 +21,39 @@ import {
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
-  Flex,
-  Center,
   CircularProgress,
   CircularProgressLabel,
 } from '@chakra-ui/react';
 import { supabase } from '../lib/supabase';
 
-interface ImageGeneratorParams {
+interface ImageParams {
   prompt: string;
-  aspectRatio: string;
+  negativePrompt: string;
   guidanceScale: number;
   numInferenceSteps: number;
   promptStrength: number;
   loraScale: number;
+  aspectRatio: string;
 }
 
-const defaultParams: ImageGeneratorParams = {
-  prompt: '',
-  aspectRatio: '1:1',
-  guidanceScale: 3,
-  numInferenceSteps: 28,
-  promptStrength: 0.8,
-  loraScale: 1,
-};
-
-export function ImageGenerator() {
-  const [params, setParams] = useState<ImageGeneratorParams>(defaultParams);
-  const [isLoading, setIsLoading] = useState(false);
+export const ImageGenerator = () => {
+  const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [params, setParams] = useState<ImageParams>({
+    prompt: '',
+    negativePrompt: '',
+    guidanceScale: 7.5,
+    numInferenceSteps: 50,
+    promptStrength: 0.8,
+    loraScale: 0.6,
+    aspectRatio: '1:1',
+  });
+
   const toast = useToast();
 
-  const progressTimer = () => {
-    let currentProgress = 0;
-    const interval = setInterval(() => {
-      if (currentProgress >= 100) {
-        clearInterval(interval);
-        return;
-      }
-      currentProgress += 4; // 25 segundos total (100 / 25 = 4)
-      setProgress(Math.min(currentProgress, 95)); // Mantém em 95% até terminar
-    }, 1000);
-    return interval;
-  };
-
   const handleGenerate = async () => {
-    if (!params.prompt) {
+    if (!params.prompt.trim()) {
       toast({
         title: 'Erro',
         description: 'Por favor, insira um prompt',
@@ -81,105 +64,88 @@ export function ImageGenerator() {
       return;
     }
 
-    setIsLoading(true);
+    setLoading(true);
     setProgress(0);
-    setImageUrl(null);
-
-    const interval = progressTimer();
 
     try {
       const { data, error } = await supabase.functions.invoke('generate-image', {
         body: {
           prompt: params.prompt,
-          aspectRatio: params.aspectRatio,
+          negative_prompt: params.negativePrompt,
           guidance_scale: params.guidanceScale,
           num_inference_steps: params.numInferenceSteps,
           prompt_strength: params.promptStrength,
           lora_scale: params.loraScale,
-        }
+          aspect_ratio: params.aspectRatio,
+        },
       });
 
       if (error) throw error;
 
-      if (data.status === 'succeeded' && data.output) {
-        clearInterval(interval);
-        setProgress(100);
-        setImageUrl(data.output);
-        
-        const { error: dbError } = await supabase
-          .from('generated_images')
-          .insert({
-            url: data.output,
-            prompt: params.prompt,
-          });
-
-        if (dbError) {
-          console.error('Erro ao salvar imagem:', dbError);
-        }
-
-        toast({
-          title: 'Sucesso',
-          description: 'Imagem gerada com sucesso!',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-      } else {
-        throw new Error('Falha ao gerar imagem');
-      }
+      setImageUrl(data.output);
+      toast({
+        title: 'Sucesso',
+        description: 'Imagem gerada com sucesso!',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
     } catch (error) {
-      clearInterval(interval);
-      console.error('Erro:', error);
+      console.error('Erro ao gerar imagem:', error);
       toast({
         title: 'Erro',
-        description: error instanceof Error ? error.message : 'Erro ao gerar imagem',
+        description: 'Erro ao gerar imagem. Por favor, tente novamente.',
         status: 'error',
         duration: 3000,
         isClosable: true,
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
     <Grid templateColumns="repeat(2, 1fr)" gap={6} p={6} maxW="1400px" mx="auto">
-      {/* Controles à esquerda */}
       <GridItem>
-        <VStack spacing={6} align="stretch" maxW="500px">
-          <FormControl>
+        <Stack spacing={6} align="stretch" maxW="500px">
+          <Box 
+            p={4} 
+            bg="yellow.100" 
+            borderRadius="md"
+            borderLeft="4px"
+            borderLeftColor="yellow.400"
+          >
+            <Text fontSize="sm" color="yellow.800">
+              Importante: Para se referir ao Vine em suas imagens, sempre use o termo "vinepvo".
+            </Text>
+          </Box>
+
+          <FormControl isRequired>
             <FormLabel>Prompt</FormLabel>
             <Input
               value={params.prompt}
               onChange={(e) => setParams({ ...params, prompt: e.target.value })}
-              placeholder="Descreva a imagem que você quer gerar..."
-              isDisabled={isLoading}
+              placeholder="Descreva a imagem que você quer gerar"
             />
           </FormControl>
 
           <FormControl>
-            <FormLabel>Proporção</FormLabel>
-            <Select
-              value={params.aspectRatio}
-              onChange={(e) => setParams({ ...params, aspectRatio: e.target.value })}
-              isDisabled={isLoading}
-            >
-              <option value="1:1">Quadrado (1:1)</option>
-              <option value="3:4">Retrato (3:4)</option>
-              <option value="4:3">Paisagem (4:3)</option>
-              <option value="16:9">Widescreen (16:9)</option>
-            </Select>
+            <FormLabel>Prompt Negativo</FormLabel>
+            <Input
+              value={params.negativePrompt}
+              onChange={(e) => setParams({ ...params, negativePrompt: e.target.value })}
+              placeholder="Descreva o que você não quer na imagem"
+            />
           </FormControl>
 
           <FormControl>
             <FormLabel>Guidance Scale ({params.guidanceScale})</FormLabel>
             <Slider
               value={params.guidanceScale}
-              onChange={(v) => setParams({ ...params, guidanceScale: v })}
+              onChange={(v: number) => setParams({ ...params, guidanceScale: v })}
               min={1}
               max={20}
               step={0.1}
-              isDisabled={isLoading}
             >
               <SliderTrack>
                 <SliderFilledTrack />
@@ -189,13 +155,13 @@ export function ImageGenerator() {
           </FormControl>
 
           <FormControl>
-            <FormLabel>Inference Steps</FormLabel>
+            <FormLabel>Passos de Inferência ({params.numInferenceSteps})</FormLabel>
             <NumberInput
               value={params.numInferenceSteps}
-              onChange={(_, v) => setParams({ ...params, numInferenceSteps: v })}
+              onChange={(_: string, v: number) => setParams({ ...params, numInferenceSteps: v })}
               min={1}
-              max={50}
-              isDisabled={isLoading}
+              max={150}
+              step={1}
             >
               <NumberInputField />
               <NumberInputStepper>
@@ -206,14 +172,13 @@ export function ImageGenerator() {
           </FormControl>
 
           <FormControl>
-            <FormLabel>Prompt Strength ({params.promptStrength})</FormLabel>
+            <FormLabel>Força do Prompt ({params.promptStrength})</FormLabel>
             <Slider
               value={params.promptStrength}
-              onChange={(v) => setParams({ ...params, promptStrength: v })}
+              onChange={(v: number) => setParams({ ...params, promptStrength: v })}
               min={0}
               max={1}
               step={0.1}
-              isDisabled={isLoading}
             >
               <SliderTrack>
                 <SliderFilledTrack />
@@ -223,14 +188,13 @@ export function ImageGenerator() {
           </FormControl>
 
           <FormControl>
-            <FormLabel>LoRA Scale ({params.loraScale})</FormLabel>
+            <FormLabel>Escala LoRA ({params.loraScale})</FormLabel>
             <Slider
               value={params.loraScale}
-              onChange={(v) => setParams({ ...params, loraScale: v })}
+              onChange={(v: number) => setParams({ ...params, loraScale: v })}
               min={0}
-              max={2}
+              max={1}
               step={0.1}
-              isDisabled={isLoading}
             >
               <SliderTrack>
                 <SliderFilledTrack />
@@ -239,50 +203,55 @@ export function ImageGenerator() {
             </Slider>
           </FormControl>
 
+          <FormControl>
+            <FormLabel>Proporção</FormLabel>
+            <Select
+              value={params.aspectRatio}
+              onChange={(e) => setParams({ ...params, aspectRatio: e.target.value })}
+            >
+              <option value="1:1">Quadrado (1:1)</option>
+              <option value="3:4">Retrato (3:4)</option>
+              <option value="4:3">Paisagem (4:3)</option>
+            </Select>
+          </FormControl>
+
           <Button
             onClick={handleGenerate}
-            isLoading={isLoading}
+            isLoading={loading}
             loadingText="Gerando..."
-            colorScheme="yellow"
-            size="lg"
+            colorScheme="blue"
           >
             Gerar Imagem
           </Button>
-        </VStack>
+        </Stack>
       </GridItem>
 
-      {/* Área da imagem à direita */}
       <GridItem>
         <Box
-          h="100%"
-          minH="600px"
           borderWidth={1}
           borderRadius="lg"
           p={6}
+          minH="600px"
           display="flex"
           alignItems="center"
           justifyContent="center"
-          bg="gray.50"
         >
-          {isLoading ? (
-            <VStack spacing={4}>
+          {loading ? (
+            <Stack spacing={4}>
               <CircularProgress
                 value={progress}
                 size="120px"
                 thickness="4px"
-                color="yellow.400"
+                color="blue.500"
               >
                 <CircularProgressLabel>{progress}%</CircularProgressLabel>
               </CircularProgress>
-              <Text>Gerando sua imagem...</Text>
-            </VStack>
+              <Text>Gerando imagem...</Text>
+            </Stack>
           ) : imageUrl ? (
             <Image
               src={imageUrl}
               alt="Imagem gerada"
-              borderRadius="lg"
-              w="100%"
-              h="auto"
               maxH="600px"
               objectFit="contain"
             />
@@ -295,4 +264,4 @@ export function ImageGenerator() {
       </GridItem>
     </Grid>
   );
-} 
+}; 
