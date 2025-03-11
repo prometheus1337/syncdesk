@@ -7,16 +7,15 @@ import {
   Button,
   VStack,
 } from '@chakra-ui/react';
-import { UserRole, UserFormData } from '../types/user';
 
 interface UserFormProps {
-  onSubmit: (data: UserFormData) => void;
+  onSubmit: (data: { name: string; email: string; role: string }) => void;
 }
 
 export const UserForm = ({ onSubmit }: UserFormProps) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState<UserRole>(UserRole.SUPPORT);
+  const [role, setRole] = useState('support');
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -49,13 +48,12 @@ export const UserForm = ({ onSubmit }: UserFormProps) => {
           <FormLabel>Cargo</FormLabel>
           <Select
             value={role}
-            onChange={(e) => setRole(e.target.value as UserRole)}
+            onChange={(e) => setRole(e.target.value)}
           >
-            <option value={UserRole.ADMIN}>Administrador</option>
-            <option value={UserRole.SUPPORT}>Suporte</option>
-            <option value={UserRole.COMMERCIAL}>Comercial</option>
-            <option value={UserRole.TEACHER}>Professor</option>
-            <option value={UserRole.DESIGNER}>Designer</option>
+            <option value="admin">Administrador</option>
+            <option value="support">Suporte</option>
+            <option value="commercial">Comercial</option>
+            <option value="essay_director">Diretor de Redação</option>
           </Select>
         </FormControl>
 

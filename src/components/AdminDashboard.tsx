@@ -120,25 +120,17 @@ export function AdminDashboard() {
 
   const handleCreateUser = async (userData: { name: string; email: string; role: string }) => {
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: userData.email,
-        password: 'changeme123',
+      // Criar usuário na autenticação
+      const { error: authError } = await supabase.functions.invoke('create-user', {
+        body: {
+          email: userData.email,
+          password: 'changeme123',
+          role: userData.role,
+          name: userData.name
+        }
       });
 
       if (authError) throw authError;
-
-      const { error: profileError } = await supabase
-        .from('app_users')
-        .insert([
-          {
-            id: authData.user?.id,
-            email: userData.email,
-            full_name: userData.name,
-            role: userData.role,
-          },
-        ]);
-
-      if (profileError) throw profileError;
 
       toast({
         title: 'Usuário criado com sucesso',
