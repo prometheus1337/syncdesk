@@ -178,7 +178,8 @@ export function EssayCreditLogs() {
   async function handleCreateLog() {
     setIsLoading(true);
     
-    const { error } = await supabase
+    // Primeiro, insere o log de crédito
+    const { error: logError } = await supabase
       .from('essay_credit_logs')
       .insert([{
         student_email: newLog.student_email,
@@ -189,11 +190,29 @@ export function EssayCreditLogs() {
         created_by: appUser?.email || 'API',
       }]);
 
-    if (error) {
+    if (logError) {
       toast({
         title: 'Erro ao registrar operação',
-        description: error.message,
+        description: logError.message,
         status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    // Depois, atualiza a data do último crédito
+    const { error: updateError } = await supabase
+      .from('essay_students')
+      .update({ last_credit_update: new Date().toISOString() })
+      .eq('email', newLog.student_email);
+
+    if (updateError) {
+      toast({
+        title: 'Aviso',
+        description: 'Operação registrada, mas houve um erro ao atualizar a data do último crédito.',
+        status: 'warning',
         duration: 3000,
         isClosable: true,
       });
@@ -203,17 +222,17 @@ export function EssayCreditLogs() {
         status: 'success',
         duration: 2000,
       });
-      setNewLog({
-        student_email: '',
-        credits_change: 0,
-        operation_type: 'add',
-        motive: '',
-      });
-      onCreateClose();
-      fetchLogs();
-      fetchStudents();
     }
-    
+
+    setNewLog({
+      student_email: '',
+      credits_change: 0,
+      operation_type: 'add',
+      motive: '',
+    });
+    onCreateClose();
+    fetchLogs();
+    fetchStudents();
     setIsLoading(false);
   }
 

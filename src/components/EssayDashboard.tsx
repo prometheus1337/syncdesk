@@ -45,6 +45,7 @@ interface EssayStudent {
   total_credits: number;
   total_spent: number;
   last_purchase: string;
+  last_credit_update: string;
 }
 
 interface CreditLog {
@@ -227,7 +228,8 @@ export function EssayDashboard() {
   async function handleCreatePurchase() {
     setIsLoading(true);
     
-    const { error } = await supabase
+    // Primeiro, insere o log de crédito
+    const { error: logError } = await supabase
       .from('essay_credit_logs')
       .insert([{
         student_name: newPurchase.student_name,
@@ -241,11 +243,29 @@ export function EssayDashboard() {
         status: 'completed',
       }]);
 
-    if (error) {
+    if (logError) {
       toast({
         title: 'Erro ao registrar compra',
-        description: error.message,
+        description: logError.message,
         status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    // Depois, atualiza a data do último crédito
+    const { error: updateError } = await supabase
+      .from('essay_students')
+      .update({ last_credit_update: new Date().toISOString() })
+      .eq('email', newPurchase.student_email);
+
+    if (updateError) {
+      toast({
+        title: 'Aviso',
+        description: 'Compra registrada, mas houve um erro ao atualizar a data do último crédito.',
+        status: 'warning',
         duration: 3000,
         isClosable: true,
       });
@@ -255,17 +275,17 @@ export function EssayDashboard() {
         status: 'success',
         duration: 2000,
       });
-      setNewPurchase({
-        student_name: '',
-        student_email: '',
-        student_phone: '',
-        credits_amount: 0,
-        price_paid: 0,
-      });
-      onCreateClose();
-      fetchStudents();
     }
-    
+
+    setNewPurchase({
+      student_name: '',
+      student_email: '',
+      student_phone: '',
+      credits_amount: 0,
+      price_paid: 0,
+    });
+    onCreateClose();
+    fetchStudents();
     setIsLoading(false);
   }
 
@@ -362,6 +382,7 @@ export function EssayDashboard() {
                   <Th>Email</Th>
                   <Th>Créditos</Th>
                   <Th>Total Investido</Th>
+                  <Th>Última Atualização</Th>
                   <Th>Ações</Th>
                 </Tr>
               </Thead>
@@ -373,6 +394,7 @@ export function EssayDashboard() {
                     <Td>{student.email}</Td>
                     <Td>{student.total_credits}</Td>
                     <Td>{formatCurrency(student.total_spent)}</Td>
+                    <Td>{student.last_credit_update ? formatDate(student.last_credit_update) : '-'}</Td>
                     <Td>
                       <Button
                         size="sm"
