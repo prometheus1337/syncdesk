@@ -23,7 +23,11 @@ const theme = extendTheme({
   components: {
     Button: {
       defaultProps: {
-        colorScheme: 'blue',
+        bg: '#FFDB01',
+        color: 'black',
+        _hover: {
+          bg: '#E5C501',
+        }
       },
     },
     Card: {
