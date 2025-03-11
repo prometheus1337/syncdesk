@@ -154,6 +154,40 @@ export function AdminDashboard() {
     }
   };
 
+  const handleUpdateUser = async (userData: { name: string; email: string; role: string }) => {
+    try {
+      const { error } = await supabase
+        .from('app_users')
+        .update({
+          full_name: userData.name,
+          email: userData.email,
+          role: userData.role,
+        })
+        .eq('id', selectedUser?.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Usuário atualizado com sucesso',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      onClose();
+      fetchUsers();
+    } catch (error: any) {
+      console.error('Error updating user:', error);
+      toast({
+        title: 'Erro ao atualizar usuário',
+        description: error.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   return (
     <Box minH="100vh" bg="gray.50" p={6}>
       <Box maxW="1200px" mx="auto">
@@ -252,7 +286,11 @@ export function AdminDashboard() {
             </ModalHeader>
             <ModalCloseButton />
             <ModalBody pb="6">
-              <UserForm onSubmit={handleCreateUser} />
+              <UserForm 
+                onSubmit={selectedUser ? handleUpdateUser : handleCreateUser} 
+                initialData={selectedUser || undefined}
+                isEditing={!!selectedUser}
+              />
             </ModalBody>
           </ModalContent>
         </Modal>
