@@ -6,16 +6,16 @@ interface RestrictedRouteProps {
   roles: UserRole[];
 }
 
-export function RestrictedRoute({ roles }: RestrictedRouteProps) {
-  const { user } = useAuth();
+export const RestrictedRoute = ({ roles }: RestrictedRouteProps) => {
+  const { appUser } = useAuth();
 
-  if (!user) {
+  if (!appUser) {
     return <Navigate to="/login" />;
   }
 
-  if (!roles.includes(user.role as UserRole)) {
+  if (!roles.includes(appUser.role)) {
     return <Navigate to="/" />;
   }
 
   return <Outlet />;
-} 
+}; 

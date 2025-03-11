@@ -13,6 +13,7 @@ import { EssayCreditLogs } from './components/EssayCreditLogs';
 import { ImageGenerator } from './components/ImageGenerator';
 import { RestrictedRoute } from './components/RestrictedRoute';
 import { UserRole } from './types/UserRole';
+import PrivateRoute from './components/PrivateRoute';
 
 const theme = extendTheme({
   styles: {
@@ -66,17 +67,21 @@ function App() {
             <Route path="/" element={<Navigate to="/refunds" />} />
             <Route path="/login" element={<LoginPage />} />
             <Route element={<PrivateRoute />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route element={<RestrictedRoute roles={[UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT]} />}>
-                <Route path="/documentos" element={<Documents />} />
-                <Route path="/redacoes" element={<Essays />} />
-                <Route path="/logs" element={<CreditLogs />} />
-              </Route>
-              <Route element={<RestrictedRoute roles={[UserRole.ADMIN]} />}>
-                <Route path="/admin" element={<Admin />} />
-              </Route>
-              <Route element={<RestrictedRoute roles={[UserRole.ADMIN, UserRole.DESIGNER]} />}>
-                <Route path="/images" element={<ImageGenerator />} />
+              <Route element={<Layout />}>
+                <Route path="/" element={<Dashboard />} />
+                <Route element={<RestrictedRoute roles={[UserRole.ADMIN, UserRole.SUPPORT, UserRole.COMMERCIAL]} />}>
+                  <Route path="/docs" element={<Documents />} />
+                </Route>
+                <Route element={<RestrictedRoute roles={[UserRole.ADMIN]} />}>
+                  <Route path="/admin" element={<Admin />} />
+                </Route>
+                <Route element={<RestrictedRoute roles={[UserRole.ADMIN, UserRole.DESIGNER]} />}>
+                  <Route path="/images" element={<ImageGenerator />} />
+                </Route>
+                <Route element={<RestrictedRoute roles={[UserRole.ADMIN, UserRole.TEACHER]} />}>
+                  <Route path="/essays" element={<EssayDashboard />} />
+                  <Route path="/essay-logs" element={<EssayCreditLogs />} />
+                </Route>
               </Route>
             </Route>
             <Route
@@ -108,22 +113,6 @@ function App() {
               element={
                 <PrivateRoute>
                   <ReportsDashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/essays"
-              element={
-                <PrivateRoute requiredRole="essay_director">
-                  <EssayDashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/essay-logs"
-              element={
-                <PrivateRoute>
-                  <EssayCreditLogs />
                 </PrivateRoute>
               }
             />

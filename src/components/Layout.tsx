@@ -28,6 +28,7 @@ import {
 } from '@chakra-ui/icons';
 import { useAuth } from '../contexts/AuthContext';
 import { FaFileAlt, FaChartBar } from 'react-icons/fa';
+import { UserRole } from '../types/user';
 
 // Importar o logo SVG
 import LogoSVGFile from '../assets/logo.svg';
@@ -85,7 +86,7 @@ export function Layout({ children }: { children: ReactNode }) {
         icon: <FaChartBar />
       });
 
-      if (appUser.role !== 'designer') {
+      if (appUser.role !== UserRole.DESIGNER) {
         links.push({
           href: '/docs',
           label: 'Documentos',
@@ -93,23 +94,29 @@ export function Layout({ children }: { children: ReactNode }) {
         });
       }
       
-      if (appUser.role === 'admin') {
+      if (appUser.role === UserRole.ADMIN) {
         links.push({ 
           href: '/admin', 
           label: 'Administração',
           icon: <SettingsIcon />
         });
 
-        if (appUser.role === 'admin' || appUser.role === 'designer') {
-          links.push({ 
-            href: '/images', 
-            label: 'Gerador de Imagens',
-            icon: <AddIcon />
-          });
-        }
+        links.push({ 
+          href: '/images', 
+          label: 'Gerador de Imagens',
+          icon: <AddIcon />
+        });
       }
 
-      if (appUser.role === 'admin' || appUser.role === 'essay_director') {
+      if (appUser.role === UserRole.DESIGNER) {
+        links.push({ 
+          href: '/images', 
+          label: 'Gerador de Imagens',
+          icon: <AddIcon />
+        });
+      }
+
+      if (appUser.role === UserRole.ADMIN || appUser.role === UserRole.TEACHER) {
         links.push({ 
           href: '/essays', 
           label: 'Redações',

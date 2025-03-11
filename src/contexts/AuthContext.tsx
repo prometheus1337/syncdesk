@@ -1,52 +1,51 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { User, UserRole } from '../types/user';
 import { supabase } from '../lib/supabase';
 
-interface AppUser {
-  id: string;
-  email: string;
-  full_name: string;
-  role: 'admin' | 'support' | 'commercial' | 'essay_director';
-}
-
 interface AuthContextType {
-  appUser: AppUser | null;
+  appUser: User | null;
   loading: boolean;
+  signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  appUser: null,
-  loading: true,
-  signOut: async () => {},
-});
+const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
-export function useAuth() {
+export const useAuth = () => {
   return useContext(AuthContext);
+};
+
+interface AuthProviderProps {
+  children: ReactNode;
 }
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [appUser, setAppUser] = useState<AppUser | null>(null);
+export const AuthProvider = ({ children }: AuthProviderProps) => {
+  const [appUser, setAppUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Busca a sessão atual
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        fetchAppUser(session.user);
-      } else {
-        setLoading(false);
-      }
-    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
 
-    // Escuta mudanças na autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        fetchAppUser(session.user);
+        if (profile) {
+          setAppUser({
+            id: profile.id,
+            name: profile.name,
+            email: profile.email,
+            role: profile.role as UserRole,
+            avatar_url: profile.avatar_url,
+            created_at: profile.created_at
+          });
+        }
       } else {
         setAppUser(null);
-        setLoading(false);
       }
+      setLoading(false);
     });
 
     return () => {
@@ -54,38 +53,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  async function fetchAppUser(authUser: User) {
-    try {
-      const { data, error } = await supabase
-        .from('app_users')
-        .select('*')
-        .eq('id', authUser.id)
-        .single();
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      if (error) throw error;
-
-      setAppUser(data);
-    } catch (error) {
-      console.error('Error fetching app user:', error);
-      setAppUser(null);
-    } finally {
-      setLoading(false);
+    if (error) {
+      throw error;
     }
-  }
+  };
 
-  async function signOut() {
-    await supabase.auth.signOut();
-  }
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      throw error;
+    }
+  };
 
   const value = {
     appUser,
     loading,
+    signIn,
     signOut,
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
-} 
+}; 
