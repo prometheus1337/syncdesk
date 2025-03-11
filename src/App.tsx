@@ -10,6 +10,7 @@ import { Layout } from './components/Layout';
 import { EssayDashboard } from './components/EssayDashboard';
 import { EssayCreditLogs } from './components/EssayCreditLogs';
 import { ImageGenerator } from './components/ImageGenerator';
+import { AdminDashboard } from './components/AdminDashboard';
 import PrivateRoute from './components/PrivateRoute';
 
 const theme = extendTheme({
@@ -50,6 +51,16 @@ function App() {
                 <PrivateRoute requiredRole="essay_director">
                   <Layout>
                     <EssayDashboard />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <PrivateRoute requiredRole="admin">
+                  <Layout>
+                    <AdminDashboard />
                   </Layout>
                 </PrivateRoute>
               }
