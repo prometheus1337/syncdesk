@@ -11,6 +11,8 @@ import { Layout } from './components/Layout';
 import { EssayDashboard } from './components/EssayDashboard';
 import { EssayCreditLogs } from './components/EssayCreditLogs';
 import { ImageGenerator } from './components/ImageGenerator';
+import { RestrictedRoute } from './components/RestrictedRoute';
+import { UserRole } from './types/UserRole';
 
 const theme = extendTheme({
   styles: {
@@ -63,14 +65,20 @@ function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/refunds" />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route
-              path="/admin"
-              element={
-                <PrivateRoute requiredRole="admin">
-                  <AdminDashboard />
-                </PrivateRoute>
-              }
-            />
+            <Route element={<PrivateRoute />}>
+              <Route path="/" element={<Dashboard />} />
+              <Route element={<RestrictedRoute roles={[UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT]} />}>
+                <Route path="/documentos" element={<Documents />} />
+                <Route path="/redacoes" element={<Essays />} />
+                <Route path="/logs" element={<CreditLogs />} />
+              </Route>
+              <Route element={<RestrictedRoute roles={[UserRole.ADMIN]} />}>
+                <Route path="/admin" element={<Admin />} />
+              </Route>
+              <Route element={<RestrictedRoute roles={[UserRole.ADMIN, UserRole.DESIGNER]} />}>
+                <Route path="/images" element={<ImageGenerator />} />
+              </Route>
+            </Route>
             <Route
               path="/refunds"
               element={
@@ -121,14 +129,6 @@ function App() {
             />
             <Route path="/docs/admin" element={<DocsHub />} />
             <Route path="/docs/edit/:docId" element={<DocsHub />} />
-            <Route
-              path="/images"
-              element={
-                <PrivateRoute requiredRole="admin">
-                  <ImageGenerator />
-                </PrivateRoute>
-              }
-            />
           </Routes>
         </Router>
       </AuthProvider>

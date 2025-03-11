@@ -146,14 +146,14 @@ export function ImageGenerator() {
     <Grid templateColumns="repeat(2, 1fr)" gap={6} p={6} maxW="1400px" mx="auto">
       {/* Controles à esquerda */}
       <GridItem>
-        <VStack spacing={6} align="stretch">
+        <VStack spacing={6} align="stretch" maxW="500px">
           <FormControl>
             <FormLabel>Prompt</FormLabel>
             <Input
               value={params.prompt}
               onChange={(e) => setParams({ ...params, prompt: e.target.value })}
               placeholder="Descreva a imagem que você quer gerar..."
-              disabled={isLoading}
+              isDisabled={isLoading}
             />
           </FormControl>
 
@@ -162,7 +162,7 @@ export function ImageGenerator() {
             <Select
               value={params.aspectRatio}
               onChange={(e) => setParams({ ...params, aspectRatio: e.target.value })}
-              disabled={isLoading}
+              isDisabled={isLoading}
             >
               <option value="1:1">Quadrado (1:1)</option>
               <option value="3:4">Retrato (3:4)</option>
@@ -255,12 +255,14 @@ export function ImageGenerator() {
       <GridItem>
         <Box
           h="100%"
+          minH="600px"
           borderWidth={1}
           borderRadius="lg"
           p={6}
           display="flex"
           alignItems="center"
           justifyContent="center"
+          bg="gray.50"
         >
           {isLoading ? (
             <VStack spacing={4}>

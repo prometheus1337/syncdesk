@@ -85,11 +85,13 @@ export function Layout({ children }: { children: ReactNode }) {
         icon: <FaChartBar />
       });
 
-      links.push({
-        href: '/docs',
-        label: 'Documentos',
-        icon: <FaFileAlt />
-      });
+      if (appUser.role !== 'designer') {
+        links.push({
+          href: '/docs',
+          label: 'Documentos',
+          icon: <FaFileAlt />
+        });
+      }
       
       if (appUser.role === 'admin') {
         links.push({ 
@@ -98,11 +100,13 @@ export function Layout({ children }: { children: ReactNode }) {
           icon: <SettingsIcon />
         });
 
-        links.push({ 
-          href: '/images', 
-          label: 'Gerador de Imagens',
-          icon: <AddIcon />
-        });
+        if (appUser.role === 'admin' || appUser.role === 'designer') {
+          links.push({ 
+            href: '/images', 
+            label: 'Gerador de Imagens',
+            icon: <AddIcon />
+          });
+        }
       }
 
       if (appUser.role === 'admin' || appUser.role === 'essay_director') {
