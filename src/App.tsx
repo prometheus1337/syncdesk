@@ -1,5 +1,5 @@
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
-import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { RefundDashboard } from './components/RefundDashboard';
 import { DocsHub } from './components/DocsHub';
@@ -10,11 +10,7 @@ import { Layout } from './components/Layout';
 import { EssayDashboard } from './components/EssayDashboard';
 import { EssayCreditLogs } from './components/EssayCreditLogs';
 import { ImageGenerator } from './components/ImageGenerator';
-import { RestrictedRoute } from './components/RestrictedRoute';
-import { UserRole } from './types/user';
-import { Dashboard } from './components/Dashboard';
-import { Documents } from './components/Documents';
-import { Admin } from './components/Admin';
+import PrivateRoute from './components/PrivateRoute';
 
 const theme = extendTheme({
   styles: {
@@ -43,61 +39,97 @@ const theme = extendTheme({
 
 function App() {
   return (
-    <Router>
-      <ChakraProvider theme={theme}>
-        <AuthProvider>
+    <ChakraProvider theme={theme}>
+      <AuthProvider>
+        <Router>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
-            
-            <Route element={<RestrictedRoute roles={[
-              UserRole.ADMIN,
-              UserRole.SUPPORT,
-              UserRole.COMMERCIAL,
-              UserRole.TEACHER,
-              UserRole.DESIGNER
-            ]} />}>
-              <Route element={<Layout><Outlet /></Layout>}>
-                <Route path="/" element={<Dashboard />} />
-                
-                <Route element={<RestrictedRoute roles={[UserRole.ADMIN, UserRole.SUPPORT, UserRole.COMMERCIAL]} />}>
-                  <Route path="/docs" element={<Documents />} />
-                </Route>
-
-                <Route element={<RestrictedRoute roles={[UserRole.ADMIN]} />}>
-                  <Route path="/admin" element={<Admin />} />
-                </Route>
-
-                <Route element={<RestrictedRoute roles={[UserRole.ADMIN, UserRole.DESIGNER]} />}>
-                  <Route path="/images" element={<ImageGenerator />} />
-                </Route>
-
-                <Route element={<RestrictedRoute roles={[UserRole.ADMIN, UserRole.TEACHER]} />}>
-                  <Route path="/essays" element={<EssayDashboard />} />
-                  <Route path="/essay-logs" element={<EssayCreditLogs />} />
-                </Route>
-              </Route>
-            </Route>
-
-            <Route element={<RestrictedRoute roles={[UserRole.ADMIN, UserRole.SUPPORT]} />}>
-              <Route path="/refunds" element={<RefundDashboard />} />
-            </Route>
-
-            <Route element={<RestrictedRoute roles={[UserRole.ADMIN, UserRole.SUPPORT, UserRole.COMMERCIAL]} />}>
-              <Route path="/docs/view" element={<DocsViewer />} />
-            </Route>
-
-            <Route element={<RestrictedRoute roles={[UserRole.ADMIN, UserRole.SUPPORT]} />}>
-              <Route path="/reports" element={<ReportsDashboard />} />
-            </Route>
-
-            <Route element={<RestrictedRoute roles={[UserRole.ADMIN]} />}>
-              <Route path="/docs/admin" element={<DocsHub />} />
-              <Route path="/docs/edit/:docId" element={<DocsHub />} />
-            </Route>
+            <Route
+              path="/"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <EssayDashboard />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/refunds"
+              element={
+                <PrivateRoute requiredRole="support">
+                  <Layout>
+                    <RefundDashboard />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/docs"
+              element={
+                <PrivateRoute requiredRole="admin">
+                  <Layout>
+                    <DocsHub />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/docs/view"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <DocsViewer />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/essays"
+              element={
+                <PrivateRoute requiredRole="essay_director">
+                  <Layout>
+                    <EssayDashboard />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/essay-logs"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <EssayCreditLogs />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/reports"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <ReportsDashboard />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/images"
+              element={
+                <PrivateRoute requiredRole="admin">
+                  <Layout>
+                    <ImageGenerator />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route path="/docs/admin" element={<DocsHub />} />
+            <Route path="/docs/edit/:docId" element={<DocsHub />} />
           </Routes>
-        </AuthProvider>
-      </ChakraProvider>
-    </Router>
+        </Router>
+      </AuthProvider>
+    </ChakraProvider>
   );
 }
 

@@ -28,7 +28,6 @@ import {
 } from '@chakra-ui/icons';
 import { useAuth } from '../contexts/AuthContext';
 import { FaFileAlt, FaChartBar } from 'react-icons/fa';
-import { UserRole } from '../types/user';
 
 // Importar o logo SVG
 import LogoSVGFile from '../assets/logo.svg';
@@ -86,15 +85,13 @@ export function Layout({ children }: { children: ReactNode }) {
         icon: <FaChartBar />
       });
 
-      if (appUser.role !== UserRole.DESIGNER) {
-        links.push({
-          href: '/docs',
-          label: 'Documentos',
-          icon: <FaFileAlt />
-        });
-      }
+      links.push({
+        href: '/docs',
+        label: 'Documentos',
+        icon: <FaFileAlt />
+      });
       
-      if (appUser.role === UserRole.ADMIN) {
+      if (appUser.role === 'admin') {
         links.push({ 
           href: '/admin', 
           label: 'Administração',
@@ -108,15 +105,7 @@ export function Layout({ children }: { children: ReactNode }) {
         });
       }
 
-      if (appUser.role === UserRole.DESIGNER) {
-        links.push({ 
-          href: '/images', 
-          label: 'Gerador de Imagens',
-          icon: <AddIcon />
-        });
-      }
-
-      if (appUser.role === UserRole.ADMIN || appUser.role === UserRole.TEACHER) {
+      if (appUser.role === 'admin' || appUser.role === 'essay_director') {
         links.push({ 
           href: '/essays', 
           label: 'Redações',
@@ -205,7 +194,7 @@ export function Layout({ children }: { children: ReactNode }) {
                   >
                     <Avatar
                       size={'sm'}
-                      name={appUser?.name}
+                      name={appUser?.full_name}
                       bg="#FFDB01"
                       color="black"
                     />
@@ -213,7 +202,7 @@ export function Layout({ children }: { children: ReactNode }) {
                       display={{ base: 'none', md: 'block' }}
                       color="black"
                     >
-                      {appUser?.name}
+                      {appUser?.full_name}
                     </Text>
                   </HStack>
                 </MenuButton>

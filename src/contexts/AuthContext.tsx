@@ -1,80 +1,52 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, UserRole } from '../types/user';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
+interface AppUser {
+  id: string;
+  email: string;
+  full_name: string;
+  role: 'admin' | 'support' | 'commercial' | 'essay_director';
+}
+
 interface AuthContextType {
-  appUser: User | null;
+  appUser: AppUser | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   appUser: null,
   loading: true,
-  signIn: async () => {},
   signOut: async () => {},
 });
 
-export const useAuth = () => {
+export function useAuth() {
   return useContext(AuthContext);
-};
-
-interface AuthProviderProps {
-  children: ReactNode;
 }
 
-export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [appUser, setAppUser] = useState<User | null>(null);
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar sessão atual
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile) {
-          setAppUser({
-            id: profile.id,
-            name: profile.name,
-            email: profile.email,
-            role: profile.role as UserRole,
-            avatar_url: profile.avatar_url,
-            created_at: profile.created_at
-          });
-        }
+    // Busca a sessão atual
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        fetchAppUser(session.user);
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
-    // Escutar mudanças na autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile) {
-          setAppUser({
-            id: profile.id,
-            name: profile.name,
-            email: profile.email,
-            role: profile.role as UserRole,
-            avatar_url: profile.avatar_url,
-            created_at: profile.created_at
-          });
-        }
+    // Escuta mudanças na autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        fetchAppUser(session.user);
       } else {
         setAppUser(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => {
@@ -82,28 +54,32 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+  async function fetchAppUser(authUser: User) {
+    try {
+      const { data, error } = await supabase
+        .from('app_users')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
 
-    if (error) {
-      throw error;
-    }
-  };
+      if (error) throw error;
 
-  const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      throw error;
+      setAppUser(data);
+    } catch (error) {
+      console.error('Error fetching app user:', error);
+      setAppUser(null);
+    } finally {
+      setLoading(false);
     }
-  };
+  }
+
+  async function signOut() {
+    await supabase.auth.signOut();
+  }
 
   const value = {
     appUser,
     loading,
-    signIn,
     signOut,
   };
 
@@ -112,4 +88,4 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       {children}
     </AuthContext.Provider>
   );
-}; 
+} 
