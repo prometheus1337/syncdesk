@@ -1,17 +1,14 @@
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import { RefundDashboard } from './components/RefundDashboard';
-import { DocsHub } from './components/DocsHub';
-import { DocsViewer } from './components/DocsViewer';
-import { ReportsDashboard } from './components/ReportsDashboard';
-import LoginPage from './components/LoginPage';
 import { Layout } from './components/Layout';
-import { EssayDashboard } from './components/EssayDashboard';
-import { EssayCreditLogs } from './components/EssayCreditLogs';
-import { ImageGenerator } from './components/ImageGenerator';
-import { AdminDashboard } from './components/AdminDashboard';
+import LoginPage from './components/LoginPage';
 import PrivateRoute from './components/PrivateRoute';
+import { RestrictedRoute } from './components/RestrictedRoute';
+import { ImageGenerator } from './components/ImageGenerator';
+import { DocsHub } from './components/DocsHub';
+import { ReportsDashboard } from './components/ReportsDashboard';
+import { AdminDashboard } from './components/AdminDashboard';
 
 const theme = extendTheme({
   styles: {
@@ -38,85 +35,20 @@ const theme = extendTheme({
   },
 });
 
-function App() {
+export function App() {
   return (
     <ChakraProvider theme={theme}>
       <AuthProvider>
-        <Router>
+        <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            
+            {/* Rota padrão - redireciona para relatórios */}
+            <Route path="/" element={<Navigate to="/relatorios" replace />} />
+            
+            {/* Rotas protegidas */}
             <Route
-              path="/"
-              element={
-                <PrivateRoute requiredRole="essay_director">
-                  <Layout>
-                    <EssayDashboard />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <PrivateRoute requiredRole="admin">
-                  <Layout>
-                    <AdminDashboard />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/refunds"
-              element={
-                <PrivateRoute requiredRole="support">
-                  <Layout>
-                    <RefundDashboard />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/docs"
-              element={
-                <PrivateRoute requiredRole="admin">
-                  <Layout>
-                    <DocsHub />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/docs/view"
-              element={
-                <PrivateRoute>
-                  <Layout>
-                    <DocsViewer />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/essays"
-              element={
-                <PrivateRoute requiredRole="essay_director">
-                  <Layout>
-                    <EssayDashboard />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/essay-logs"
-              element={
-                <PrivateRoute>
-                  <Layout>
-                    <EssayCreditLogs />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/reports"
+              path="/relatorios"
               element={
                 <PrivateRoute>
                   <Layout>
@@ -125,20 +57,44 @@ function App() {
                 </PrivateRoute>
               }
             />
+
+            <Route
+              path="/documentos"
+              element={
+                <RestrictedRoute allowedRoles={['admin', 'support', 'commercial', 'essay_director', 'designer']}>
+                  <Layout>
+                    <DocsHub />
+                  </Layout>
+                </RestrictedRoute>
+              }
+            />
+
             <Route
               path="/images"
               element={
-                <PrivateRoute requiredRole="admin">
+                <RestrictedRoute allowedRoles={['admin', 'designer']}>
                   <Layout>
                     <ImageGenerator />
                   </Layout>
-                </PrivateRoute>
+                </RestrictedRoute>
               }
             />
-            <Route path="/docs/admin" element={<DocsHub />} />
-            <Route path="/docs/edit/:docId" element={<DocsHub />} />
+
+            <Route
+              path="/admin"
+              element={
+                <RestrictedRoute allowedRoles={['admin']}>
+                  <Layout>
+                    <AdminDashboard />
+                  </Layout>
+                </RestrictedRoute>
+              }
+            />
+
+            {/* Rota para páginas não encontradas - redireciona para relatórios */}
+            <Route path="*" element={<Navigate to="/relatorios" replace />} />
           </Routes>
-        </Router>
+        </BrowserRouter>
       </AuthProvider>
     </ChakraProvider>
   );
