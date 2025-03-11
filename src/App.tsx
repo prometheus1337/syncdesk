@@ -47,9 +47,9 @@ function App() {
             <Route
               path="/"
               element={
-                <PrivateRoute>
+                <PrivateRoute requiredRole="essay_director">
                   <Layout>
-                    <RefundDashboard />
+                    <EssayDashboard />
                   </Layout>
                 </PrivateRoute>
               }
