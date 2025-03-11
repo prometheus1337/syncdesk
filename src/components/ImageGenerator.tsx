@@ -147,8 +147,8 @@ export const ImageGenerator = () => {
               max={20}
               step={0.1}
             >
-              <SliderTrack>
-                <SliderFilledTrack />
+              <SliderTrack bg="gray.200">
+                <SliderFilledTrack bg="#FFDB01" />
               </SliderTrack>
               <SliderThumb />
             </Slider>
@@ -180,8 +180,8 @@ export const ImageGenerator = () => {
               max={1}
               step={0.1}
             >
-              <SliderTrack>
-                <SliderFilledTrack />
+              <SliderTrack bg="gray.200">
+                <SliderFilledTrack bg="#FFDB01" />
               </SliderTrack>
               <SliderThumb />
             </Slider>
@@ -196,8 +196,8 @@ export const ImageGenerator = () => {
               max={1}
               step={0.1}
             >
-              <SliderTrack>
-                <SliderFilledTrack />
+              <SliderTrack bg="gray.200">
+                <SliderFilledTrack bg="#FFDB01" />
               </SliderTrack>
               <SliderThumb />
             </Slider>
@@ -219,7 +219,9 @@ export const ImageGenerator = () => {
             onClick={handleGenerate}
             isLoading={loading}
             loadingText="Gerando..."
-            colorScheme="blue"
+            bg="#FFDB01"
+            color="black"
+            _hover={{ bg: "#E5C501" }}
           >
             Gerar Imagem
           </Button>
@@ -242,7 +244,7 @@ export const ImageGenerator = () => {
                 value={progress}
                 size="120px"
                 thickness="4px"
-                color="blue.500"
+                color="#FFDB01"
               >
                 <CircularProgressLabel>{progress}%</CircularProgressLabel>
               </CircularProgress>
