@@ -228,65 +228,85 @@ export function EssayDashboard() {
   async function handleCreatePurchase() {
     setIsLoading(true);
     
-    // Primeiro, insere o log de crédito
-    const { error: logError } = await supabase
-      .from('essay_credit_logs')
-      .insert([{
-        student_name: newPurchase.student_name,
-        student_email: newPurchase.student_email,
-        credits_change: newPurchase.credits_amount,
-        operation_type: 'add',
-        motive: 'purchase',
-        created_by: appUser?.email || 'API',
-        price_paid: newPurchase.price_paid,
-        payment_method: 'Não especificado',
-        status: 'completed',
-      }]);
+    try {
+      // Primeiro, verifica se o aluno existe
+      const { data: existingStudent, error: checkError } = await supabase
+        .from('essay_students')
+        .select('id')
+        .eq('email', newPurchase.student_email)
+        .single();
 
-    if (logError) {
-      toast({
-        title: 'Erro ao registrar compra',
-        description: logError.message,
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-      setIsLoading(false);
-      return;
-    }
+      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 é o código para "não encontrado"
+        throw checkError;
+      }
 
-    // Depois, atualiza a data do último crédito
-    const { error: updateError } = await supabase
-      .from('essay_students')
-      .update({ last_credit_update: new Date().toISOString() })
-      .eq('email', newPurchase.student_email);
+      // Se o aluno não existe, cria ele
+      if (!existingStudent) {
+        const { error: createError } = await supabase
+          .from('essay_students')
+          .insert([{
+            email: newPurchase.student_email,
+            name: newPurchase.student_name,
+            phone: newPurchase.student_phone,
+            created_at: new Date().toISOString(),
+            last_credit_update: new Date().toISOString()
+          }]);
 
-    if (updateError) {
-      toast({
-        title: 'Aviso',
-        description: 'Compra registrada, mas houve um erro ao atualizar a data do último crédito.',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
-    } else {
+        if (createError) throw createError;
+      }
+
+      // Insere o log de crédito
+      const { error: logError } = await supabase
+        .from('essay_credit_logs')
+        .insert([{
+          student_name: newPurchase.student_name,
+          student_email: newPurchase.student_email,
+          credits_change: newPurchase.credits_amount,
+          operation_type: 'add',
+          motive: 'purchase',
+          created_by: appUser?.email || 'API',
+          price_paid: newPurchase.price_paid,
+          payment_method: 'Não especificado',
+          status: 'completed',
+        }]);
+
+      if (logError) throw logError;
+
+      // Atualiza a data do último crédito
+      const { error: updateError } = await supabase
+        .from('essay_students')
+        .update({ last_credit_update: new Date().toISOString() })
+        .eq('email', newPurchase.student_email);
+
+      if (updateError) throw updateError;
+
       toast({
         title: 'Compra registrada com sucesso',
         status: 'success',
         duration: 2000,
       });
-    }
 
-    setNewPurchase({
-      student_name: '',
-      student_email: '',
-      student_phone: '',
-      credits_amount: 0,
-      price_paid: 0,
-    });
-    onCreateClose();
-    fetchStudents();
-    setIsLoading(false);
+      setNewPurchase({
+        student_name: '',
+        student_email: '',
+        student_phone: '',
+        credits_amount: 0,
+        price_paid: 0,
+      });
+      onCreateClose();
+      fetchStudents();
+
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao processar compra',
+        description: error.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   function validateForm() {
