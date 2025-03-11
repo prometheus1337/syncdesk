@@ -19,11 +19,11 @@ serve(async (req) => {
 
     const { email, password, role, name } = await req.json()
 
-    // Criar usuário na autenticação
+    // Criar usuário na autenticação sem confirmar o email
     const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
       email,
       password,
-      email_confirm: true
+      email_confirm: false
     })
 
     if (authError) throw authError
@@ -41,6 +41,11 @@ serve(async (req) => {
       ])
 
     if (profileError) throw profileError
+
+    // Enviar email de convite
+    const { error: inviteError } = await supabaseClient.auth.admin.inviteUserByEmail(email)
+
+    if (inviteError) throw inviteError
 
     return new Response(
       JSON.stringify({ user: authData.user }),
