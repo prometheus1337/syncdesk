@@ -9,7 +9,12 @@ interface AuthContextType {
   signOut: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+const AuthContext = createContext<AuthContextType>({
+  appUser: null,
+  loading: true,
+  signIn: async () => {},
+  signOut: async () => {},
+});
 
 export const useAuth = () => {
   return useContext(AuthContext);
@@ -24,6 +29,30 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Verificar sessão atual
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile) {
+          setAppUser({
+            id: profile.id,
+            name: profile.name,
+            email: profile.email,
+            role: profile.role as UserRole,
+            avatar_url: profile.avatar_url,
+            created_at: profile.created_at
+          });
+        }
+      }
+      setLoading(false);
+    });
+
+    // Escutar mudanças na autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session) {
         const { data: profile } = await supabase
@@ -80,7 +109,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }; 

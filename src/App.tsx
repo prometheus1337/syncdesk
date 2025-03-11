@@ -43,9 +43,9 @@ const theme = extendTheme({
 
 function App() {
   return (
-    <ChakraProvider theme={theme}>
-      <AuthProvider>
-        <Router>
+    <Router>
+      <ChakraProvider theme={theme}>
+        <AuthProvider>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             
@@ -95,9 +95,9 @@ function App() {
               <Route path="/docs/edit/:docId" element={<DocsHub />} />
             </Route>
           </Routes>
-        </Router>
-      </AuthProvider>
-    </ChakraProvider>
+        </AuthProvider>
+      </ChakraProvider>
+    </Router>
   );
 }
 
