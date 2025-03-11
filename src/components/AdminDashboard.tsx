@@ -118,13 +118,13 @@ export function AdminDashboard() {
     );
   }
 
-  const handleCreateUser = async (userData: { name: string; email: string; role: string }) => {
+  const handleCreateUser = async (userData: { name: string; email: string; role: string; password?: string }) => {
     try {
       // Criar usuário na autenticação
       const { error: authError } = await supabase.functions.invoke('create-user', {
         body: {
           email: userData.email,
-          password: 'changeme123',
+          password: userData.password || 'changeme123',
           role: userData.role,
           name: userData.name
         }
@@ -134,7 +134,9 @@ export function AdminDashboard() {
 
       toast({
         title: 'Usuário criado com sucesso',
-        description: 'Um email foi enviado para o usuário com as instruções de acesso.',
+        description: userData.password 
+          ? 'O usuário pode fazer login com as credenciais fornecidas.'
+          : 'Um email foi enviado para o usuário com as instruções de acesso.',
         status: 'success',
         duration: 5000,
         isClosable: true,

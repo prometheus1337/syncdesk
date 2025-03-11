@@ -9,7 +9,7 @@ import {
 } from '@chakra-ui/react';
 
 interface UserFormProps {
-  onSubmit: (data: { name: string; email: string; role: string }) => void;
+  onSubmit: (data: { name: string; email: string; role: string; password?: string }) => void;
   initialData?: {
     full_name: string;
     email: string;
@@ -22,18 +22,25 @@ export const UserForm = ({ onSubmit, initialData, isEditing = false }: UserFormP
   const [name, setName] = useState(initialData?.full_name || '');
   const [email, setEmail] = useState(initialData?.email || '');
   const [role, setRole] = useState(initialData?.role || 'support');
+  const [password, setPassword] = useState('');
 
   useEffect(() => {
     if (initialData) {
       setName(initialData.full_name);
       setEmail(initialData.email);
       setRole(initialData.role);
+      setPassword('');
     }
   }, [initialData]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    onSubmit({ name, email, role });
+    onSubmit({ 
+      name, 
+      email, 
+      role,
+      ...(isEditing ? {} : { password })
+    });
   };
 
   return (
@@ -59,6 +66,19 @@ export const UserForm = ({ onSubmit, initialData, isEditing = false }: UserFormP
             bg={isEditing ? "gray.100" : "white"}
           />
         </FormControl>
+
+        {!isEditing && (
+          <FormControl isRequired>
+            <FormLabel>Senha</FormLabel>
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Digite a senha"
+              minLength={6}
+            />
+          </FormControl>
+        )}
 
         <FormControl isRequired>
           <FormLabel>Cargo</FormLabel>
