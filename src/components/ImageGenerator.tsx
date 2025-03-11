@@ -23,6 +23,7 @@ import {
   NumberDecrementStepper,
   CircularProgress,
   CircularProgressLabel,
+  Textarea,
 } from '@chakra-ui/react';
 import { supabase } from '../lib/supabase';
 
@@ -35,6 +36,47 @@ interface ImageParams {
   loraScale: number;
   aspectRatio: string;
 }
+
+// Componente personalizado para o input do prompt
+const HighlightedInput = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {
+  // Função para renderizar o texto com destaque
+  const renderHighlightedText = () => {
+    const parts = value.split(/(vinepvo)/gi);
+    return parts.map((part, i) => 
+      part.toLowerCase() === 'vinepvo' ? 
+        <Text as="span" key={i} color="green.500" fontWeight="bold">{part}</Text> : 
+        part
+    );
+  };
+
+  return (
+    <Box position="relative">
+      <Textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Descreva a imagem que você quer gerar"
+        size="md"
+        resize="vertical"
+        minH="100px"
+        bg="white"
+      />
+      <Box
+        position="absolute"
+        top={0}
+        left={0}
+        right={0}
+        bottom={0}
+        p={2}
+        pointerEvents="none"
+        whiteSpace="pre-wrap"
+        overflowWrap="break-word"
+        color="transparent"
+      >
+        {renderHighlightedText()}
+      </Box>
+    </Box>
+  );
+};
 
 export const ImageGenerator = () => {
   const [loading, setLoading] = useState(false);
@@ -122,10 +164,9 @@ export const ImageGenerator = () => {
 
           <FormControl isRequired>
             <FormLabel>Prompt</FormLabel>
-            <Input
+            <HighlightedInput
               value={params.prompt}
-              onChange={(e) => setParams({ ...params, prompt: e.target.value })}
-              placeholder="Descreva a imagem que você quer gerar"
+              onChange={(value) => setParams({ ...params, prompt: value })}
             />
           </FormControl>
 
