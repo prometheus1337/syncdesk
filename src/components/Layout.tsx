@@ -24,7 +24,7 @@ import {
   AddIcon,
 } from '@chakra-ui/icons';
 import { useAuth } from '../contexts/AuthContext';
-import { FaFileAlt, FaChartBar } from 'react-icons/fa';
+import { FaFileAlt, FaChartBar, FaCoins } from 'react-icons/fa';
 import LogoSVGFile from '../assets/logo.svg';
 
 interface NavLinkProps {
@@ -115,6 +115,24 @@ export function Layout({ children }: { children: ReactNode }) {
         href: '/admin', 
         label: 'Administração',
         icon: <SettingsIcon />
+      });
+    }
+
+    // Link para Redações - apenas admin e essay_director têm acesso
+    if (['admin', 'essay_director'].includes(appUser?.role || '')) {
+      links.push({
+        href: '/redacoes',
+        label: 'Redações',
+        icon: <FaFileAlt />
+      });
+    }
+
+    // Link para Créditos - apenas admin e essay_director têm acesso
+    if (['admin', 'essay_director'].includes(appUser?.role || '')) {
+      links.push({
+        href: '/redacoes/creditos',
+        label: 'Créditos',
+        icon: <FaCoins />
       });
     }
     

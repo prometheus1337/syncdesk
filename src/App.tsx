@@ -9,6 +9,8 @@ import { ImageGenerator } from './components/ImageGenerator';
 import { DocsHub } from './components/DocsHub';
 import { ReportsDashboard } from './components/ReportsDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
+import { EssayDashboard } from './components/EssayDashboard';
+import { EssayCreditLogs } from './components/EssayCreditLogs';
 
 const theme = extendTheme({
   styles: {
@@ -86,6 +88,29 @@ export function App() {
                 <RestrictedRoute allowedRoles={['admin']}>
                   <Layout>
                     <AdminDashboard />
+                  </Layout>
+                </RestrictedRoute>
+              }
+            />
+
+            {/* Rotas de redação */}
+            <Route
+              path="/redacoes"
+              element={
+                <RestrictedRoute allowedRoles={['admin', 'essay_director']}>
+                  <Layout>
+                    <EssayDashboard />
+                  </Layout>
+                </RestrictedRoute>
+              }
+            />
+
+            <Route
+              path="/redacoes/creditos"
+              element={
+                <RestrictedRoute allowedRoles={['admin', 'essay_director']}>
+                  <Layout>
+                    <EssayCreditLogs />
                   </Layout>
                 </RestrictedRoute>
               }
