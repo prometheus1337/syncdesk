@@ -49,7 +49,7 @@ function App() {
               element={
                 <PrivateRoute>
                   <Layout>
-                    <EssayDashboard />
+                    <RefundDashboard />
                   </Layout>
                 </PrivateRoute>
               }

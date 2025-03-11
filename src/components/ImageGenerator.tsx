@@ -43,8 +43,8 @@ export const ImageGenerator = () => {
   const [params, setParams] = useState<ImageParams>({
     prompt: '',
     negativePrompt: '',
-    guidanceScale: 7.5,
-    numInferenceSteps: 50,
+    guidanceScale: 3.5,
+    numInferenceSteps: 25,
     promptStrength: 0.8,
     loraScale: 0.6,
     aspectRatio: '1:1',
