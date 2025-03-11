@@ -59,6 +59,8 @@ const HighlightedInput = ({ value, onChange }: { value: string; onChange: (value
         resize="vertical"
         minH="100px"
         bg="white"
+        color="transparent"
+        style={{ caretColor: 'black' }}
       />
       <Box
         position="absolute"
@@ -70,7 +72,8 @@ const HighlightedInput = ({ value, onChange }: { value: string; onChange: (value
         pointerEvents="none"
         whiteSpace="pre-wrap"
         overflowWrap="break-word"
-        color="transparent"
+        fontFamily="inherit"
+        fontSize="inherit"
       >
         {renderHighlightedText()}
       </Box>
