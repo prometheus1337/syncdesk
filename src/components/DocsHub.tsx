@@ -1459,7 +1459,10 @@ export function DocsHub() {
                       toolbar_mode: 'wrap',
                       contextmenu: 'link image table',
                       quickbars_selection_toolbar: 'bold italic | quicklink h2 h3 blockquote',
-                      images_upload_handler: async (blobInfo) => {
+                      automatic_uploads: true,
+                      paste_data_images: true,
+                      file_picker_types: 'image',
+                      images_upload_handler: async (blobInfo: any) => {
                         try {
                           setIsUploading(true);
                           const file = blobInfo.blob();
