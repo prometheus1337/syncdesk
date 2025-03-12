@@ -68,7 +68,7 @@ export function App() {
             <Route
               path="/documentos"
               element={
-                <RestrictedRoute allowedRoles={['admin', 'user']}>
+                <RestrictedRoute allowedRoles={['admin', 'support', 'essay_director', 'designer']}>
                   <Layout>
                     <DocsHub />
                   </Layout>
