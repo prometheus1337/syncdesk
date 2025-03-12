@@ -181,18 +181,18 @@ export function EssayCreditLogs() {
     try {
       console.log('Iniciando operação:', newLog); // Debug
 
+      const now = new Date().toISOString();
+
       // Primeiro, verifica se o aluno existe
       const { data: existingStudent, error: checkError } = await supabase
         .from('essay_students')
-        .select('id')
+        .select('*')
         .eq('email', newLog.student_email)
         .single();
 
       if (checkError && checkError.code !== 'PGRST116') { // PGRST116 é o código para "não encontrado"
         throw checkError;
       }
-
-      const now = new Date().toISOString();
 
       // Se o aluno não existe, cria ele
       if (!existingStudent) {
