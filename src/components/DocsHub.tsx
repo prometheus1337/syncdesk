@@ -1414,46 +1414,31 @@ export function DocsHub() {
                   overflow="hidden"
                 >
                   <Editor
-                    apiKey="sua-api-key-aqui"
-                    value={newDoc.content || ''}
-                    onEditorChange={(content) => setNewDoc({ ...newDoc, content })}
                     init={{
                       height: "100%",
                       width: "100%",
                       menubar: true,
-                      statusbar: true,
-                      resize: false,
-                      plugins: [
-                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                        'insertdatetime', 'media', 'table', 'help', 'wordcount', 'paste'
-                      ],
-                      toolbar: 'undo redo | formatselect | ' +
-                        'bold italic forecolor backcolor | alignleft aligncenter ' +
-                        'alignright alignjustify | bullist numlist outdent indent | ' +
-                        'removeformat | link image media table | fullscreen',
+                      statusbar: false,
+                      plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table help wordcount paste',
+                      toolbar: 'undo redo | blocks | bold italic forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
                       content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 16px; margin: 1rem; }',
-                      file_picker_types: 'image media',
-                      paste_data_images: true,
-                      automatic_uploads: true,
                       branding: false,
-                      elementpath: false,
-                      skin: 'oxide',
-                      entity_encoding: 'raw',
-                      forced_root_block: 'p',
-                      valid_elements: '*[*]',
-                      valid_children: '+body[style]',
-                      images_upload_handler: async (blobInfo: { blob: () => File }) => {
+                      promotion: false,
+                      paste_data_images: true,
+                      convert_urls: false,
+                      relative_urls: false,
+                      remove_script_host: false,
+                      document_base_url: window.location.origin,
+                      images_upload_handler: async (blobInfo) => {
                         try {
                           setIsUploading(true);
-                          const file = blobInfo.blob();
-                          const fileExt = file.name?.split('.').pop() || 'png';
-                          const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+                          const blob = blobInfo.blob();
+                          const fileName = `${Math.random().toString(36).substring(2)}.${blob.type.split('/')[1] || 'png'}`;
                           const filePath = `docs/${fileName}`;
 
                           const { error: uploadError } = await supabase.storage
                             .from('media')
-                            .upload(filePath, file);
+                            .upload(filePath, blob);
 
                           if (uploadError) throw uploadError;
 
@@ -1477,6 +1462,8 @@ export function DocsHub() {
                         }
                       }
                     }}
+                    value={newDoc.content || ''}
+                    onEditorChange={(content) => setNewDoc({ ...newDoc, content })}
                   />
                 </Box>
                 <Text fontSize="sm" color="gray.500" mt={2}>
