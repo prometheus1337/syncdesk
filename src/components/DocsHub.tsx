@@ -1409,60 +1409,45 @@ export function DocsHub() {
                   border="1px" 
                   borderColor={editorBorderColor} 
                   borderRadius="md"
-                  className="notion-style-editor"
                   height="600px"
-                  overflow="hidden"
                 >
                   <Editor
+                    apiKey="no-api-key"
                     init={{
-                      height: "100%",
-                      width: "100%",
-                      menubar: 'file edit view insert format tools table help',
-                      toolbar: 'undo redo | formatselect | ' +
-                        'bold italic backcolor | alignleft aligncenter ' +
-                        'alignright alignjustify | bullist numlist outdent indent | ' +
-                        'removeformat | help',
-                      plugins: [
-                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                        'insertdatetime', 'media', 'table', 'help', 'wordcount'
-                      ],
-                      content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 16px; margin: 1rem; }',
+                      height: 600,
+                      menubar: false,
+                      plugins: ['link', 'table', 'image'],
+                      toolbar: 'undo redo | bold italic | alignleft aligncenter alignright | link image table',
+                      content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px }',
+                      image_advtab: true,
                       images_upload_handler: async (blobInfo) => {
                         try {
-                          setIsUploading(true);
-                          const blob = blobInfo.blob();
-                          const fileName = `${Math.random().toString(36).substring(2)}.${blob.type.split('/')[1] || 'png'}`;
+                          const file = blobInfo.blob();
+                          const fileName = `${Date.now()}.${file.type.split('/')[1]}`;
                           const filePath = `docs/${fileName}`;
 
-                          const { error: uploadError } = await supabase.storage
+                          const { error } = await supabase.storage
                             .from('media')
-                            .upload(filePath, blob);
+                            .upload(filePath, file);
 
-                          if (uploadError) throw uploadError;
+                          if (error) throw error;
 
-                          const { data: { publicUrl } } = supabase.storage
+                          const { data } = supabase.storage
                             .from('media')
                             .getPublicUrl(filePath);
 
-                          return publicUrl;
-                        } catch (error: any) {
-                          console.error('Erro ao fazer upload da imagem:', error);
-                          toast({
-                            title: 'Erro ao fazer upload da imagem',
-                            description: error.message,
-                            status: 'error',
-                            duration: 3000,
-                            isClosable: true,
-                          });
+                          return data.publicUrl;
+                        } catch (error) {
+                          console.error('Erro no upload:', error);
                           return '';
-                        } finally {
-                          setIsUploading(false);
                         }
                       }
                     }}
-                    value={newDoc.content || ''}
-                    onEditorChange={(content) => setNewDoc({ ...newDoc, content })}
+                    value={newDoc.content}
+                    onEditorChange={(content) => {
+                      console.log('Conteúdo alterado:', content);
+                      setNewDoc({ ...newDoc, content });
+                    }}
                   />
                 </Box>
                 <Text fontSize="sm" color="gray.500" mt={2}>
