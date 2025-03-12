@@ -1470,13 +1470,13 @@ export function DocsHub() {
                           const filePath = `docs/${fileName}`;
 
                           const { error } = await supabase.storage
-                            .from('media')
+                            .from('doc_media')
                             .upload(filePath, file);
 
                           if (error) throw error;
 
                           const { data } = supabase.storage
-                            .from('media')
+                            .from('doc_media')
                             .getPublicUrl(filePath);
 
                           return data.publicUrl;
