@@ -241,6 +241,8 @@ export function EssayDashboard() {
         throw checkError;
       }
 
+      const now = new Date().toISOString();
+
       // Se o aluno não existe, cria ele
       if (!existingStudent) {
         const { error: createError } = await supabase
@@ -249,8 +251,9 @@ export function EssayDashboard() {
             email: newPurchase.student_email,
             name: newPurchase.student_name,
             phone: newPurchase.student_phone,
-            created_at: new Date().toISOString(),
-            last_credit_update: new Date().toISOString()
+            created_at: now,
+            last_credit_update: now,
+            last_credit_removed: null // Compra nunca é redução
           }]);
 
         if (createError) throw createError;
@@ -264,7 +267,7 @@ export function EssayDashboard() {
           student_email: newPurchase.student_email,
           credits_change: newPurchase.credits_amount,
           operation_type: 'add',
-          motive: 'purchase',
+          motive: 'Compra',
           created_by: appUser?.email || 'API',
           price_paid: newPurchase.price_paid,
           payment_method: 'Não especificado',
@@ -276,7 +279,7 @@ export function EssayDashboard() {
       // Atualiza a data do último crédito
       const { error: updateError } = await supabase
         .from('essay_students')
-        .update({ last_credit_update: new Date().toISOString() })
+        .update({ last_credit_update: now })
         .eq('email', newPurchase.student_email);
 
       if (updateError) throw updateError;

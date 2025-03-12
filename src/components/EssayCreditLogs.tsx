@@ -179,6 +179,8 @@ export function EssayCreditLogs() {
     setIsLoading(true);
     
     try {
+      console.log('Iniciando operação:', newLog); // Debug
+
       // Primeiro, verifica se o aluno existe
       const { data: existingStudent, error: checkError } = await supabase
         .from('essay_students')
@@ -190,21 +192,26 @@ export function EssayCreditLogs() {
         throw checkError;
       }
 
+      const now = new Date().toISOString();
+
       // Se o aluno não existe, cria ele
       if (!existingStudent) {
+        console.log('Criando novo aluno'); // Debug
         const { error: createError } = await supabase
           .from('essay_students')
           .insert([{
             email: newLog.student_email,
             name: selectedStudent?.name || newLog.student_email,
-            created_at: new Date().toISOString(),
-            last_credit_update: new Date().toISOString()
+            created_at: now,
+            last_credit_update: now,
+            last_credit_removed: newLog.operation_type === 'remove' ? now : null
           }]);
 
         if (createError) throw createError;
       }
 
       // Insere o log de crédito
+      console.log('Inserindo log de crédito'); // Debug
       const { error: logError } = await supabase
         .from('essay_credit_logs')
         .insert([{
@@ -219,15 +226,17 @@ export function EssayCreditLogs() {
       if (logError) throw logError;
 
       // Prepara o objeto de atualização
-      const now = new Date().toISOString();
       const updateData: any = {
         last_credit_update: now
       };
 
       // Se for uma operação de remoção, atualiza também last_credit_removed
       if (newLog.operation_type === 'remove') {
+        console.log('Atualizando last_credit_removed'); // Debug
         updateData.last_credit_removed = now;
       }
+
+      console.log('Dados de atualização:', updateData); // Debug
 
       // Atualiza as datas no aluno
       const { error: updateError } = await supabase
@@ -254,6 +263,7 @@ export function EssayCreditLogs() {
       fetchStudents();
 
     } catch (error: any) {
+      console.error('Erro na operação:', error); // Debug
       toast({
         title: 'Erro ao processar operação',
         description: error.message,
