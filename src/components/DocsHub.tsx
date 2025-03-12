@@ -1416,16 +1416,16 @@ export function DocsHub() {
                     init={{
                       height: 600,
                       inline: false,
-                      menubar: 'file edit view insert format tools table',
+                      menubar: true,
                       plugins: [
-                        'advlist autolink lists link image charmap preview anchor',
-                        'searchreplace visualblocks code fullscreen',
-                        'insertdatetime media table paste help wordcount'
+                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                        'insertdatetime', 'media', 'table', 'help', 'wordcount'
                       ],
-                      toolbar: 'undo redo | formatselect | ' +
-                        'bold italic backcolor | alignleft aligncenter ' +
-                        'alignright alignjustify | bullist numlist outdent indent | ' +
-                        'removeformat | link image media table | help',
+                      toolbar: [
+                        'undo redo | blocks | bold italic forecolor | alignleft aligncenter alignright alignjustify',
+                        'bullist numlist outdent indent | link image media | removeformat help'
+                      ],
                       content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px }',
                       entity_encoding: 'raw',
                       verify_html: false,
@@ -1433,6 +1433,9 @@ export function DocsHub() {
                       promotion: false,
                       base_url: '/tinymce',
                       suffix: '.min',
+                      toolbar_mode: 'wrap',
+                      contextmenu: 'link image table',
+                      quickbars_selection_toolbar: 'bold italic | quicklink h2 h3 blockquote',
                       images_upload_handler: async (blobInfo) => {
                         try {
                           setIsUploading(true);
