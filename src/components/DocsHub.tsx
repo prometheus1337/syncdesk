@@ -1412,7 +1412,7 @@ export function DocsHub() {
                   height="600px"
                 >
                   <Editor
-                    apiKey="wb3g4j05kptxthoby0xwv5k0539bbejbf9350t75budlog6u"
+                    tinymceScriptSrc="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js"
                     init={{
                       height: 600,
                       inline: false,
@@ -1420,7 +1420,7 @@ export function DocsHub() {
                       plugins: [
                         'advlist autolink lists link image charmap preview anchor',
                         'searchreplace visualblocks code fullscreen',
-                        'insertdatetime media table paste code help wordcount'
+                        'insertdatetime media table paste help wordcount'
                       ],
                       toolbar: 'undo redo | formatselect | ' +
                         'bold italic backcolor | alignleft aligncenter ' +
@@ -1430,6 +1430,7 @@ export function DocsHub() {
                       entity_encoding: 'raw',
                       verify_html: false,
                       forced_root_block: 'p',
+                      promotion: false,
                       images_upload_handler: async (blobInfo) => {
                         try {
                           setIsUploading(true);
