@@ -41,6 +41,26 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Editor } from '@tinymce/tinymce-react';
 import "./markdown-styles.css";
+import { Global } from '@emotion/react';
+
+// Adicionar estilos globais para o TinyMCE
+const globalStyles = `
+  .tox-tinymce-aux {
+    z-index: 9999 !important;
+  }
+  .tox-dialog-wrap {
+    z-index: 9999 !important;
+  }
+  .tox-menu {
+    z-index: 9999 !important;
+  }
+  .tox-collection {
+    z-index: 9999 !important;
+  }
+  .tox-selected-menu {
+    z-index: 9999 !important;
+  }
+`;
 
 interface DocSection {
   id: string;
@@ -876,6 +896,7 @@ export function DocsHub() {
 
   return (
     <Box maxW="1200px" mx="auto" p={4}>
+      <Global styles={globalStyles} />
       <Flex mb={6} justifyContent="space-between" alignItems="center">
         <Heading>Documentação</Heading>
         {appUser?.role === 'admin' && (
@@ -1410,6 +1431,8 @@ export function DocsHub() {
                   borderColor={editorBorderColor} 
                   borderRadius="md"
                   height="600px"
+                  position="relative"
+                  zIndex="1"
                 >
                   <Editor
                     tinymceScriptSrc="/tinymce/tinymce.min.js"
