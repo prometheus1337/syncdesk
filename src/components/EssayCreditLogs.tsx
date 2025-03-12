@@ -181,6 +181,8 @@ export function EssayCreditLogs() {
     try {
       console.log('Iniciando operação:', newLog); // Debug
 
+      const now = new Date().toISOString();
+
       // Primeiro, verifica se o aluno existe
       const { data: existingStudent, error: checkError } = await supabase
         .from('essay_students')
@@ -199,7 +201,9 @@ export function EssayCreditLogs() {
           .from('essay_students')
           .insert([{
             email: newLog.student_email,
-            name: selectedStudent?.name || newLog.student_email
+            name: selectedStudent?.name || newLog.student_email,
+            created_at: now,
+            updated_at: now
           }]);
 
         if (createError) throw createError;
@@ -215,10 +219,24 @@ export function EssayCreditLogs() {
           credits_change: newLog.credits_change,
           operation_type: newLog.operation_type,
           motive: newLog.motive || null,
-          created_by: appUser?.email || 'API'
+          created_by: appUser?.email || 'API',
+          created_at: now
         }]);
 
       if (logError) throw logError;
+
+      // Atualiza o last_credit_update manualmente para garantir
+      if (existingStudent) {
+        const { error: updateError } = await supabase
+          .from('essay_students')
+          .update({ 
+            updated_at: now,
+            last_credit_update: now 
+          })
+          .eq('email', newLog.student_email);
+
+        if (updateError) throw updateError;
+      }
 
       console.log('Operação concluída com sucesso'); // Debug
 
