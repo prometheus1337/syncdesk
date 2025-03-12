@@ -203,8 +203,7 @@ export function EssayCreditLogs() {
             email: newLog.student_email,
             name: selectedStudent?.name || newLog.student_email,
             created_at: now,
-            last_credit_update: now,
-            last_credit_removed: newLog.operation_type === 'remove' ? now : null
+            last_credit_update: now
           }]);
 
         if (createError) throw createError;
@@ -221,27 +220,15 @@ export function EssayCreditLogs() {
           operation_type: newLog.operation_type,
           motive: newLog.motive || null,
           created_by: appUser?.email || 'API',
+          created_at: now
         }]);
 
       if (logError) throw logError;
 
-      // Atualiza as datas no aluno
-      const updateData: any = {
-        last_credit_update: now
-      };
-
-      // Se for uma operação de remoção, atualiza também last_credit_removed
-      if (newLog.operation_type === 'remove') {
-        console.log('Atualizando last_credit_removed para:', now); // Debug
-        updateData.last_credit_removed = now;
-      }
-
-      console.log('Dados de atualização:', updateData); // Debug
-
-      // Atualiza o aluno
+      // Atualiza apenas last_credit_update
       const { error: updateError } = await supabase
         .from('essay_students')
-        .update(updateData)
+        .update({ last_credit_update: now })
         .eq('email', newLog.student_email);
 
       if (updateError) {
