@@ -1412,7 +1412,7 @@ export function DocsHub() {
                   height="600px"
                 >
                   <Editor
-                    tinymceScriptSrc="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js"
+                    tinymceScriptSrc="/tinymce/tinymce.min.js"
                     init={{
                       height: 600,
                       inline: false,
@@ -1431,6 +1431,8 @@ export function DocsHub() {
                       verify_html: false,
                       forced_root_block: 'p',
                       promotion: false,
+                      base_url: '/tinymce',
+                      suffix: '.min',
                       images_upload_handler: async (blobInfo) => {
                         try {
                           setIsUploading(true);
