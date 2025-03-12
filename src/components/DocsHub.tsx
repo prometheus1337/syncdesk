@@ -1417,18 +1417,17 @@ export function DocsHub() {
                     init={{
                       height: "100%",
                       width: "100%",
-                      menubar: true,
-                      statusbar: false,
-                      plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table help wordcount paste',
-                      toolbar: 'undo redo | blocks | bold italic forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+                      menubar: 'file edit view insert format tools table help',
+                      toolbar: 'undo redo | formatselect | ' +
+                        'bold italic backcolor | alignleft aligncenter ' +
+                        'alignright alignjustify | bullist numlist outdent indent | ' +
+                        'removeformat | help',
+                      plugins: [
+                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                        'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                      ],
                       content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 16px; margin: 1rem; }',
-                      branding: false,
-                      promotion: false,
-                      paste_data_images: true,
-                      convert_urls: false,
-                      relative_urls: false,
-                      remove_script_host: false,
-                      document_base_url: window.location.origin,
                       images_upload_handler: async (blobInfo) => {
                         try {
                           setIsUploading(true);
