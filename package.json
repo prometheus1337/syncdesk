@@ -17,6 +17,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@supabase/supabase-js": "^2.49.1",
+    "@tinymce/tinymce-react": "^6.0.0",
     "@types/node": "^22.13.10",
     "@uiw/react-md-editor": "^4.0.5",
     "framer-motion": "^11.18.2",

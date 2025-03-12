@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -35,13 +35,12 @@ import {
   Divider,
 } from '@chakra-ui/react';
 import { ChevronRightIcon, AddIcon, EditIcon, DeleteIcon, ChevronDownIcon, ArrowUpIcon, ArrowDownIcon, ArrowBackIcon, ViewIcon } from '@chakra-ui/icons';
-import { supabase, initializeStorage, uploadFile } from '../lib/supabase';
+import { supabase, initializeStorage } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import MDEditor, { commands } from '@uiw/react-md-editor';
+import { Editor } from '@tinymce/tinymce-react';
 import "./markdown-styles.css";
-import { getPlaceholderImageUrl } from '../lib/supabase';
 
 interface DocSection {
   id: string;
@@ -87,10 +86,7 @@ export function DocsHub() {
   const [expandedDocs, setExpandedDocs] = useState<Record<string, boolean>>({});
   const [orphanDocs, setOrphanDocs] = useState<DocItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const editorRef = useRef<any>(null);
   const [editorMode, setEditorMode] = useState<"edit" | "preview">("preview");
-  const [cursorPosition, setCursorPosition] = useState<number | null>(null);
 
   // Cores
   const textColor = useColorModeValue('gray.800', 'white');
@@ -869,258 +865,6 @@ export function DocsHub() {
     setIsLoading(false);
   }
 
-  // Configuração do editor
-  const editorConfig = {
-    imageUploadTab: () => {
-      // Salvar a posição atual do cursor antes de abrir o seletor de arquivos
-      const editor = editorRef.current?.getInstance?.();
-      if (editor && editor.getSelection) {
-        const selection = editor.getSelection();
-        if (selection) {
-          setCursorPosition(selection.end);
-          console.log('DocsHub: Posição do cursor salva:', selection.end);
-        }
-      }
-      
-      // Quando o botão de imagem for clicado, aciona o input de arquivo
-      fileInputRef.current?.click();
-    },
-  };
-
-  // Função para lidar com colagem de imagens
-  const handlePaste = async (event: React.ClipboardEvent<HTMLTextAreaElement> | React.ClipboardEvent<HTMLDivElement> | ClipboardEvent) => {
-    const clipboardData = 'clipboardData' in event ? event.clipboardData : (event as ClipboardEvent).clipboardData;
-    if (!clipboardData) return;
-    
-    const items = clipboardData.items;
-    let imageFile: File | null = null;
-    
-    // Verificar se há uma imagem no clipboard
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].type.indexOf('image') !== -1) {
-        imageFile = items[i].getAsFile();
-        break;
-      }
-    }
-    
-    if (imageFile) {
-      // Prevenir o comportamento padrão para evitar que a imagem seja colada como dados brutos
-      event.preventDefault();
-      
-      // Capturar a posição do cursor diretamente do elemento de texto
-      let cursorPos = null;
-      
-      // Método 1: Tentar obter do editor
-      const editor = editorRef.current?.getInstance?.();
-      if (editor && editor.getSelection) {
-        const selection = editor.getSelection();
-        if (selection) {
-          cursorPos = selection.end;
-          console.log('DocsHub: Posição do cursor obtida do editor:', cursorPos);
-        }
-      }
-      
-      // Método 2: Tentar obter do elemento textarea diretamente
-      if (cursorPos === null) {
-        const textarea = document.querySelector('.w-md-editor-text-input') as HTMLTextAreaElement;
-        if (textarea) {
-          cursorPos = textarea.selectionStart;
-          console.log('DocsHub: Posição do cursor obtida do textarea:', cursorPos);
-        }
-      }
-      
-      // Salvar a posição do cursor no estado
-      if (cursorPos !== null) {
-        setCursorPosition(cursorPos);
-        console.log('DocsHub: Posição do cursor salva para colagem:', cursorPos);
-      } else {
-        console.warn('DocsHub: Não foi possível obter a posição do cursor');
-      }
-      
-      // Fazer upload da imagem colada
-      await handleImageUpload(imageFile, cursorPos);
-    }
-  };
-
-  // Função para fazer upload de uma imagem (usada tanto para colagem quanto para seleção de arquivo)
-  const handleImageUpload = async (file: File, forcedCursorPosition: number | null = null) => {
-    if (!file) return;
-    
-    setIsUploading(true);
-    
-    try {
-      console.log('DocsHub: Iniciando upload de imagem colada:', file.name, file.type, file.size);
-      console.log('DocsHub: Posição do cursor no início do upload:', forcedCursorPosition !== null ? forcedCursorPosition : cursorPosition);
-      
-      // Tentar inicializar o armazenamento
-      console.log('DocsHub: Inicializando storage antes do upload...');
-      try {
-        await initializeStorage();
-        console.log('DocsHub: Storage inicializado com sucesso');
-      } catch (initError) {
-        console.error('DocsHub: Erro ao inicializar storage:', initError);
-        console.log('DocsHub: Continuando com o upload mesmo com erro de inicialização');
-      }
-      
-      // Fazer upload do arquivo
-      console.log('DocsHub: Chamando função uploadFile...');
-      let fileUrl;
-      try {
-        fileUrl = await uploadFile(file);
-        console.log('DocsHub: URL do arquivo obtida:', fileUrl);
-      } catch (uploadError) {
-        console.error('DocsHub: Erro no upload do arquivo:', uploadError);
-        toast({
-          title: 'Erro no upload',
-          description: `Não foi possível fazer o upload do arquivo: ${uploadError instanceof Error ? uploadError.message : 'Erro desconhecido'}. Usando imagem de placeholder temporariamente.`,
-          status: 'warning',
-          duration: 5000,
-          isClosable: true,
-        });
-        
-        // Usar fallback de placeholder
-        fileUrl = getPlaceholderImageUrl(file);
-        console.log('DocsHub: Usando URL de placeholder:', fileUrl);
-      }
-      
-      if (fileUrl) {
-        // Gerar o markdown para a imagem
-        const markdownText = `![${file.name || 'Imagem colada'}](${fileUrl})`;
-        console.log('DocsHub: Markdown gerado para imagem colada:', markdownText);
-        
-        // Usar a posição do cursor forçada (passada como parâmetro) ou a do estado
-        const positionToUse = forcedCursorPosition !== null ? forcedCursorPosition : cursorPosition;
-        console.log('DocsHub: Posição do cursor a ser usada:', positionToUse);
-        
-        // Inserir o texto na posição do cursor
-        if (positionToUse !== null) {
-          // Se temos uma posição de cursor salva, inserir o texto nessa posição
-          const currentContent = newDoc.content || '';
-          console.log('DocsHub: Conteúdo atual tem', currentContent.length, 'caracteres');
-          
-          const beforeCursor = currentContent.substring(0, positionToUse);
-          const afterCursor = currentContent.substring(positionToUse);
-          
-          const updatedContent = `${beforeCursor}${markdownText}${afterCursor}`;
-          console.log('DocsHub: Inserindo na posição do cursor:', positionToUse);
-          console.log('DocsHub: Texto antes do cursor:', beforeCursor.slice(-20));
-          console.log('DocsHub: Texto depois do cursor:', afterCursor.slice(0, 20));
-          
-          setNewDoc(prev => ({
-            ...prev,
-            content: updatedContent
-          }));
-          
-          // Não resetar a posição do cursor se estamos usando uma posição forçada
-          if (forcedCursorPosition === null) {
-            setCursorPosition(null);
-          }
-        } else {
-          // Se não temos posição de cursor, adicionar ao final
-          setNewDoc(prev => ({
-            ...prev,
-            content: prev.content ? `${prev.content}\n${markdownText}` : markdownText
-          }));
-          console.log('DocsHub: Texto adicionado ao final do conteúdo (sem posição de cursor)');
-        }
-        
-        toast({
-          title: 'Upload concluído',
-          description: fileUrl.includes('placeholder') ? 
-            'Imagem colada adicionada com placeholder temporário.' : 
-            'Imagem colada adicionada ao documento.',
-          status: 'success',
-          duration: 2000,
-          isClosable: true,
-        });
-      } else {
-        toast({
-          title: 'Erro no upload',
-          description: 'Não foi possível obter a URL da imagem colada.',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } catch (error) {
-      console.error('DocsHub: Erro geral no upload de imagem colada:', error);
-      toast({
-        title: 'Erro no upload',
-        description: 'Ocorreu um erro ao fazer o upload da imagem colada.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-    
-    setIsUploading(false);
-  };
-
-  // Configurar o evento de colagem quando o componente for montado
-  useEffect(() => {
-    // Função para configurar o evento de colagem
-    const setupPasteEvent = () => {
-      // Tentar encontrar o textarea do editor
-      const editorTextarea = document.querySelector('.w-md-editor-text-input');
-      if (editorTextarea) {
-        console.log('DocsHub: Configurando evento de colagem no editor');
-        
-        // Função para lidar com o evento de clique no textarea (para atualizar a posição do cursor)
-        const handleEditorClick = () => {
-          const textarea = editorTextarea as HTMLTextAreaElement;
-          if (textarea) {
-            const pos = textarea.selectionStart;
-            setCursorPosition(pos);
-            console.log('DocsHub: Posição do cursor atualizada após clique:', pos);
-          }
-        };
-        
-        // Função para lidar com o evento de tecla no textarea (para atualizar a posição do cursor)
-        const handleEditorKeyUp = () => {
-          const textarea = editorTextarea as HTMLTextAreaElement;
-          if (textarea) {
-            const pos = textarea.selectionStart;
-            setCursorPosition(pos);
-            console.log('DocsHub: Posição do cursor atualizada após digitação:', pos);
-          }
-        };
-        
-        // Adicionar os eventos
-        editorTextarea.addEventListener('click', handleEditorClick);
-        editorTextarea.addEventListener('keyup', handleEditorKeyUp);
-        editorTextarea.addEventListener('paste', (e) => handlePaste(e as ClipboardEvent));
-        
-        return () => {
-          editorTextarea.removeEventListener('click', handleEditorClick);
-          editorTextarea.removeEventListener('keyup', handleEditorKeyUp);
-          editorTextarea.removeEventListener('paste', (e) => handlePaste(e as ClipboardEvent));
-        };
-      }
-      return undefined;
-    };
-    
-    // Configurar o evento após um pequeno delay para garantir que o editor esteja renderizado
-    const timeoutId = setTimeout(setupPasteEvent, 500);
-    
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, [isDocModalOpen]); // Reconfigurar quando o modal for aberto
-
-  // Função para lidar com o upload de arquivos
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-    
-    // Usar a função comum de upload de imagem
-    await handleImageUpload(files[0]);
-    
-    // Limpar o input de arquivo para permitir selecionar o mesmo arquivo novamente
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
   if (!appUser) {
     return (
       <Card>
@@ -1661,17 +1405,13 @@ export function DocsHub() {
                     >
                       {editorMode === "preview" ? "Modo Edição" : "Modo Visualização"}
                     </Button>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      style={{ display: 'none' }}
-                      onChange={handleFileUpload}
-                      accept="image/*,video/*"
-                    />
                     <Button 
                       size="sm" 
                       leftIcon={<AddIcon />} 
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={() => {
+                        setIsUploading(true);
+                        onDocModalOpen();
+                      }}
                       isLoading={isUploading}
                       colorScheme="yellow"
                     >
@@ -1687,44 +1427,59 @@ export function DocsHub() {
                   height="600px"
                   overflow="hidden"
                 >
-                  <MDEditor
+                  <Editor
+                    apiKey="sua-api-key-aqui"
                     value={newDoc.content || ''}
-                    onChange={(value) => setNewDoc({ ...newDoc, content: value || '' })}
-                    height={600}
-                    preview={editorMode}
-                    hideToolbar={false}
-                    ref={editorRef}
-                    onPaste={handlePaste}
-                    commands={[
-                      commands.bold,
-                      commands.italic,
-                      commands.strikethrough,
-                      commands.hr,
-                      commands.title,
-                      commands.divider,
-                      commands.link,
-                      {
-                        ...commands.image,
-                        execute: editorConfig.imageUploadTab
-                      },
-                      commands.divider,
-                      commands.codeBlock,
-                      commands.quote,
-                    ]}
-                    previewOptions={{
-                      className: 'notion-style-preview'
+                    onEditorChange={(content) => setNewDoc({ ...newDoc, content })}
+                    init={{
+                      height: 600,
+                      menubar: false,
+                      plugins: [
+                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                        'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                      ],
+                      toolbar: 'undo redo | formatselect | ' +
+                        'bold italic backcolor | alignleft aligncenter ' +
+                        'alignright alignjustify | bullist numlist outdent indent | ' +
+                        'removeformat | image media | help',
+                      content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 16px; }',
+                      file_picker_types: 'image media',
+                      automatic_uploads: true,
+                      images_upload_handler: async (blobInfo: { blob: () => File }) => {
+                        try {
+                          setIsUploading(true);
+                          const file = blobInfo.blob();
+                          const fileExt = file.name?.split('.').pop() || 'png';
+                          const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+                          const filePath = `docs/${fileName}`;
+
+                          const { error: uploadError } = await supabase.storage
+                            .from('media')
+                            .upload(filePath, file);
+
+                          if (uploadError) throw uploadError;
+
+                          const { data: { publicUrl } } = supabase.storage
+                            .from('media')
+                            .getPublicUrl(filePath);
+
+                          return publicUrl;
+                        } catch (error: any) {
+                          console.error('Erro ao fazer upload da imagem:', error);
+                          toast({
+                            title: 'Erro ao fazer upload da imagem',
+                            description: error.message,
+                            status: 'error',
+                            duration: 3000,
+                            isClosable: true,
+                          });
+                          return '';
+                        } finally {
+                          setIsUploading(false);
+                        }
+                      }
                     }}
-                    visibleDragbar={false}
-                    textareaProps={{
-                      placeholder: 'Escreva seu conteúdo aqui...',
-                      style: {
-                        backgroundColor: 'white',
-                        color: '#333',
-                        opacity: 1
-                      },
-                      onPaste: handlePaste
-                    }}
-                    className="editor-with-visible-text"
                   />
                 </Box>
                 <Text fontSize="sm" color="gray.500" mt={2}>
