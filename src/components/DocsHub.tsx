@@ -1412,16 +1412,31 @@ export function DocsHub() {
                   height="600px"
                 >
                   <Editor
-                    apiKey="no-api-key"
+                    apiKey="wb3g4j05kptxthoby0xwv5k0539bbejbf9350t75budlog6u"
+                    tinymceScriptSrc="/tinymce/tinymce.min.js"
                     init={{
-                      height: 600,
-                      menubar: false,
-                      plugins: ['link', 'table', 'image'],
-                      toolbar: 'undo redo | bold italic | alignleft aligncenter alignright | link image table',
-                      content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px }',
-                      image_advtab: true,
+                      height: "100%",
+                      width: "100%",
+                      skin: "oxide",
+                      content_css: "default",
+                      branding: false,
+                      menubar: true,
+                      statusbar: true,
+                      plugins: [
+                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                        'insertdatetime', 'media', 'table', 'help', 'wordcount', 'paste'
+                      ],
+                      toolbar: 'undo redo | formatselect | ' +
+                        'bold italic backcolor | alignleft aligncenter ' +
+                        'alignright alignjustify | bullist numlist outdent indent | ' +
+                        'removeformat | help',
+                      contextmenu: 'link image table',
+                      paste_data_images: true,
+                      automatic_uploads: true,
                       images_upload_handler: async (blobInfo) => {
                         try {
+                          setIsUploading(true);
                           const file = blobInfo.blob();
                           const fileName = `${Date.now()}.${file.type.split('/')[1]}`;
                           const filePath = `docs/${fileName}`;
@@ -1439,11 +1454,25 @@ export function DocsHub() {
                           return data.publicUrl;
                         } catch (error) {
                           console.error('Erro no upload:', error);
+                          toast({
+                            title: 'Erro ao fazer upload da imagem',
+                            description: 'Não foi possível fazer o upload da imagem',
+                            status: 'error',
+                            duration: 3000,
+                            isClosable: true,
+                          });
                           return '';
+                        } finally {
+                          setIsUploading(false);
                         }
+                      },
+                      setup: function(editor) {
+                        editor.on('init', function() {
+                          editor.setContent(newDoc.content || '');
+                        });
                       }
                     }}
-                    value={newDoc.content}
+                    value={newDoc.content || ''}
                     onEditorChange={(content) => {
                       console.log('Conteúdo alterado:', content);
                       setNewDoc({ ...newDoc, content });
