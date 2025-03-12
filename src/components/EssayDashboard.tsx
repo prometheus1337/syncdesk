@@ -46,6 +46,7 @@ interface EssayStudent {
   total_spent: number;
   last_purchase: string;
   last_credit_update: string;
+  last_credit_removed: string;
 }
 
 interface CreditLog {
@@ -403,6 +404,7 @@ export function EssayDashboard() {
                   <Th>Créditos</Th>
                   <Th>Total Investido</Th>
                   <Th>Última Atualização</Th>
+                  <Th>Última Redução</Th>
                   <Th>Ações</Th>
                 </Tr>
               </Thead>
@@ -415,6 +417,7 @@ export function EssayDashboard() {
                     <Td>{student.total_credits}</Td>
                     <Td>{formatCurrency(student.total_spent)}</Td>
                     <Td>{student.last_credit_update ? formatDate(student.last_credit_update) : '-'}</Td>
+                    <Td>{student.last_credit_removed ? formatDate(student.last_credit_removed) : '-'}</Td>
                     <Td>
                       <Button
                         size="sm"

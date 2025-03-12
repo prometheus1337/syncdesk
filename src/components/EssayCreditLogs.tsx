@@ -70,12 +70,12 @@ interface NewCreditLog {
 
 const CREDIT_MOTIVES = {
   add: [
-    { value: 'bonus', label: 'Bônus' },
-    { value: 'refund', label: 'Devolução de crédito' }
+    { value: 'Bônus', label: 'Bônus' },
+    { value: 'Devolução de crédito', label: 'Devolução de crédito' }
   ],
   remove: [
-    { value: 'expired', label: 'Crédito expirado' },
-    { value: 'essay_sent', label: 'Redação enviada' }
+    { value: 'Crédito expirado', label: 'Crédito expirado' },
+    { value: 'Redação enviada', label: 'Redação enviada' }
   ]
 };
 
@@ -218,10 +218,21 @@ export function EssayCreditLogs() {
 
       if (logError) throw logError;
 
-      // Atualiza a data do último crédito
+      // Prepara o objeto de atualização
+      const now = new Date().toISOString();
+      const updateData: any = {
+        last_credit_update: now
+      };
+
+      // Se for uma operação de remoção, atualiza também last_credit_removed
+      if (newLog.operation_type === 'remove') {
+        updateData.last_credit_removed = now;
+      }
+
+      // Atualiza as datas no aluno
       const { error: updateError } = await supabase
         .from('essay_students')
-        .update({ last_credit_update: new Date().toISOString() })
+        .update(updateData)
         .eq('email', newLog.student_email);
 
       if (updateError) throw updateError;
