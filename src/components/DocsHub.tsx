@@ -34,7 +34,7 @@ import {
   ButtonGroup,
   Divider,
 } from '@chakra-ui/react';
-import { ChevronRightIcon, AddIcon, EditIcon, DeleteIcon, ChevronDownIcon, ArrowUpIcon, ArrowDownIcon, ArrowBackIcon, ViewIcon } from '@chakra-ui/icons';
+import { ChevronRightIcon, AddIcon, EditIcon, DeleteIcon, ChevronDownIcon, ArrowUpIcon, ArrowDownIcon, ArrowBackIcon } from '@chakra-ui/icons';
 import { supabase, initializeStorage } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import ReactMarkdown from 'react-markdown';
@@ -86,7 +86,6 @@ export function DocsHub() {
   const [expandedDocs, setExpandedDocs] = useState<Record<string, boolean>>({});
   const [orphanDocs, setOrphanDocs] = useState<DocItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [editorMode, setEditorMode] = useState<"edit" | "preview">("preview");
 
   // Cores
   const textColor = useColorModeValue('gray.800', 'white');
@@ -1130,8 +1129,6 @@ export function DocsHub() {
                                 variant="outline"
                                 onClick={() => {
                                   setNewDoc(selectedDoc);
-                                  setIsEditing(true);
-                                  setEditorMode("preview");
                                   onDocModalOpen();
                                 }}
                               >
@@ -1395,29 +1392,18 @@ export function DocsHub() {
               <FormControl isRequired>
                 <Flex justifyContent="space-between" alignItems="center" mb={2}>
                   <FormLabel mb={0}>Conteúdo</FormLabel>
-                  <Flex gap={2}>
-                    <Button
-                      size="sm"
-                      leftIcon={editorMode === "preview" ? <EditIcon /> : <ViewIcon />}
-                      onClick={() => setEditorMode(editorMode === "preview" ? "edit" : "preview")}
-                      colorScheme="yellow"
-                      variant="outline"
-                    >
-                      {editorMode === "preview" ? "Modo Edição" : "Modo Visualização"}
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      leftIcon={<AddIcon />} 
-                      onClick={() => {
-                        setIsUploading(true);
-                        onDocModalOpen();
-                      }}
-                      isLoading={isUploading}
-                      colorScheme="yellow"
-                    >
-                      Adicionar Mídia
-                    </Button>
-                  </Flex>
+                  <Button 
+                    size="sm" 
+                    leftIcon={<AddIcon />} 
+                    onClick={() => {
+                      setIsUploading(true);
+                      onDocModalOpen();
+                    }}
+                    isLoading={isUploading}
+                    colorScheme="yellow"
+                  >
+                    Adicionar Mídia
+                  </Button>
                 </Flex>
                 <Box 
                   border="1px" 
@@ -1433,16 +1419,16 @@ export function DocsHub() {
                     onEditorChange={(content) => setNewDoc({ ...newDoc, content })}
                     init={{
                       height: 600,
-                      menubar: false,
+                      menubar: true,
                       plugins: [
                         'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
                         'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
                         'insertdatetime', 'media', 'table', 'help', 'wordcount'
                       ],
-                      toolbar: 'undo redo | formatselect | ' +
-                        'bold italic backcolor | alignleft aligncenter ' +
+                      toolbar: 'undo redo | blocks | ' +
+                        'bold italic forecolor | alignleft aligncenter ' +
                         'alignright alignjustify | bullist numlist outdent indent | ' +
-                        'removeformat | image media | help',
+                        'removeformat | link image media table | help',
                       content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 16px; }',
                       file_picker_types: 'image media',
                       automatic_uploads: true,
@@ -1483,9 +1469,7 @@ export function DocsHub() {
                   />
                 </Box>
                 <Text fontSize="sm" color="gray.500" mt={2}>
-                  {editorMode === "preview" 
-                    ? "Dica: Alterne para o modo de edição para modificar o conteúdo."
-                    : "Dica: Você pode colar imagens diretamente no editor (Ctrl+V)."}
+                  Dica: Você pode colar imagens diretamente no editor (Ctrl+V).
                 </Text>
               </FormControl>
             </Stack>
