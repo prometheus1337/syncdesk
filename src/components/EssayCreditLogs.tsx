@@ -216,7 +216,7 @@ export function EssayCreditLogs() {
         .from('essay_credit_logs')
         .insert([{
           student_email: newLog.student_email,
-          student_name: selectedStudent?.name,
+          student_name: selectedStudent?.name || existingStudent?.name,
           credits_change: newLog.credits_change,
           operation_type: newLog.operation_type,
           motive: newLog.motive || null,
@@ -225,26 +225,31 @@ export function EssayCreditLogs() {
 
       if (logError) throw logError;
 
-      // Prepara o objeto de atualização
+      // Atualiza as datas no aluno
       const updateData: any = {
         last_credit_update: now
       };
 
       // Se for uma operação de remoção, atualiza também last_credit_removed
       if (newLog.operation_type === 'remove') {
-        console.log('Atualizando last_credit_removed'); // Debug
+        console.log('Atualizando last_credit_removed para:', now); // Debug
         updateData.last_credit_removed = now;
       }
 
       console.log('Dados de atualização:', updateData); // Debug
 
-      // Atualiza as datas no aluno
+      // Atualiza o aluno
       const { error: updateError } = await supabase
         .from('essay_students')
         .update(updateData)
         .eq('email', newLog.student_email);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Erro ao atualizar aluno:', updateError); // Debug
+        throw updateError;
+      }
+
+      console.log('Aluno atualizado com sucesso'); // Debug
 
       toast({
         title: 'Operação registrada com sucesso',
