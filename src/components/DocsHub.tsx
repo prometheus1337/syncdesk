@@ -1418,20 +1418,31 @@ export function DocsHub() {
                     value={newDoc.content || ''}
                     onEditorChange={(content) => setNewDoc({ ...newDoc, content })}
                     init={{
-                      height: 600,
+                      height: "100%",
+                      width: "100%",
                       menubar: true,
+                      statusbar: true,
+                      resize: false,
                       plugins: [
                         'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
                         'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                        'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                        'insertdatetime', 'media', 'table', 'help', 'wordcount', 'paste'
                       ],
-                      toolbar: 'undo redo | blocks | ' +
-                        'bold italic forecolor | alignleft aligncenter ' +
+                      toolbar: 'undo redo | formatselect | ' +
+                        'bold italic forecolor backcolor | alignleft aligncenter ' +
                         'alignright alignjustify | bullist numlist outdent indent | ' +
-                        'removeformat | link image media table | help',
-                      content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 16px; }',
+                        'removeformat | link image media table | fullscreen',
+                      content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 16px; margin: 1rem; }',
                       file_picker_types: 'image media',
+                      paste_data_images: true,
                       automatic_uploads: true,
+                      branding: false,
+                      elementpath: false,
+                      skin: 'oxide',
+                      entity_encoding: 'raw',
+                      forced_root_block: 'p',
+                      valid_elements: '*[*]',
+                      valid_children: '+body[style]',
                       images_upload_handler: async (blobInfo: { blob: () => File }) => {
                         try {
                           setIsUploading(true);
