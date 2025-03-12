@@ -1415,6 +1415,7 @@ export function DocsHub() {
                     apiKey="wb3g4j05kptxthoby0xwv5k0539bbejbf9350t75budlog6u"
                     init={{
                       height: 600,
+                      inline: false,
                       menubar: 'file edit view insert format tools table',
                       plugins: [
                         'advlist autolink lists link image charmap preview anchor',
@@ -1426,6 +1427,9 @@ export function DocsHub() {
                         'alignright alignjustify | bullist numlist outdent indent | ' +
                         'removeformat | link image media table | help',
                       content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px }',
+                      entity_encoding: 'raw',
+                      verify_html: false,
+                      forced_root_block: 'p',
                       images_upload_handler: async (blobInfo) => {
                         try {
                           setIsUploading(true);
@@ -1464,6 +1468,7 @@ export function DocsHub() {
                       console.log('Conteúdo alterado:', content);
                       setNewDoc({ ...newDoc, content });
                     }}
+                    disabled={false}
                   />
                 </Box>
                 <Text fontSize="sm" color="gray.500" mt={2}>
