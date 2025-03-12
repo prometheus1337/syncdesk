@@ -1413,27 +1413,19 @@ export function DocsHub() {
                 >
                   <Editor
                     apiKey="wb3g4j05kptxthoby0xwv5k0539bbejbf9350t75budlog6u"
-                    tinymceScriptSrc="/tinymce/tinymce.min.js"
                     init={{
-                      height: "100%",
-                      width: "100%",
-                      skin: "oxide",
-                      content_css: "default",
-                      branding: false,
-                      menubar: true,
-                      statusbar: true,
+                      height: 600,
+                      menubar: 'file edit view insert format tools table',
                       plugins: [
-                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                        'insertdatetime', 'media', 'table', 'help', 'wordcount', 'paste'
+                        'advlist autolink lists link image charmap preview anchor',
+                        'searchreplace visualblocks code fullscreen',
+                        'insertdatetime media table paste code help wordcount'
                       ],
                       toolbar: 'undo redo | formatselect | ' +
                         'bold italic backcolor | alignleft aligncenter ' +
                         'alignright alignjustify | bullist numlist outdent indent | ' +
-                        'removeformat | help',
-                      contextmenu: 'link image table',
-                      paste_data_images: true,
-                      automatic_uploads: true,
+                        'removeformat | link image media table | help',
+                      content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px }',
                       images_upload_handler: async (blobInfo) => {
                         try {
                           setIsUploading(true);
@@ -1465,11 +1457,6 @@ export function DocsHub() {
                         } finally {
                           setIsUploading(false);
                         }
-                      },
-                      setup: function(editor) {
-                        editor.on('init', function() {
-                          editor.setContent(newDoc.content || '');
-                        });
                       }
                     }}
                     value={newDoc.content || ''}
