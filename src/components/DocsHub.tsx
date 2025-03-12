@@ -51,13 +51,64 @@ const globalStyles = `
   .tox-dialog-wrap {
     z-index: 9999 !important;
   }
+  .tox-dialog {
+    z-index: 9999 !important;
+  }
+  .tox-dialog__header {
+    z-index: 9999 !important;
+  }
+  .tox-dialog__footer {
+    z-index: 9999 !important;
+  }
+  .tox-dialog__body {
+    z-index: 9999 !important;
+  }
+  .tox-dialog__body-content {
+    z-index: 9999 !important;
+  }
+  .tox-form {
+    z-index: 9999 !important;
+  }
+  .tox-form__group {
+    z-index: 9999 !important;
+  }
+  .tox-textfield {
+    z-index: 9999 !important;
+  }
   .tox-menu {
     z-index: 9999 !important;
   }
   .tox-collection {
     z-index: 9999 !important;
   }
+  .tox-collection__item {
+    z-index: 9999 !important;
+  }
   .tox-selected-menu {
+    z-index: 9999 !important;
+  }
+  .tox-toolbar {
+    z-index: 9999 !important;
+  }
+  .tox-toolbar__group {
+    z-index: 9999 !important;
+  }
+  .tox-toolbar-overlord {
+    z-index: 9999 !important;
+  }
+  .tox-toolbar__primary {
+    z-index: 9999 !important;
+  }
+  .tox-pop {
+    z-index: 9999 !important;
+  }
+  .tox-tbtn {
+    z-index: 9999 !important;
+  }
+  .tox-tbtn--enabled {
+    z-index: 9999 !important;
+  }
+  .tox-tbtn--select {
     z-index: 9999 !important;
   }
 `;
