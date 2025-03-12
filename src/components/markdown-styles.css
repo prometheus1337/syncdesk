@@ -18,6 +18,7 @@
   margin-top: 1.5em;
   margin-bottom: 0.5em;
   font-weight: 600;
+  line-height: 1.25;
 }
 
 .markdown-content h1 {
@@ -38,6 +39,15 @@
 
 .markdown-content h4 {
   font-size: 1em;
+}
+
+.markdown-content h5 {
+  font-size: 0.875em;
+}
+
+.markdown-content h6 {
+  font-size: 0.85em;
+  color: #6a737d;
 }
 
 /* Parágrafos */
@@ -68,10 +78,12 @@
 /* Blocos de código */
 .markdown-content pre {
   background-color: #f6f8fa;
-  border-radius: 3px;
+  border-radius: 6px;
   padding: 16px;
   overflow: auto;
   margin-bottom: 1em;
+  font-size: 85%;
+  line-height: 1.45;
 }
 
 .markdown-content code {
@@ -80,6 +92,7 @@
   padding: 0.2em 0.4em;
   border-radius: 3px;
   font-size: 85%;
+  margin: 0;
 }
 
 .markdown-content pre code {
@@ -87,6 +100,7 @@
   padding: 0;
   font-size: 100%;
   white-space: pre;
+  border: 0;
 }
 
 /* Tabelas */
@@ -94,6 +108,8 @@
   border-collapse: collapse;
   width: 100%;
   margin-bottom: 1em;
+  display: block;
+  overflow-x: auto;
 }
 
 .markdown-content table th,
@@ -111,12 +127,17 @@
   background-color: #f6f8fa;
 }
 
+.markdown-content table th {
+  font-weight: 600;
+  background-color: #f6f8fa;
+}
+
 /* Citações */
 .markdown-content blockquote {
   padding: 0 1em;
   color: #6a737d;
   border-left: 0.25em solid #dfe2e5;
-  margin-bottom: 1em;
+  margin: 0 0 1em;
 }
 
 .markdown-content blockquote > :first-child {
@@ -131,7 +152,7 @@
 .markdown-content img {
   max-width: 100%;
   border-radius: 8px;
-  box-shadow: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   margin: 1.5em 0;
   display: block;
 }
@@ -153,6 +174,7 @@
 
 .markdown-content a:hover {
   text-decoration: underline;
+  color: #0056b3;
 }
 
 /* Linha horizontal */
@@ -162,6 +184,137 @@
   margin: 24px 0;
   background-color: #e1e4e8;
   border: 0;
+}
+
+/* Elementos adicionais */
+.markdown-content iframe {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 1.5em 0;
+  border: 1px solid #e1e4e8;
+}
+
+.markdown-content audio {
+  width: 100%;
+  margin: 1em 0;
+}
+
+.markdown-content figure {
+  margin: 1.5em 0;
+  text-align: center;
+}
+
+.markdown-content figcaption {
+  color: #6a737d;
+  font-size: 0.875rem;
+  margin-top: 0.5em;
+}
+
+/* Estilos para o modo escuro */
+.chakra-ui-dark .markdown-content {
+  color: #e2e8f0;
+}
+
+.chakra-ui-dark .markdown-content h1,
+.chakra-ui-dark .markdown-content h2 {
+  border-bottom-color: #2d3748;
+}
+
+.chakra-ui-dark .markdown-content code {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.chakra-ui-dark .markdown-content pre {
+  background-color: #2d3748;
+}
+
+.chakra-ui-dark .markdown-content table th,
+.chakra-ui-dark .markdown-content table td {
+  border-color: #4a5568;
+}
+
+.chakra-ui-dark .markdown-content table tr {
+  background-color: transparent;
+  border-color: #4a5568;
+}
+
+.chakra-ui-dark .markdown-content table tr:nth-child(2n) {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.chakra-ui-dark .markdown-content blockquote {
+  color: #a0aec0;
+  border-left-color: #4a5568;
+}
+
+.chakra-ui-dark .markdown-content a {
+  color: #63b3ed;
+}
+
+.chakra-ui-dark .markdown-content a:hover {
+  color: #4299e1;
+}
+
+.chakra-ui-dark .markdown-content hr {
+  background-color: #4a5568;
+}
+
+.chakra-ui-dark .markdown-content iframe {
+  border-color: #4a5568;
+}
+
+.chakra-ui-dark .markdown-content figcaption {
+  color: #a0aec0;
+}
+
+/* Ajustes de acessibilidade */
+.markdown-content :focus {
+  outline: 2px solid #3182ce;
+  outline-offset: 2px;
+}
+
+.markdown-content a:focus {
+  outline: 2px solid #3182ce;
+  outline-offset: 2px;
+}
+
+/* Ajustes de responsividade */
+@media (max-width: 768px) {
+  .markdown-content {
+    padding: 0 0.5rem;
+  }
+
+  .markdown-content table {
+    font-size: 0.875rem;
+  }
+
+  .markdown-content pre {
+    font-size: 0.8125rem;
+  }
+}
+
+/* Ajustes de impressão */
+@media print {
+  .markdown-content {
+    max-width: none;
+    padding: 0;
+  }
+
+  .markdown-content pre,
+  .markdown-content code {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .markdown-content a {
+    text-decoration: underline;
+  }
+
+  .markdown-content img,
+  .markdown-content video {
+    max-height: 500px;
+    page-break-inside: avoid;
+  }
 }
 
 /* Estilos para o editor Markdown estilo Notion */

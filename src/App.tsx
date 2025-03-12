@@ -1,16 +1,17 @@
-import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import { AuthProvider } from './contexts/AuthContext';
 import { Layout } from './components/Layout';
 import LoginPage from './components/LoginPage';
 import PrivateRoute from './components/PrivateRoute';
 import { RestrictedRoute } from './components/RestrictedRoute';
-import { ImageGenerator } from './components/ImageGenerator';
 import { DocsHub } from './components/DocsHub';
-import { ReportsDashboard } from './components/ReportsDashboard';
+import { DocView } from './components/DocView';
+import { ImageGenerator } from './components/ImageGenerator';
 import { AdminDashboard } from './components/AdminDashboard';
 import { EssayDashboard } from './components/EssayDashboard';
 import { EssayCreditLogs } from './components/EssayCreditLogs';
+import { ReportsDashboard } from './components/ReportsDashboard';
 
 const theme = extendTheme({
   styles: {
@@ -67,7 +68,7 @@ export function App() {
             <Route
               path="/documentos"
               element={
-                <RestrictedRoute allowedRoles={['admin', 'support', 'commercial', 'essay_director', 'designer']}>
+                <RestrictedRoute allowedRoles={['admin', 'user']}>
                   <Layout>
                     <DocsHub />
                   </Layout>
@@ -76,9 +77,20 @@ export function App() {
             />
 
             <Route
+              path="/documentos/visualizar/:id"
+              element={
+                <RestrictedRoute allowedRoles={['admin']}>
+                  <Layout>
+                    <DocView />
+                  </Layout>
+                </RestrictedRoute>
+              }
+            />
+
+            <Route
               path="/images"
               element={
-                <RestrictedRoute allowedRoles={['admin', 'designer']}>
+                <RestrictedRoute allowedRoles={['admin']}>
                   <Layout>
                     <ImageGenerator />
                   </Layout>
@@ -101,7 +113,7 @@ export function App() {
             <Route
               path="/redacoes"
               element={
-                <RestrictedRoute allowedRoles={['admin', 'essay_director']}>
+                <RestrictedRoute allowedRoles={['admin']}>
                   <Layout>
                     <EssayDashboard />
                   </Layout>
@@ -112,7 +124,7 @@ export function App() {
             <Route
               path="/redacoes/creditos"
               element={
-                <RestrictedRoute allowedRoles={['admin', 'essay_director']}>
+                <RestrictedRoute allowedRoles={['admin']}>
                   <Layout>
                     <EssayCreditLogs />
                   </Layout>
@@ -120,7 +132,7 @@ export function App() {
               }
             />
 
-            {/* Rota para páginas não encontradas - redireciona para relatórios */}
+            {/* Redireciona qualquer rota não encontrada para relatórios */}
             <Route path="*" element={<Navigate to="/relatorios" replace />} />
           </Routes>
         </BrowserRouter>

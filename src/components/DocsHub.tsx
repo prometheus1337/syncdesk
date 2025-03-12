@@ -34,82 +34,148 @@ import {
   ButtonGroup,
   Divider,
 } from '@chakra-ui/react';
-import { ChevronRightIcon, AddIcon, EditIcon, DeleteIcon, ChevronDownIcon, ArrowUpIcon, ArrowDownIcon, ArrowBackIcon } from '@chakra-ui/icons';
+import { ChevronRightIcon, AddIcon, EditIcon, DeleteIcon, ChevronDownIcon, ArrowUpIcon, ArrowDownIcon, ArrowBackIcon, ViewIcon } from '@chakra-ui/icons';
 import { supabase, initializeStorage } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { Editor } from '@tinymce/tinymce-react';
 import "./markdown-styles.css";
 import { Global } from '@emotion/react';
+import { css } from '@emotion/react';
 
-// Adicionar estilos globais para o TinyMCE
-const globalStyles = `
-  .tox-tinymce-aux {
-    z-index: 9999 !important;
+// Adicionar estilos globais para o conteúdo do TinyMCE
+const globalStyles = css`
+  .content-preview {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.6;
+    color: var(--chakra-colors-gray-800);
+    padding: 1rem;
+
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin: 1rem 0;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1rem 0;
+      
+      th, td {
+        border: 1px solid var(--chakra-colors-gray-200);
+        padding: 8px;
+        text-align: left;
+      }
+      
+      th {
+        background-color: ${useColorModeValue('gray.50', 'gray.700')};
+      }
+      
+      tr:nth-of-type(even) {
+        background-color: ${useColorModeValue('gray.50', 'gray.700')};
+      }
+    }
+
+    p {
+      margin: 1rem 0;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      margin: 2rem 0 1rem;
+      line-height: 1.25;
+      font-weight: 600;
+    }
+
+    h1 { font-size: 2em; }
+    h2 { font-size: 1.5em; }
+    h3 { font-size: 1.25em; }
+    h4 { font-size: 1em; }
+    h5 { font-size: 0.875em; }
+    h6 { font-size: 0.85em; }
+
+    ul, ol {
+      margin: 1rem 0;
+      padding-left: 2rem;
+    }
+
+    li {
+      margin: 0.5rem 0;
+    }
+
+    a {
+      color: ${useColorModeValue('yellow.600', 'yellow.300')};
+      text-decoration: none;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    blockquote {
+      margin: 1rem 0;
+      padding: 0.5rem 1rem;
+      border-left: 4px solid ${useColorModeValue('yellow.400', 'yellow.500')};
+      background-color: ${useColorModeValue('gray.50', 'gray.700')};
+      font-style: italic;
+    }
+
+    code {
+      font-family: monospace;
+      background-color: ${useColorModeValue('gray.100', 'gray.700')};
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+
+    pre {
+      background-color: ${useColorModeValue('gray.100', 'gray.700')};
+      padding: 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0;
+      
+      code {
+        background-color: transparent;
+        padding: 0;
+        border-radius: 0;
+      }
+    }
+
+    hr {
+      margin: 2rem 0;
+      border: 0;
+      border-top: 1px solid var(--chakra-colors-gray-200);
+    }
+
+    iframe, video, audio {
+      max-width: 100%;
+      margin: 1rem 0;
+      border-radius: 8px;
+    }
+
+    figure {
+      margin: 1rem 0;
+      
+      figcaption {
+        text-align: center;
+        font-size: 0.9em;
+        color: ${useColorModeValue('gray.600', 'gray.400')};
+        margin-top: 0.5rem;
+      }
+    }
   }
-  .tox-dialog-wrap {
-    z-index: 9999 !important;
-  }
-  .tox-dialog {
-    z-index: 9999 !important;
-  }
-  .tox-dialog__header {
-    z-index: 9999 !important;
-  }
-  .tox-dialog__footer {
-    z-index: 9999 !important;
-  }
-  .tox-dialog__body {
-    z-index: 9999 !important;
-  }
-  .tox-dialog__body-content {
-    z-index: 9999 !important;
-  }
-  .tox-form {
-    z-index: 9999 !important;
-  }
-  .tox-form__group {
-    z-index: 9999 !important;
-  }
-  .tox-textfield {
-    z-index: 9999 !important;
-  }
-  .tox-menu {
-    z-index: 9999 !important;
-  }
-  .tox-collection {
-    z-index: 9999 !important;
-  }
-  .tox-collection__item {
-    z-index: 9999 !important;
-  }
-  .tox-selected-menu {
-    z-index: 9999 !important;
-  }
-  .tox-toolbar {
-    z-index: 9999 !important;
-  }
-  .tox-toolbar__group {
-    z-index: 9999 !important;
-  }
-  .tox-toolbar-overlord {
-    z-index: 9999 !important;
-  }
-  .tox-toolbar__primary {
-    z-index: 9999 !important;
-  }
-  .tox-pop {
-    z-index: 9999 !important;
-  }
-  .tox-tbtn {
-    z-index: 9999 !important;
-  }
-  .tox-tbtn--enabled {
-    z-index: 9999 !important;
-  }
-  .tox-tbtn--select {
-    z-index: 9999 !important;
+
+  .chakra-ui-dark .content-preview {
+    color: var(--chakra-colors-gray-200);
+
+    table th, table td {
+      border-color: var(--chakra-colors-gray-600);
+    }
+
+    hr {
+      border-top-color: var(--chakra-colors-gray-600);
+    }
   }
 `;
 
@@ -159,7 +225,7 @@ export function DocsHub() {
   const [isUploading, setIsUploading] = useState(false);
 
   // Cores
-  const textColor = useColorModeValue('gray.800', 'white');
+  const textColor = useColorModeValue('gray.800', 'gray.200');
   const editorBorderColor = useColorModeValue('gray.200', 'gray.600');
 
   useEffect(() => {
@@ -1188,6 +1254,14 @@ export function DocsHub() {
                           {appUser?.role === 'admin' && (
                             <>
                               <IconButton
+                                aria-label="Visualizar documento"
+                                icon={<ViewIcon />}
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => navigate(`/documentos/visualizar/${selectedDoc.id}`)}
+                                mr={2}
+                              />
+                              <IconButton
                                 aria-label="Editar documento"
                                 icon={<EditIcon />}
                                 size="sm"
@@ -1210,11 +1284,7 @@ export function DocsHub() {
                           )}
                         </Flex>
                       </Flex>
-                      <Box className="markdown-content">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {selectedDoc.content}
-                        </ReactMarkdown>
-                      </Box>
+                      <Box className="content-preview" dangerouslySetInnerHTML={{ __html: selectedDoc.content }} />
                     </Box>
                   ) : (
                     // Exibir informações da seção
