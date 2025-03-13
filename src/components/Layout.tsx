@@ -91,6 +91,15 @@ export function Layout({ children }: { children: ReactNode }) {
       icon: <FaChartBar />
     });
 
+    // Link para Reembolsos - apenas admin e support têm acesso
+    if (['admin', 'support'].includes(appUser?.role || '')) {
+      links.push({
+        href: '/reembolsos',
+        label: 'Reembolsos',
+        icon: <FaFileAlt />
+      });
+    }
+
     // Link para Documentos - todos exceto commercial têm acesso
     if (['admin', 'support', 'essay_director', 'designer'].includes(appUser?.role || '')) {
       links.push({

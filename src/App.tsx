@@ -11,6 +11,7 @@ import { ReportsDashboard } from './components/ReportsDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { EssayDashboard } from './components/EssayDashboard';
 import { EssayCreditLogs } from './components/EssayCreditLogs';
+import { RefundDashboard } from './components/RefundDashboard';
 
 const theme = extendTheme({
   styles: {
@@ -115,6 +116,18 @@ export function App() {
                 <RestrictedRoute allowedRoles={['admin', 'essay_director']}>
                   <Layout>
                     <EssayCreditLogs />
+                  </Layout>
+                </RestrictedRoute>
+              }
+            />
+
+            {/* Rota de reembolsos */}
+            <Route
+              path="/reembolsos"
+              element={
+                <RestrictedRoute allowedRoles={['admin', 'support']}>
+                  <Layout>
+                    <RefundDashboard />
                   </Layout>
                 </RestrictedRoute>
               }
