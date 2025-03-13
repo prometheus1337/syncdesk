@@ -91,18 +91,11 @@ export function Layout({ children }: { children: ReactNode }) {
       icon: <FaChartBar />
     });
 
-    // Link para Documentação - todos os usuários têm acesso
-    links.push({
-      href: '/docs',
-      label: 'Documentação',
-      icon: <FaFileAlt />
-    });
-
     // Link para Documentos - todos exceto commercial têm acesso
     if (['admin', 'support', 'essay_director', 'designer'].includes(appUser?.role || '')) {
       links.push({
         href: '/documentos',
-        label: 'Gerenciar Documentos',
+        label: 'Documentos',
         icon: <FaFileAlt />
       });
     }

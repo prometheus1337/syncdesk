@@ -12,7 +12,6 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { EssayDashboard } from './components/EssayDashboard';
 import { EssayCreditLogs } from './components/EssayCreditLogs';
 import { ReportsDashboard } from './components/ReportsDashboard';
-import { DocsViewer } from './components/DocsViewer';
 
 const theme = extendTheme({
   styles: {
@@ -69,7 +68,7 @@ export function App() {
             <Route
               path="/documentos"
               element={
-                <RestrictedRoute allowedRoles={['admin', 'support', 'essay_director', 'designer']}>
+                <RestrictedRoute allowedRoles={['admin', 'user']}>
                   <Layout>
                     <DocsHub />
                   </Layout>
@@ -85,17 +84,6 @@ export function App() {
                     <DocView />
                   </Layout>
                 </RestrictedRoute>
-              }
-            />
-
-            <Route
-              path="/docs"
-              element={
-                <PrivateRoute>
-                  <Layout>
-                    <DocsViewer />
-                  </Layout>
-                </PrivateRoute>
               }
             />
 
