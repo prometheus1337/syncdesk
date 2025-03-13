@@ -1,17 +1,16 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { Layout } from './components/Layout';
 import LoginPage from './components/LoginPage';
 import PrivateRoute from './components/PrivateRoute';
 import { RestrictedRoute } from './components/RestrictedRoute';
-import { DocsHub } from './components/DocsHub';
-import { DocView } from './components/DocView';
 import { ImageGenerator } from './components/ImageGenerator';
+import { DocsHub } from './components/DocsHub';
+import { ReportsDashboard } from './components/ReportsDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { EssayDashboard } from './components/EssayDashboard';
 import { EssayCreditLogs } from './components/EssayCreditLogs';
-import { ReportsDashboard } from './components/ReportsDashboard';
 
 const theme = extendTheme({
   styles: {
@@ -68,7 +67,7 @@ export function App() {
             <Route
               path="/documentos"
               element={
-                <RestrictedRoute allowedRoles={['admin', 'user']}>
+                <RestrictedRoute allowedRoles={['admin', 'support', 'commercial', 'essay_director', 'designer']}>
                   <Layout>
                     <DocsHub />
                   </Layout>
@@ -77,20 +76,9 @@ export function App() {
             />
 
             <Route
-              path="/documentos/visualizar/:id"
-              element={
-                <RestrictedRoute allowedRoles={['admin']}>
-                  <Layout>
-                    <DocView />
-                  </Layout>
-                </RestrictedRoute>
-              }
-            />
-
-            <Route
               path="/images"
               element={
-                <RestrictedRoute allowedRoles={['admin']}>
+                <RestrictedRoute allowedRoles={['admin', 'designer']}>
                   <Layout>
                     <ImageGenerator />
                   </Layout>
@@ -113,7 +101,7 @@ export function App() {
             <Route
               path="/redacoes"
               element={
-                <RestrictedRoute allowedRoles={['admin']}>
+                <RestrictedRoute allowedRoles={['admin', 'essay_director']}>
                   <Layout>
                     <EssayDashboard />
                   </Layout>
@@ -124,7 +112,7 @@ export function App() {
             <Route
               path="/redacoes/creditos"
               element={
-                <RestrictedRoute allowedRoles={['admin']}>
+                <RestrictedRoute allowedRoles={['admin', 'essay_director']}>
                   <Layout>
                     <EssayCreditLogs />
                   </Layout>
@@ -132,7 +120,7 @@ export function App() {
               }
             />
 
-            {/* Redireciona qualquer rota não encontrada para relatórios */}
+            {/* Rota para páginas não encontradas - redireciona para relatórios */}
             <Route path="*" element={<Navigate to="/relatorios" replace />} />
           </Routes>
         </BrowserRouter>
