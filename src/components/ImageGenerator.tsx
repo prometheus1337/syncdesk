@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -40,6 +40,7 @@ export const ImageGenerator = () => {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [progressInterval, setProgressInterval] = useState<NodeJS.Timeout | null>(null);
   const [params, setParams] = useState<ImageParams>({
     prompt: '',
     negativePrompt: '',
@@ -51,6 +52,34 @@ export const ImageGenerator = () => {
   });
 
   const toast = useToast();
+
+  useEffect(() => {
+    if (loading) {
+      setProgress(0);
+      const interval = setInterval(() => {
+        setProgress((prev: number) => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            return 100;
+          }
+          return prev + (100 / 150); // 15 segundos divididos em 100 steps
+        });
+      }, 100);
+      setProgressInterval(interval);
+    } else {
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        setProgressInterval(null);
+      }
+      setProgress(0);
+    }
+
+    return () => {
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
+    };
+  }, [loading, progressInterval]);
 
   const handleGenerate = async () => {
     if (!params.prompt.trim()) {
