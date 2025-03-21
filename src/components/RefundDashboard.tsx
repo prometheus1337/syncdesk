@@ -1072,6 +1072,11 @@ export function RefundDashboard() {
               />
             </Tooltip>
           </Flex>
+          <Box mt={2}>
+            <Text color="gray.600" fontSize="sm">
+              {refunds.length} {refunds.length === 1 ? 'resultado encontrado' : 'resultados encontrados'}
+            </Text>
+          </Box>
         </Stack>
       </CardHeader>
       <CardBody>
