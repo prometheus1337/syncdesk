@@ -37,6 +37,8 @@ export function Navigation() {
   async function fetchMenuItems() {
     if (!appUser) return;
 
+    console.log('Buscando itens do menu para o usuário:', appUser);
+
     const { data: items, error } = await supabase
       .from('menu_items')
       .select(`
@@ -55,14 +57,24 @@ export function Navigation() {
       return;
     }
 
-    const { data: permissions } = await supabase
+    console.log('Itens do menu carregados:', items);
+
+    const { data: permissions, error: permissionsError } = await supabase
       .from('menu_permissions')
       .select('menu_item_id')
       .eq('role', appUser.role);
 
+    if (permissionsError) {
+      console.error('Erro ao carregar permissões:', permissionsError);
+      return;
+    }
+
+    console.log('Permissões carregadas:', permissions);
+
     if (permissions) {
       const allowedIds = permissions.map(p => p.menu_item_id);
       const filteredItems = items.filter(item => allowedIds.includes(item.id));
+      console.log('Itens filtrados por permissão:', filteredItems);
       setMenuItems(filteredItems);
     }
   }
@@ -78,6 +90,9 @@ export function Navigation() {
       .filter(item => !item.parent_id)
       .sort((a, b) => a.order_index - b.order_index);
   }
+
+  const mainItems = getMainItems();
+  console.log('Itens principais do menu:', mainItems);
 
   return (
     <Flex 
@@ -100,7 +115,7 @@ export function Navigation() {
       </Flex>
 
       <Flex align="center" flex={1} justify="center" gap={2}>
-        {getMainItems().map(item => (
+        {mainItems.map(item => (
           item.type === 'dropdown' ? (
             <Menu key={item.id}>
               <MenuButton
