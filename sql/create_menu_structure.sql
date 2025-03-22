@@ -1,3 +1,19 @@
+-- Remover objetos existentes se já existirem
+DROP TABLE IF EXISTS menu_permissions CASCADE;
+DROP TABLE IF EXISTS menu_items CASCADE;
+
+DO $$ BEGIN
+    IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'menu_item_type') THEN
+        DROP TYPE menu_item_type CASCADE;
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+        DROP TYPE user_role CASCADE;
+    END IF;
+END $$;
+
 -- Criar enum para tipos de item de menu
 CREATE TYPE menu_item_type AS ENUM ('link', 'dropdown');
 
