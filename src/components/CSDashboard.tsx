@@ -629,14 +629,14 @@ export function CSDashboard() {
                           />
                         </Td>
                         <Td>
-                          <IconButton
-                            aria-label="Ver feedbacks"
-                            icon={<EditIcon />}
+                          <Button
                             size="sm"
-                            variant="ghost"
+                            colorScheme="purple"
+                            variant="outline"
                             onClick={() => handleViewNotes(student)}
-                            colorScheme="blue"
-                          />
+                          >
+                            Ver Feedbacks
+                          </Button>
                         </Td>
                       </Tr>
                     ))}
