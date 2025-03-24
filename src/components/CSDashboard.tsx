@@ -85,6 +85,7 @@ export function CSDashboard() {
 
       if (error) throw error;
       
+      // Garantir que só temos usuários CS
       const csUsers = data?.filter(user => user.role === 'cs') || [];
       setCSUsers(csUsers);
     } catch (error: any) {
