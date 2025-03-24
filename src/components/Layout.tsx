@@ -144,6 +144,15 @@ export function Layout({ children }: { children: ReactNode }) {
         icon: <FaCoins />
       });
     }
+
+    // Link para Painel CS - apenas admin e cs têm acesso
+    if (['admin', 'cs'].includes(appUser?.role || '')) {
+      links.push({
+        href: '/cs',
+        label: 'Painel CS',
+        icon: <FaChartBar />
+      });
+    }
     
     return links;
   };

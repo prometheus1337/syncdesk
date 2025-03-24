@@ -81,7 +81,7 @@ export const UserForm = ({ onSubmit, initialData, isEditing = false }: UserFormP
         )}
 
         <FormControl isRequired>
-          <FormLabel>Cargo</FormLabel>
+          <FormLabel>Função</FormLabel>
           <Select
             value={role}
             onChange={(e) => setRole(e.target.value)}
@@ -91,6 +91,7 @@ export const UserForm = ({ onSubmit, initialData, isEditing = false }: UserFormP
             <option value="commercial">Comercial</option>
             <option value="essay_director">Diretor de Redação</option>
             <option value="designer">Designer</option>
+            <option value="cs">CS</option>
           </Select>
         </FormControl>
 

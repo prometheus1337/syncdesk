@@ -6,7 +6,7 @@ interface AppUser {
   id: string;
   email: string;
   full_name: string;
-  role: 'admin' | 'support' | 'commercial' | 'essay_director';
+  role: 'admin' | 'support' | 'commercial' | 'essay_director' | 'cs';
 }
 
 interface AuthContextType {

@@ -12,6 +12,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { EssayDashboard } from './components/EssayDashboard';
 import { EssayCreditLogs } from './components/EssayCreditLogs';
 import { RefundDashboard } from './components/RefundDashboard';
+import { CSDashboard } from './components/CSDashboard';
 
 const theme = extendTheme({
   styles: {
@@ -128,6 +129,17 @@ export function App() {
                 <RestrictedRoute allowedRoles={['admin', 'support']}>
                   <Layout>
                     <RefundDashboard />
+                  </Layout>
+                </RestrictedRoute>
+              }
+            />
+
+            <Route
+              path="/cs"
+              element={
+                <RestrictedRoute allowedRoles={['admin', 'cs']}>
+                  <Layout>
+                    <CSDashboard />
                   </Layout>
                 </RestrictedRoute>
               }

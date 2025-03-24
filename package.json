@@ -16,6 +16,7 @@
     "@chakra-ui/react": "^2.10.6",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@hello-pangea/dnd": "^18.0.1",
     "@supabase/supabase-js": "^2.49.1",
     "@tinymce/tinymce-react": "^6.0.0",
     "@types/node": "^22.13.10",
