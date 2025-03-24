@@ -38,7 +38,7 @@ import {
   Switch,
   ButtonGroup,
 } from '@chakra-ui/react';
-import { AddIcon, EditIcon } from '@chakra-ui/icons';
+import { AddIcon } from '@chakra-ui/icons';
 import { BsTable, BsKanban } from 'react-icons/bs';
 import { supabase } from '../lib/supabase';
 import { CSStudent, CSFeedbackNote, NewCSStudent, CSUser } from '../types/cs';
