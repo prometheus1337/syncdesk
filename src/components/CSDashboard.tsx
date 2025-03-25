@@ -479,7 +479,7 @@ export function CSDashboard() {
       // Primeiro, deleta todos os feedbacks do aluno
       console.log('Deletando feedbacks...');
       const { error: feedbackError } = await supabase
-        .rpc('delete_student_feedbacks', { student_id: studentToDelete.id });
+        .rpc('delete_student_feedbacks', { p_student_id: studentToDelete.id });
 
       if (feedbackError) {
         console.error('Erro ao deletar feedbacks:', feedbackError);
@@ -490,7 +490,7 @@ export function CSDashboard() {
       // Depois, deleta o aluno
       console.log('Deletando aluno...');
       const { error: studentError } = await supabase
-        .rpc('delete_student', { student_id: studentToDelete.id });
+        .rpc('delete_student', { p_student_id: studentToDelete.id });
 
       if (studentError) {
         console.error('Erro ao deletar aluno:', studentError);
