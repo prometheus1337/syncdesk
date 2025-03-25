@@ -29,21 +29,18 @@ import {
   Card,
   CardBody,
   Stack,
-  IconButton,
   Menu,
   MenuButton,
   MenuList,
   MenuItem,
   Flex,
   Switch,
-  ButtonGroup,
+  Textarea,
 } from '@chakra-ui/react';
 import { AddIcon } from '@chakra-ui/icons';
-import { BsTable, BsKanban } from 'react-icons/bs';
 import { supabase } from '../lib/supabase';
 import { CSStudent, CSFeedbackNote, NewCSStudent, CSUser } from '../types/cs';
 import { useAuth } from '../contexts/AuthContext';
-import { CSKanbanView } from './CSKanbanView';
 
 export function CSDashboard() {
   const [students, setStudents] = useState<CSStudent[]>([]);
@@ -51,8 +48,8 @@ export function CSDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedStudent, setSelectedStudent] = useState<CSStudent | null>(null);
   const [feedbackNotes, setFeedbackNotes] = useState<CSFeedbackNote[]>([]);
+  const [newFeedbackNote, setNewFeedbackNote] = useState('');
   const [csUsers, setCSUsers] = useState<CSUser[]>([]);
-  const [tabIndex, setTabIndex] = useState(0);
   const [filters, setFilters] = useState({
     priority: '',
     responsible: '',
@@ -428,6 +425,41 @@ export function CSDashboard() {
     }
   };
 
+  const handleAddNote = async () => {
+    if (!selectedStudent || !newFeedbackNote.trim()) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('cs_feedback_notes')
+        .insert([{
+          student_id: selectedStudent.id,
+          note: newFeedbackNote,
+          created_by: appUser?.id,
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setFeedbackNotes(prev => [data, ...prev]);
+      setNewFeedbackNote('');
+      
+      toast({
+        title: 'Feedback adicionado com sucesso!',
+        status: 'success',
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Erro ao adicionar feedback:', error);
+      toast({
+        title: 'Erro ao adicionar feedback',
+        description: 'Por favor, tente novamente.',
+        status: 'error',
+        duration: 3000,
+      });
+    }
+  };
+
   return (
     <Box>
       <Card mb={4} variant="outline" borderRadius="lg">
@@ -457,22 +489,6 @@ export function CSDashboard() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   maxW="400px"
                 />
-                <ButtonGroup size="md" variant="ghost" spacing={1}>
-                  <IconButton
-                    aria-label="Visualização em Tabela"
-                    icon={<BsTable />}
-                    onClick={() => setTabIndex(0)}
-                    color={tabIndex === 0 ? '#FFDB01' : 'gray.500'}
-                    _hover={{ color: '#FFDB01' }}
-                  />
-                  <IconButton
-                    aria-label="Visualização Kanban"
-                    icon={<BsKanban />}
-                    onClick={() => setTabIndex(1)}
-                    color={tabIndex === 1 ? '#FFDB01' : 'gray.500'}
-                    _hover={{ color: '#FFDB01' }}
-                  />
-                </ButtonGroup>
               </HStack>
 
               <HStack spacing={4}>
@@ -539,122 +555,109 @@ export function CSDashboard() {
           </CardBody>
         </Card>
       ) : (
-        <Box>
-          {tabIndex === 0 ? (
-            <Card variant="outline" borderRadius="lg">
-              <CardBody p={0}>
-                <Table variant="simple">
-                  <Thead>
-                    <Tr>
-                      <Th>Nome</Th>
-                      <Th>Email</Th>
-                      <Th>Telefone</Th>
-                      <Th>Prioridade</Th>
-                      <Th>CS Responsável</Th>
-                      <Th>Data de Cadastro</Th>
-                      <Th>Finalizado</Th>
-                      <Th>Ações</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {students.map((student) => (
-                      <Tr 
-                        key={student.id}
-                        bg={student.is_completed ? 'green.100' : undefined}
-                        _hover={{
-                          bg: student.is_completed ? 'green.200' : 'gray.50'
-                        }}
-                      >
-                        <Td>{student.name}</Td>
-                        <Td>{student.email}</Td>
-                        <Td>{student.phone}</Td>
-                        <Td>
-                          <Menu>
-                            <MenuButton as={Button} size="sm" variant="ghost" p={1}>
-                              <Badge
-                                colorScheme={getPriorityColor(student.priority)}
-                                px={2}
-                                py={1}
-                                borderRadius="full"
-                              >
-                                {getPriorityLabel(student.priority)}
-                              </Badge>
-                            </MenuButton>
-                            <MenuList minW="110px">
-                              <MenuItem onClick={() => handlePriorityChange(student.id, 'baixa')}>
-                                <Badge colorScheme="green" mr={2}>Baixa</Badge>
-                              </MenuItem>
-                              <MenuItem onClick={() => handlePriorityChange(student.id, 'media')}>
-                                <Badge colorScheme="orange" mr={2}>Média</Badge>
-                              </MenuItem>
-                              <MenuItem onClick={() => handlePriorityChange(student.id, 'alta')}>
-                                <Badge colorScheme="red" mr={2}>Alta</Badge>
-                              </MenuItem>
-                            </MenuList>
-                          </Menu>
-                        </Td>
-                        <Td>
-                          <Menu>
-                            <MenuButton as={Button} size="sm" variant="ghost" p={1}>
-                              <Badge
-                                colorScheme="purple"
-                                px={2}
-                                py={1}
-                                borderRadius="full"
-                              >
-                                {student.responsible_user?.full_name || 'Sem CS'}
-                              </Badge>
-                            </MenuButton>
-                            <MenuList minW="200px">
-                              <MenuItem onClick={() => handleChangeResponsible(student.id, null)}>
-                                <Badge colorScheme="gray" mr={2}>Sem CS</Badge>
-                              </MenuItem>
-                              {csUsers.map((user) => (
-                                <MenuItem 
-                                  key={user.id} 
-                                  onClick={() => handleChangeResponsible(student.id, user.id)}
-                                >
-                                  <Badge colorScheme="purple" mr={2}>{user.full_name}</Badge>
-                                </MenuItem>
-                              ))}
-                            </MenuList>
-                          </Menu>
-                        </Td>
-                        <Td>{new Date(student.created_at).toLocaleDateString()}</Td>
-                        <Td>
-                          <Switch
-                            isChecked={student.is_completed}
-                            onChange={() => handleToggleCompleted(student.id)}
-                            colorScheme="green"
-                          />
-                        </Td>
-                        <Td>
-                          <Button
-                            size="sm"
-                            colorScheme="purple"
-                            variant="outline"
-                            onClick={() => handleViewNotes(student)}
+        <Card variant="outline" borderRadius="lg">
+          <CardBody p={0}>
+            <Table variant="simple">
+              <Thead>
+                <Tr>
+                  <Th>Nome</Th>
+                  <Th>Email</Th>
+                  <Th>Telefone</Th>
+                  <Th>Prioridade</Th>
+                  <Th>CS Responsável</Th>
+                  <Th>Data de Cadastro</Th>
+                  <Th>Finalizado</Th>
+                  <Th>Ações</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {students.map((student) => (
+                  <Tr 
+                    key={student.id}
+                    bg={student.is_completed ? 'green.100' : undefined}
+                    _hover={{
+                      bg: student.is_completed ? 'green.200' : 'gray.50'
+                    }}
+                  >
+                    <Td>{student.name}</Td>
+                    <Td>{student.email}</Td>
+                    <Td>{student.phone}</Td>
+                    <Td>
+                      <Menu>
+                        <MenuButton as={Button} size="sm" variant="ghost" p={1}>
+                          <Badge
+                            colorScheme={getPriorityColor(student.priority)}
+                            px={2}
+                            py={1}
+                            borderRadius="full"
                           >
-                            Ver Feedbacks
-                          </Button>
-                        </Td>
-                      </Tr>
-                    ))}
-                  </Tbody>
-                </Table>
-              </CardBody>
-            </Card>
-          ) : (
-            <CSKanbanView
-              students={students}
-              csUsers={csUsers}
-              onPriorityChange={handlePriorityChange}
-              onResponsibleChange={handleChangeResponsible}
-              onToggleCompleted={handleToggleCompleted}
-              onViewNotes={handleViewNotes}
-            />
-          )}
-        </Box>
+                            {getPriorityLabel(student.priority)}
+                          </Badge>
+                        </MenuButton>
+                        <MenuList minW="110px">
+                          <MenuItem onClick={() => handlePriorityChange(student.id, 'baixa')}>
+                            <Badge colorScheme="green" mr={2}>Baixa</Badge>
+                          </MenuItem>
+                          <MenuItem onClick={() => handlePriorityChange(student.id, 'media')}>
+                            <Badge colorScheme="orange" mr={2}>Média</Badge>
+                          </MenuItem>
+                          <MenuItem onClick={() => handlePriorityChange(student.id, 'alta')}>
+                            <Badge colorScheme="red" mr={2}>Alta</Badge>
+                          </MenuItem>
+                        </MenuList>
+                      </Menu>
+                    </Td>
+                    <Td>
+                      <Menu>
+                        <MenuButton as={Button} size="sm" variant="ghost" p={1}>
+                          <Badge
+                            colorScheme="purple"
+                            px={2}
+                            py={1}
+                            borderRadius="full"
+                          >
+                            {student.responsible_user?.full_name || 'Sem CS'}
+                          </Badge>
+                        </MenuButton>
+                        <MenuList minW="200px">
+                          <MenuItem onClick={() => handleChangeResponsible(student.id, null)}>
+                            <Badge colorScheme="gray" mr={2}>Sem CS</Badge>
+                          </MenuItem>
+                          {csUsers.map((user) => (
+                            <MenuItem 
+                              key={user.id} 
+                              onClick={() => handleChangeResponsible(student.id, user.id)}
+                            >
+                              <Badge colorScheme="purple" mr={2}>{user.full_name}</Badge>
+                            </MenuItem>
+                          ))}
+                        </MenuList>
+                      </Menu>
+                    </Td>
+                    <Td>{new Date(student.created_at).toLocaleDateString()}</Td>
+                    <Td>
+                      <Switch
+                        isChecked={student.is_completed}
+                        onChange={() => handleToggleCompleted(student.id)}
+                        colorScheme="green"
+                      />
+                    </Td>
+                    <Td>
+                      <Button
+                        size="sm"
+                        colorScheme="purple"
+                        variant="outline"
+                        onClick={() => handleViewNotes(student)}
+                      >
+                        Ver Feedbacks
+                      </Button>
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </CardBody>
+        </Card>
       )}
 
       {/* Modal de Criar Aluno */}
@@ -746,19 +749,32 @@ export function CSDashboard() {
           <Box position="relative" p={6}>
             <Flex justify="space-between" align="center" mb={6} pr={8}>
               <Text fontSize="lg" fontWeight="bold">Feedbacks - {selectedStudent?.name}</Text>
-              <Button 
-                size="sm" 
-                leftIcon={<AddIcon />} 
-                onClick={onViewNotesOpen}
-                bg="#FFDB01"
-                color="black"
-                _hover={{ bg: '#E5C501' }}
-              >
-                Novo Feedback
-              </Button>
             </Flex>
             <ModalCloseButton />
             <Box>
+              <VStack spacing={4} align="stretch" mb={6}>
+                <FormControl>
+                  <FormLabel>Novo Feedback</FormLabel>
+                  <Textarea
+                    value={newFeedbackNote}
+                    onChange={(e) => setNewFeedbackNote(e.target.value)}
+                    placeholder="Digite seu feedback aqui..."
+                    size="sm"
+                    rows={3}
+                  />
+                </FormControl>
+                <Button
+                  leftIcon={<AddIcon />}
+                  onClick={handleAddNote}
+                  bg="#FFDB01"
+                  color="black"
+                  _hover={{ bg: '#E5C501' }}
+                  isDisabled={!newFeedbackNote.trim()}
+                >
+                  Adicionar Feedback
+                </Button>
+              </VStack>
+
               {feedbackNotes.length === 0 ? (
                 <Text color="gray.500" textAlign="center">Nenhum feedback registrado.</Text>
               ) : (
