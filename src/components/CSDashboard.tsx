@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Button,
@@ -36,8 +36,14 @@ import {
   Flex,
   Switch,
   Textarea,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
 } from '@chakra-ui/react';
-import { AddIcon } from '@chakra-ui/icons';
+import { AddIcon, DeleteIcon } from '@chakra-ui/icons';
 import { supabase } from '../lib/supabase';
 import { CSStudent, CSFeedbackNote, NewCSStudent, CSUser } from '../types/cs';
 import { useAuth } from '../contexts/AuthContext';
@@ -62,11 +68,15 @@ export function CSDashboard() {
     priority: 'media',
     cs_responsible: undefined
   });
+  const [studentToDelete, setStudentToDelete] = useState<CSStudent | null>(null);
 
   const { isOpen: isCreateStudentOpen, onOpen: onCreateStudentOpen, onClose: onCreateStudentClose } = useDisclosure();
   const { isOpen: isViewNotesOpen, onOpen: onViewNotesOpen, onClose: onViewNotesClose } = useDisclosure();
+  const { isOpen: isDeleteDialogOpen, onOpen: onDeleteDialogOpen, onClose: onDeleteDialogClose } = useDisclosure();
+  const cancelRef = useRef<HTMLButtonElement>(null);
   const toast = useToast();
   const { appUser } = useAuth();
+  const isAdmin = appUser?.role === 'admin';
 
   useEffect(() => {
     fetchStudents();
@@ -460,6 +470,46 @@ export function CSDashboard() {
     }
   };
 
+  const handleDeleteStudent = async () => {
+    if (!studentToDelete) return;
+
+    try {
+      // Primeiro, deleta todos os feedbacks do aluno
+      const { error: feedbackError } = await supabase
+        .from('cs_feedback_notes')
+        .delete()
+        .eq('student_id', studentToDelete.id);
+
+      if (feedbackError) throw feedbackError;
+
+      // Depois, deleta o aluno
+      const { error: studentError } = await supabase
+        .from('cs_students')
+        .delete()
+        .eq('id', studentToDelete.id);
+
+      if (studentError) throw studentError;
+
+      setStudents(prev => prev.filter(s => s.id !== studentToDelete.id));
+      onDeleteDialogClose();
+      setStudentToDelete(null);
+
+      toast({
+        title: 'Aluno removido com sucesso!',
+        status: 'success',
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Erro ao remover aluno:', error);
+      toast({
+        title: 'Erro ao remover aluno',
+        description: 'Por favor, tente novamente.',
+        status: 'error',
+        duration: 3000,
+      });
+    }
+  };
+
   return (
     <Box>
       <Card mb={4} variant="outline" borderRadius="lg">
@@ -643,14 +693,29 @@ export function CSDashboard() {
                       />
                     </Td>
                     <Td>
-                      <Button
-                        size="sm"
-                        colorScheme="purple"
-                        variant="outline"
-                        onClick={() => handleViewNotes(student)}
-                      >
-                        Ver Feedbacks
-                      </Button>
+                      <HStack spacing={2}>
+                        <Button
+                          size="sm"
+                          colorScheme="purple"
+                          variant="outline"
+                          onClick={() => handleViewNotes(student)}
+                        >
+                          Ver Feedbacks
+                        </Button>
+                        {isAdmin && (
+                          <Button
+                            size="sm"
+                            colorScheme="red"
+                            variant="ghost"
+                            onClick={() => {
+                              setStudentToDelete(student);
+                              onDeleteDialogOpen();
+                            }}
+                          >
+                            <DeleteIcon />
+                          </Button>
+                        )}
+                      </HStack>
                     </Td>
                   </Tr>
                 ))}
@@ -796,6 +861,34 @@ export function CSDashboard() {
           </Box>
         </ModalContent>
       </Modal>
+
+      {/* Modal de Confirmação de Deleção */}
+      <AlertDialog
+        isOpen={isDeleteDialogOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onDeleteDialogClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize='lg' fontWeight='bold'>
+              Remover Aluno
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              Tem certeza que deseja remover o aluno {studentToDelete?.name}? Esta ação não pode ser desfeita e todos os feedbacks serão removidos.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onDeleteDialogClose}>
+                Cancelar
+              </Button>
+              <Button colorScheme='red' onClick={handleDeleteStudent} ml={3}>
+                Remover
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Box>
   );
 } 
