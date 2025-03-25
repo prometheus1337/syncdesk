@@ -478,17 +478,25 @@ export function CSDashboard() {
       const { error: feedbackError } = await supabase
         .from('cs_feedback_notes')
         .delete()
-        .eq('student_id', studentToDelete.id);
+        .eq('student_id', studentToDelete.id)
+        .select();
 
-      if (feedbackError) throw feedbackError;
+      if (feedbackError) {
+        console.error('Erro ao deletar feedbacks:', feedbackError);
+        throw feedbackError;
+      }
 
       // Depois, deleta o aluno
       const { error: studentError } = await supabase
         .from('cs_students')
         .delete()
-        .eq('id', studentToDelete.id);
+        .eq('id', studentToDelete.id)
+        .select();
 
-      if (studentError) throw studentError;
+      if (studentError) {
+        console.error('Erro ao deletar aluno:', studentError);
+        throw studentError;
+      }
 
       setStudents(prev => prev.filter(s => s.id !== studentToDelete.id));
       onDeleteDialogClose();
