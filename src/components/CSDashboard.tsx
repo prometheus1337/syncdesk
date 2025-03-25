@@ -474,27 +474,35 @@ export function CSDashboard() {
     if (!studentToDelete) return;
 
     try {
+      console.log('Iniciando exclusão do aluno:', studentToDelete.id);
+
       // Primeiro, deleta todos os feedbacks do aluno
-      const { error: feedbackError } = await supabase
+      console.log('Deletando feedbacks...');
+      const { data: feedbackData, error: feedbackError } = await supabase
         .from('cs_feedback_notes')
         .delete()
-        .eq('student_id', studentToDelete.id);
+        .eq('student_id', studentToDelete.id)
+        .select();
 
       if (feedbackError) {
         console.error('Erro ao deletar feedbacks:', feedbackError);
         throw feedbackError;
       }
+      console.log('Feedbacks deletados:', feedbackData);
 
       // Depois, deleta o aluno
-      const { error: studentError } = await supabase
+      console.log('Deletando aluno...');
+      const { data: studentData, error: studentError } = await supabase
         .from('cs_students')
         .delete()
-        .eq('id', studentToDelete.id);
+        .eq('id', studentToDelete.id)
+        .select();
 
       if (studentError) {
         console.error('Erro ao deletar aluno:', studentError);
         throw studentError;
       }
+      console.log('Aluno deletado:', studentData);
 
       // Atualiza o estado local
       setStudents(prev => prev.filter(s => s.id !== studentToDelete.id));
