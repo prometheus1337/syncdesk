@@ -1,3 +1,7 @@
+-- Remove funções existentes
+DROP FUNCTION IF EXISTS delete_student_feedbacks(UUID);
+DROP FUNCTION IF EXISTS delete_student(UUID);
+
 -- Função para deletar feedbacks de um aluno
 CREATE OR REPLACE FUNCTION delete_student_feedbacks(p_student_id UUID)
 RETURNS void AS $$
