@@ -15,12 +15,20 @@ async function generateMetabaseToken(questionId: string) {
   const METABASE_SITE_URL = 'https://metabase-production-b92e.up.railway.app';
   const METABASE_SECRET_KEY = '74197c75b058669dd254f4eadb4551621983efa532c16c4bb61d90d0cb565188';
 
+  // Converte o ID para número se for string
+  const dashboardId = parseInt(questionId, 10);
+  if (isNaN(dashboardId)) {
+    throw new Error(`ID inválido: ${questionId}`);
+  }
+
   // Cria o payload
   const payload = {
-    resource: { dashboard: questionId },
+    resource: { dashboard: dashboardId }, // Usando o número
     params: {},
     exp: Math.round(Date.now() / 1000) + (10 * 60) // 10 minutos
   };
+
+  console.log('Payload do token:', payload); // Log para debug
 
   // Converte para base64url
   const encodeBase64URL = (str: string) => {
@@ -83,13 +91,21 @@ export default function AmbassadorDashboard() {
       // Busca os dados do embaixador
       const { data: ambassadorData, error: ambassadorError } = await supabase
         .from('ambassadors')
-        .select('*')
+        .select('id, metabase_question_id')
         .single();
 
       if (ambassadorError) throw ambassadorError;
       if (!ambassadorData) throw new Error('Embaixador não encontrado');
 
-      console.log('Dados do embaixador:', ambassadorData);
+      console.log('Dados do embaixador:', {
+        id: ambassadorData.id,
+        metabase_id: ambassadorData.metabase_question_id,
+        tipo: typeof ambassadorData.metabase_question_id
+      });
+
+      if (!ambassadorData.metabase_question_id) {
+        throw new Error('ID do dashboard não configurado');
+      }
 
       // Gera o token e URL do iframe
       try {
@@ -98,7 +114,7 @@ export default function AmbassadorDashboard() {
         setIframeUrl(embedUrl);
       } catch (tokenError: any) {
         console.error('Erro ao gerar token:', tokenError);
-        throw new Error('Erro ao gerar URL do dashboard');
+        throw new Error(`Erro ao gerar URL do dashboard: ${tokenError.message}`);
       }
 
     } catch (err: any) {
