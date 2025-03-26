@@ -10,6 +10,13 @@ import {
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
+interface Ambassador {
+  id: string;
+  user_id: string;
+  metabase_question_id: string;
+  created_at: string;
+}
+
 export function AmbassadorDashboard() {
   const [iframeUrl, setIframeUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,14 +35,20 @@ export function AmbassadorDashboard() {
         .from('ambassadors')
         .select('*')
         .eq('user_id', appUser?.id)
-        .single();
+        .single() as { data: Ambassador | null; error: any };
 
       if (error) throw error;
 
       if (ambassador) {
+        const questionId = parseInt(ambassador.metabase_question_id, 10);
+        
+        if (isNaN(questionId)) {
+          throw new Error('ID da questão inválido');
+        }
+
         const { data: tokenData, error: tokenError } = await supabase
           .rpc('generate_metabase_token', {
-            question_id: ambassador.metabase_question_id
+            question_id: questionId
           });
 
         if (tokenError) throw tokenError;
