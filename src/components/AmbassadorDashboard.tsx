@@ -8,11 +8,12 @@ import {
   Spinner
 } from '@chakra-ui/react';
 import { useToast } from '@chakra-ui/react';
+import styles from './AmbassadorDashboard.module.css';
 
 // Função para gerar o token JWT
 async function generateMetabaseToken(questionId: string) {
   const METABASE_SITE_URL = 'https://metabase-production-b92e.up.railway.app';
-  const METABASE_SECRET_KEY = 'your-secret-key-here';
+  const METABASE_SECRET_KEY = '8c3f3c0f6c5c3c0f6c5c3c0f6c5c3c0f'; // Substitua pela sua chave real
 
   // Cria o payload
   const payload = {
@@ -164,14 +165,10 @@ export default function AmbassadorDashboard() {
           >
             <iframe
               src={iframeUrl}
-              style={{
-                width: '100%',
-                height: '100%',
-                border: 'none',
-              }}
+              className={styles.metabaseIframe}
               frameBorder="0"
               allowTransparency
-              sandbox="allow-same-origin allow-scripts"
+              sandbox="allow-same-origin allow-scripts allow-forms"
             />
           </Box>
         )}
