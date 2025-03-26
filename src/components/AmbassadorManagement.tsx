@@ -75,7 +75,7 @@ export const AmbassadorManagement: React.FC = () => {
 
   const fetchUsers = async () => {
     const { data, error } = await supabase
-      .from('auth.users')
+      .from('users_view')
       .select('*');
 
     if (error) {
