@@ -12,11 +12,4 @@ FROM auth.users;
 GRANT USAGE ON SCHEMA public TO authenticated;
 
 -- Permite acesso à view apenas para usuários autenticados
-GRANT SELECT ON public.users_view TO authenticated;
-
--- Cria uma política de segurança para a view
-CREATE POLICY "Usuários autenticados podem ver a view de usuários"
-    ON public.users_view
-    FOR SELECT
-    TO authenticated
-    USING (true); 
+GRANT SELECT ON public.users_view TO authenticated; 
