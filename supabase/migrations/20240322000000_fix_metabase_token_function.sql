@@ -8,23 +8,43 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 DECLARE
-  payload JSONB;
+  header TEXT;
+  payload TEXT;
+  signature TEXT;
   token TEXT;
   embed_url TEXT;
 BEGIN
-  -- Cria o payload do token
-  payload := jsonb_build_object(
-    'resource', jsonb_build_object('question', question_id),
-    'params', '{}',
-    'exp', extract(epoch from now() + interval '10 minutes')
+  -- Cria o header do token (base64)
+  header := encode(
+    convert_to('{"alg":"HS256","typ":"JWT"}', 'UTF8'),
+    'base64'
   );
 
-  -- Gera o token JWT usando a chave secreta do Metabase
-  token := jwt.sign(
-    payload,
-    current_setting('app.metabase_secret_key'),
-    'HS256'
+  -- Cria o payload do token (base64)
+  payload := encode(
+    convert_to(
+      json_build_object(
+        'resource', json_build_object('question', question_id),
+        'params', '{}',
+        'exp', extract(epoch from now() + interval '10 minutes')
+      )::text,
+      'UTF8'
+    ),
+    'base64'
   );
+
+  -- Gera a assinatura usando HMAC-SHA256
+  signature := encode(
+    hmac(
+      header || '.' || payload,
+      current_setting('app.metabase_secret_key'),
+      'sha256'
+    ),
+    'base64'
+  );
+
+  -- Constrói o token JWT
+  token := header || '.' || payload || '.' || signature;
 
   -- Constrói a URL completa do iframe
   embed_url := current_setting('app.metabase_site_url') || 
