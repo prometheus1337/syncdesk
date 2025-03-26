@@ -16,6 +16,7 @@ import {
   Text,
   Image,
   useToast,
+  Button,
 } from '@chakra-ui/react';
 import { 
   HamburgerIcon, 
@@ -24,7 +25,7 @@ import {
   AddIcon,
 } from '@chakra-ui/icons';
 import { useAuth } from '../contexts/AuthContext';
-import { FaFileAlt, FaChartBar, FaCoins } from 'react-icons/fa';
+import { FaFileAlt, FaChartBar, FaCoins, FaUserShield, FaUserTie } from 'react-icons/fa';
 import LogoSVGFile from '../assets/logo.svg';
 
 interface NavLinkProps {
@@ -198,6 +199,28 @@ export function Layout({ children }: { children: ReactNode }) {
                     {link.label}
                   </NavLink>
                 ))}
+                {appUser?.role === 'admin' && (
+                  <>
+                    <Button
+                      as={RouterLink}
+                      to="/admin"
+                      variant="ghost"
+                      leftIcon={<FaUserShield />}
+                      colorScheme="yellow"
+                    >
+                      Admin
+                    </Button>
+                    <Button
+                      as={RouterLink}
+                      to="/admin/ambassadors"
+                      variant="ghost"
+                      leftIcon={<FaUserTie />}
+                      colorScheme="yellow"
+                    >
+                      Embaixadores
+                    </Button>
+                  </>
+                )}
               </HStack>
 
               <Menu>
