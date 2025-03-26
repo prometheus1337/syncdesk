@@ -10,7 +10,6 @@ import {
   ModalBody,
   ModalCloseButton,
   ModalContent,
-  ModalFooter,
   ModalHeader,
   ModalOverlay,
   Table,
@@ -39,18 +38,16 @@ interface Ambassador {
 interface User {
   id: string;
   email: string;
-  full_name: string;
-  role: string;
-  created_at: string;
 }
 
 export default function AmbassadorManagement() {
   const [ambassadors, setAmbassadors] = useState<Ambassador[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [selectedUser, setSelectedUser] = useState<string>('');
-  const [questionId, setQuestionId] = useState<string>('');
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
+  const [selectedAmbassador, setSelectedAmbassador] = useState<Ambassador | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [formData, setFormData] = useState({ userId: '', metabaseQuestionId: '' });
 
   useEffect(() => {
     fetchAmbassadors();
@@ -76,74 +73,91 @@ export default function AmbassadorManagement() {
   };
 
   const fetchUsers = async () => {
-    const { data, error } = await supabase
-      .from('users_view')
-      .select('*');
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, email');
 
-    if (error) {
+      if (error) throw error;
+      setUsers(data || []);
+    } catch (error: any) {
       toast({
         title: 'Erro ao carregar usuários',
-        status: 'error',
-        duration: 3000,
-      });
-      return;
-    }
-
-    setUsers(data || []);
-  };
-
-  const handleCreateAmbassador = async () => {
-    if (!selectedUser) {
-      toast({
-        title: 'Selecione um usuário',
-        status: 'error',
-        duration: 3000,
-      });
-      return;
-    }
-
-    if (!questionId.trim()) {
-      toast({
-        title: 'ID da questão inválido',
-        description: 'Digite o ID da questão do Metabase',
-        status: 'error',
-        duration: 3000,
-      });
-      return;
-    }
-
-    const selectedUserData = users.find(u => u.id === selectedUser);
-    if (!selectedUserData) return;
-
-    const { error } = await supabase
-      .from('ambassadors')
-      .insert([
-        {
-          user_id: selectedUser,
-          name: selectedUserData.full_name || selectedUserData.email,
-          email: selectedUserData.email,
-          metabase_question_id: questionId.trim(),
-        },
-      ]);
-
-    if (error) {
-      toast({
-        title: 'Erro ao criar embaixador',
         description: error.message,
         status: 'error',
         duration: 3000,
+        isClosable: true,
       });
-      return;
     }
+  };
 
-    toast({
-      title: 'Embaixador criado com sucesso!',
-      status: 'success',
-      duration: 3000,
+  const handleEdit = (ambassador: Ambassador) => {
+    setSelectedAmbassador(ambassador);
+    setIsEditMode(true);
+    setFormData({
+      userId: ambassador.user_id,
+      metabaseQuestionId: ambassador.metabase_question_id
     });
+    onOpen();
+  };
 
-    onClose();
-    fetchAmbassadors();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      if (isEditMode && selectedAmbassador) {
+        // Atualizar embaixador existente
+        const { error } = await supabase
+          .from('ambassadors')
+          .update({
+            user_id: formData.userId,
+            metabase_question_id: formData.metabaseQuestionId
+          })
+          .eq('id', selectedAmbassador.id);
+
+        if (error) throw error;
+        
+        toast({
+          title: 'Embaixador atualizado com sucesso!',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        // Criar novo embaixador
+        const { error } = await supabase
+          .from('ambassadors')
+          .insert([
+            {
+              user_id: formData.userId,
+              metabase_question_id: formData.metabaseQuestionId
+            }
+          ]);
+
+        if (error) throw error;
+
+        toast({
+          title: 'Embaixador adicionado com sucesso!',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+
+      onClose();
+      fetchAmbassadors();
+      setFormData({ userId: '', metabaseQuestionId: '' });
+      setSelectedAmbassador(null);
+      setIsEditMode(false);
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao salvar embaixador',
+        description: error.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   return (
@@ -151,7 +165,11 @@ export default function AmbassadorManagement() {
       <Container maxW="container.xl" py={8}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={6}>
           <Heading size="lg">Gerenciamento de Embaixadores</Heading>
-          <Button colorScheme="blue" onClick={onOpen}>
+          <Button colorScheme="blue" onClick={() => {
+            setIsEditMode(false);
+            setSelectedAmbassador(null);
+            onOpen();
+          }}>
             Adicionar Embaixador
           </Button>
         </Box>
@@ -162,6 +180,7 @@ export default function AmbassadorManagement() {
               <Th>Nome</Th>
               <Th>Email</Th>
               <Th>Data de Criação</Th>
+              <Th>Ações</Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -170,51 +189,61 @@ export default function AmbassadorManagement() {
                 <Td>{ambassador.name}</Td>
                 <Td>{ambassador.email}</Td>
                 <Td>{new Date(ambassador.created_at).toLocaleDateString()}</Td>
+                <Td>
+                  <Button
+                    size="sm"
+                    colorScheme="yellow"
+                    onClick={() => handleEdit(ambassador)}
+                  >
+                    Editar
+                  </Button>
+                </Td>
               </Tr>
             ))}
           </Tbody>
         </Table>
 
-        <Modal isOpen={isOpen} onClose={onClose}>
+        <Modal isOpen={isOpen} onClose={() => {
+          onClose();
+          setSelectedAmbassador(null);
+          setIsEditMode(false);
+          setFormData({ userId: '', metabaseQuestionId: '' });
+        }}>
           <ModalOverlay />
           <ModalContent>
-            <ModalHeader>Novo Embaixador</ModalHeader>
+            <ModalHeader>
+              {isEditMode ? 'Editar Embaixador' : 'Adicionar Embaixador'}
+            </ModalHeader>
             <ModalCloseButton />
             <ModalBody>
-              <FormControl mb={4}>
-                <FormLabel>Usuário</FormLabel>
-                <Select
-                  value={selectedUser}
-                  onChange={(e) => setSelectedUser(e.target.value)}
-                >
-                  <option value="">Selecione um usuário</option>
-                  {users.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.full_name || user.email}
-                    </option>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl>
-                <FormLabel>ID da Questão do Metabase</FormLabel>
-                <Input
-                  value={questionId}
-                  onChange={(e) => setQuestionId(e.target.value)}
-                  placeholder="Digite o ID da questão do Metabase"
-                  required
-                />
-              </FormControl>
+              <form onSubmit={handleSubmit}>
+                <FormControl mb={4}>
+                  <FormLabel>Usuário</FormLabel>
+                  <Select
+                    placeholder="Selecione um usuário"
+                    value={formData.userId}
+                    onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
+                  >
+                    {users.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.email}
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl mb={4}>
+                  <FormLabel>ID do Dashboard Metabase</FormLabel>
+                  <Input
+                    value={formData.metabaseQuestionId}
+                    onChange={(e) => setFormData({ ...formData, metabaseQuestionId: e.target.value })}
+                    placeholder="Digite o ID do dashboard"
+                  />
+                </FormControl>
+                <Button type="submit" colorScheme="blue" w="full">
+                  {isEditMode ? 'Salvar Alterações' : 'Adicionar'}
+                </Button>
+              </form>
             </ModalBody>
-
-            <ModalFooter>
-              <Button variant="ghost" mr={3} onClick={onClose}>
-                Cancelar
-              </Button>
-              <Button colorScheme="blue" onClick={handleCreateAmbassador}>
-                Criar
-              </Button>
-            </ModalFooter>
           </ModalContent>
         </Modal>
       </Container>

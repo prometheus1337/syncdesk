@@ -85,7 +85,17 @@ export function Layout({ children }: { children: ReactNode }) {
   const getNavLinks = () => {
     const links = [];
 
-    // Link para Relatórios - todos os usuários têm acesso
+    // Link para Dashboard do Embaixador - apenas embaixadores têm acesso
+    if (appUser?.role === 'ambassador') {
+      links.push({
+        href: '/ambassador',
+        label: 'Dashboard',
+        icon: <FaChartBar />
+      });
+      return links;
+    }
+
+    // Link para Relatórios - todos os usuários exceto embaixadores têm acesso
     links.push({
       href: '/relatorios',
       label: 'Relatórios',
