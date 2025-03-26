@@ -13,7 +13,7 @@ import styles from './AmbassadorDashboard.module.css';
 // Função para gerar o token JWT
 async function generateMetabaseToken(questionId: string) {
   const METABASE_SITE_URL = 'https://metabase-production-b92e.up.railway.app';
-  const METABASE_SECRET_KEY = '8c3f3c0f6c5c3c0f6c5c3c0f6c5c3c0f'; // Substitua pela sua chave real
+  const METABASE_SECRET_KEY = '74197c75b058669dd254f4eadb4551621983efa532c16c4bb61d90d0cb565188';
 
   // Cria o payload
   const payload = {
