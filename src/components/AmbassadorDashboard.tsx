@@ -17,7 +17,7 @@ async function generateMetabaseToken(questionId: string) {
 
   // Cria o payload
   const payload = {
-    resource: { question: questionId },
+    resource: { dashboard: questionId },
     params: {},
     exp: Math.round(Date.now() / 1000) + (10 * 60) // 10 minutos
   };
@@ -62,7 +62,7 @@ async function generateMetabaseToken(questionId: string) {
   const token = `${header}.${payloadBase64}.${signature}`;
   
   // Retorna a URL completa
-  return `${METABASE_SITE_URL}/embed/question/${token}`;
+  return `${METABASE_SITE_URL}/embed/dashboard/${token}`;
 }
 
 export default function AmbassadorDashboard() {
@@ -89,9 +89,12 @@ export default function AmbassadorDashboard() {
       if (ambassadorError) throw ambassadorError;
       if (!ambassadorData) throw new Error('Embaixador não encontrado');
 
+      console.log('Dados do embaixador:', ambassadorData);
+
       // Gera o token e URL do iframe
       try {
         const embedUrl = await generateMetabaseToken(ambassadorData.metabase_question_id);
+        console.log('URL gerada:', embedUrl);
         setIframeUrl(embedUrl);
       } catch (tokenError: any) {
         console.error('Erro ao gerar token:', tokenError);
