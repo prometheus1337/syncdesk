@@ -30,7 +30,7 @@ interface Ambassador {
   user_id: string;
   name: string;
   email: string;
-  metabase_question_id: number;
+  metabase_question_id: string;
   created_at: string;
 }
 
@@ -100,11 +100,10 @@ export const AmbassadorManagement: React.FC = () => {
       return;
     }
 
-    const questionIdNumber = parseInt(questionId);
-    if (isNaN(questionIdNumber) || questionIdNumber <= 0) {
+    if (!questionId.trim()) {
       toast({
         title: 'ID da questão inválido',
-        description: 'Digite um número válido maior que zero',
+        description: 'Digite o ID da questão do Metabase',
         status: 'error',
         duration: 3000,
       });
@@ -121,7 +120,7 @@ export const AmbassadorManagement: React.FC = () => {
           user_id: selectedUser,
           name: selectedUserData.full_name || selectedUserData.email,
           email: selectedUserData.email,
-          metabase_question_id: questionIdNumber,
+          metabase_question_id: questionId.trim(),
         },
       ]);
 
@@ -199,8 +198,6 @@ export const AmbassadorManagement: React.FC = () => {
                 value={questionId}
                 onChange={(e) => setQuestionId(e.target.value)}
                 placeholder="Digite o ID da questão do Metabase"
-                type="number"
-                min="1"
                 required
               />
             </FormControl>
