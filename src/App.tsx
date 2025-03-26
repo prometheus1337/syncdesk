@@ -160,7 +160,9 @@ export function App() {
               path="/ambassador"
               element={
                 <PrivateRoute requiredRole="ambassador">
-                  <AmbassadorDashboard />
+                  <Layout>
+                    <AmbassadorDashboard />
+                  </Layout>
                 </PrivateRoute>
               }
             />
