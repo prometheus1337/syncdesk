@@ -1,59 +1,54 @@
 import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
 import {
+  Container,
   Box,
   Heading,
   Text,
-  useToast,
-  Container,
-  Spinner,
+  Spinner
 } from '@chakra-ui/react';
-import { supabase } from '../lib/supabase';
-import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '@chakra-ui/react';
 
-interface Ambassador {
-  id: string;
-  user_id: string;
-  metabase_question_id: string;
-  created_at: string;
-}
-
-export function AmbassadorDashboard() {
-  const [iframeUrl, setIframeUrl] = useState<string | null>(null);
+export default function AmbassadorDashboard() {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [iframeUrl, setIframeUrl] = useState<string | null>(null);
   const toast = useToast();
-  const { appUser } = useAuth();
 
   useEffect(() => {
-    if (appUser?.id) {
-      fetchAmbassadorData();
-    }
-  }, [appUser?.id]);
+    fetchAmbassadorData();
+  }, []);
 
-  async function fetchAmbassadorData() {
+  const fetchAmbassadorData = async () => {
     try {
-      const { data: ambassador, error } = await supabase
+      setLoading(true);
+      setError(null);
+
+      // Busca os dados do embaixador
+      const { data: ambassadorData, error: ambassadorError } = await supabase
         .from('ambassadors')
         .select('*')
-        .eq('user_id', appUser?.id)
-        .single() as { data: Ambassador | null; error: any };
+        .single();
 
-      if (error) throw error;
+      if (ambassadorError) throw ambassadorError;
+      if (!ambassadorData) throw new Error('Embaixador não encontrado');
 
-      if (ambassador) {
-        const { data: tokenData, error: tokenError } = await supabase
-          .rpc('generate_metabase_token', {
-            question_id: ambassador.metabase_question_id
-          });
+      // Gera o token para o iframe
+      const { data: embedUrl, error: embedError } = await supabase
+        .rpc('generate_metabase_token', {
+          question_id: ambassadorData.metabase_question_id
+        });
 
-        if (tokenError) throw tokenError;
+      if (embedError) throw embedError;
+      if (!embedUrl) throw new Error('Erro ao gerar URL do dashboard');
 
-        setIframeUrl(tokenData);
-      }
-    } catch (error: any) {
-      console.error('Error fetching ambassador data:', error);
+      setIframeUrl(embedUrl);
+    } catch (err: any) {
+      console.error('Erro ao carregar dados:', err);
+      setError(err.message || 'Erro ao carregar o dashboard');
       toast({
         title: 'Erro ao carregar dados',
-        description: error.message,
+        description: err.message,
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -61,24 +56,26 @@ export function AmbassadorDashboard() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minH="100vh">
-        <Spinner size="xl" color="#FFDB01" />
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <Spinner size="xl" />
       </Box>
     );
   }
 
-  if (!iframeUrl) {
+  if (error) {
     return (
       <Container maxW="container.xl" py={8}>
         <Box textAlign="center">
-          <Heading size="lg" mb={4}>Nenhum gráfico encontrado</Heading>
+          <Heading size="lg" mb={4} color="red.500">Erro</Heading>
           <Text color="gray.600">
-            Você ainda não tem um gráfico do Metabase vinculado ao seu perfil.
-            Entre em contato com o administrador para configurar seu dashboard.
+            {error}
+          </Text>
+          <Text color="gray.500" mt={2}>
+            Por favor, tente novamente mais tarde ou contate o suporte.
           </Text>
         </Box>
       </Container>
@@ -102,24 +99,27 @@ export function AmbassadorDashboard() {
             Visualize os dados e métricas do seu perfil
           </Text>
         </Box>
-
-        <Box
-          bg="white"
-          borderRadius="md"
-          boxShadow="sm"
-          overflow="hidden"
-          height="calc(100vh - 200px)"
-        >
-          <iframe
-            src={iframeUrl}
-            style={{
-              width: '100%',
-              height: '100%',
-              border: 'none',
-            }}
-            allow="clipboard-write"
-          />
-        </Box>
+        
+        {iframeUrl && (
+          <Box 
+            bg="white"
+            borderRadius="md"
+            boxShadow="sm"
+            overflow="hidden"
+            height="calc(100vh - 200px)"
+          >
+            <iframe
+              src={iframeUrl}
+              style={{
+                width: '100%',
+                height: '100%',
+                border: 'none',
+              }}
+              frameBorder="0"
+              allowTransparency
+            />
+          </Box>
+        )}
       </Container>
     </Box>
   );

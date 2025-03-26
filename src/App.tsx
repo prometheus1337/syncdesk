@@ -14,7 +14,7 @@ import { EssayCreditLogs } from './components/EssayCreditLogs';
 import { RefundDashboard } from './components/RefundDashboard';
 import { CSDashboard } from './components/CSDashboard';
 import AmbassadorManagement from './components/AmbassadorManagement';
-import { AmbassadorDashboard } from './components/AmbassadorDashboard';
+import AmbassadorDashboard from './components/AmbassadorDashboard';
 
 const theme = extendTheme({
   styles: {
