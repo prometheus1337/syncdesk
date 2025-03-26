@@ -14,7 +14,7 @@ DECLARE
 BEGIN
   -- Cria o payload do token
   payload := jsonb_build_object(
-    'resource', jsonb_build_object('question', question_id::integer),
+    'resource', jsonb_build_object('question', question_id),
     'params', '{}',
     'exp', extract(epoch from now() + interval '10 minutes')
   );
