@@ -20,8 +20,8 @@ BEGIN
   );
 
   -- Gera o token JWT usando a chave secreta do Metabase
-  token := pgcrypto.sign(
-    payload::text,
+  token := jwt.sign(
+    payload,
     current_setting('app.metabase_secret_key'),
     'HS256'
   );
