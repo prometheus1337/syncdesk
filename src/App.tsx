@@ -13,6 +13,8 @@ import { EssayDashboard } from './components/EssayDashboard';
 import { EssayCreditLogs } from './components/EssayCreditLogs';
 import { RefundDashboard } from './components/RefundDashboard';
 import { CSDashboard } from './components/CSDashboard';
+import { AmbassadorManagement } from './components/AmbassadorManagement';
+import { AmbassadorDashboard } from './components/AmbassadorDashboard';
 
 const theme = extendTheme({
   styles: {
@@ -141,6 +143,24 @@ export function App() {
                   <Layout>
                     <CSDashboard />
                   </Layout>
+                </RestrictedRoute>
+              }
+            />
+
+            <Route
+              path="/admin/ambassadors"
+              element={
+                <RestrictedRoute allowedRoles={['admin']}>
+                  <AmbassadorManagement />
+                </RestrictedRoute>
+              }
+            />
+
+            <Route
+              path="/ambassador/dashboard"
+              element={
+                <RestrictedRoute allowedRoles={['ambassador']}>
+                  <AmbassadorDashboard />
                 </RestrictedRoute>
               }
             />
