@@ -12,23 +12,23 @@ import styles from './AmbassadorDashboard.module.css';
 
 // Função para gerar o token JWT
 async function generateMetabaseToken(questionId: string) {
-  const METABASE_SITE_URL = 'https://metabase-production-b92e.up.railway.app';
+  const METABASE_SITE_URL = 'https://metabase.syncdesk.com.br';
   const METABASE_SECRET_KEY = '74197c75b058669dd254f4eadb4551621983efa532c16c4bb61d90d0cb565188';
 
   // Converte o ID para número se for string
-  const dashboardId = parseInt(questionId, 10);
-  if (isNaN(dashboardId)) {
+  const questionIdNumber = parseInt(questionId, 10);
+  if (isNaN(questionIdNumber)) {
     throw new Error(`ID inválido: ${questionId}`);
   }
 
-  // Cria o payload
+  // Cria o payload exatamente como no exemplo
   const payload = {
-    resource: { dashboard: dashboardId }, // Usando o número
+    resource: { question: questionIdNumber },
     params: {},
     exp: Math.round(Date.now() / 1000) + (10 * 60) // 10 minutos
   };
 
-  console.log('Payload do token:', payload); // Log para debug
+  console.log('Payload do token:', payload);
 
   // Converte para base64url
   const encodeBase64URL = (str: string) => {
@@ -69,8 +69,8 @@ async function generateMetabaseToken(questionId: string) {
   // Monta o token final
   const token = `${header}.${payloadBase64}.${signature}`;
   
-  // Retorna a URL completa
-  return `${METABASE_SITE_URL}/embed/dashboard/${token}`;
+  // Retorna a URL completa com os parâmetros de estilo
+  return `${METABASE_SITE_URL}/embed/question/${token}#bordered=true&titled=true`;
 }
 
 export default function AmbassadorDashboard() {
@@ -104,7 +104,7 @@ export default function AmbassadorDashboard() {
       });
 
       if (!ambassadorData.metabase_question_id) {
-        throw new Error('ID do dashboard não configurado');
+        throw new Error('ID da questão não configurado');
       }
 
       // Gera o token e URL do iframe
