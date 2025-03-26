@@ -5,10 +5,40 @@ import {
   Box,
   Heading,
   Text,
-  Spinner
+  Spinner,
+  Button,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  FormControl,
+  FormLabel,
+  Input,
+  VStack,
+  useDisclosure,
+  IconButton,
+  Flex,
+  Tooltip
 } from '@chakra-ui/react';
 import { useToast } from '@chakra-ui/react';
+import { EditIcon } from '@chakra-ui/icons';
 import styles from './AmbassadorDashboard.module.css';
+import { useAuth } from '../contexts/AuthContext';
+
+interface Ambassador {
+  id: string;
+  user_id: string;
+  metabase_question_id: string;
+  created_at: string;
+}
+
+interface User {
+  id: string;
+  email: string;
+  full_name: string;
+}
 
 // Função para gerar o token JWT
 async function generateMetabaseToken(dashboardId: string) {
@@ -77,11 +107,44 @@ export default function AmbassadorDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [iframeUrl, setIframeUrl] = useState<string | null>(null);
+  const [ambassador, setAmbassador] = useState<Ambassador | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
+  const { appUser } = useAuth();
+
+  const [formData, setFormData] = useState({
+    user_id: '',
+    metabase_question_id: ''
+  });
 
   useEffect(() => {
     fetchAmbassadorData();
-  }, []);
+    if (appUser?.role === 'admin') {
+      fetchUsers();
+    }
+  }, [appUser?.role]);
+
+  const fetchUsers = async () => {
+    try {
+      const { data: users, error } = await supabase
+        .from('users')
+        .select('id, email, full_name')
+        .order('full_name');
+
+      if (error) throw error;
+      setUsers(users || []);
+    } catch (err: any) {
+      console.error('Erro ao buscar usuários:', err);
+      toast({
+        title: 'Erro ao carregar usuários',
+        description: err.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
 
   const fetchAmbassadorData = async () => {
     try {
@@ -91,16 +154,16 @@ export default function AmbassadorDashboard() {
       // Busca os dados do embaixador
       const { data: ambassadorData, error: ambassadorError } = await supabase
         .from('ambassadors')
-        .select('id, metabase_question_id')
+        .select('*')
         .single();
 
       if (ambassadorError) throw ambassadorError;
       if (!ambassadorData) throw new Error('Embaixador não encontrado');
 
-      console.log('Dados do embaixador:', {
-        id: ambassadorData.id,
-        metabase_id: ambassadorData.metabase_question_id,
-        tipo: typeof ambassadorData.metabase_question_id
+      setAmbassador(ambassadorData);
+      setFormData({
+        user_id: ambassadorData.user_id,
+        metabase_question_id: ambassadorData.metabase_question_id
       });
 
       if (!ambassadorData.metabase_question_id) {
@@ -132,6 +195,42 @@ export default function AmbassadorDashboard() {
     }
   };
 
+  const handleUpdateAmbassador = async () => {
+    try {
+      if (!ambassador) return;
+
+      const { error } = await supabase
+        .from('ambassadors')
+        .update({
+          user_id: formData.user_id,
+          metabase_question_id: formData.metabase_question_id
+        })
+        .eq('id', ambassador.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Sucesso',
+        description: 'Informações do embaixador atualizadas',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      onClose();
+      fetchAmbassadorData();
+    } catch (err: any) {
+      console.error('Erro ao atualizar embaixador:', err);
+      toast({
+        title: 'Erro ao atualizar',
+        description: err.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -157,22 +256,35 @@ export default function AmbassadorDashboard() {
   }
 
   return (
-    <Box minH="100vh" bg="gray.50" p={6}>
+    <Box p={6}>
       <Container maxW="container.xl">
-        <Box mb={8}>
-          <Heading
-            as="h1"
-            fontSize="24px"
-            fontWeight="500"
-            color="gray.700"
-            mb="2"
-          >
-            Dashboard do Embaixador
-          </Heading>
-          <Text color="gray.500">
-            Visualize os dados e métricas do seu perfil
-          </Text>
-        </Box>
+        <Flex justify="space-between" align="center" mb={8}>
+          <Box>
+            <Heading
+              as="h1"
+              fontSize="24px"
+              fontWeight="500"
+              color="gray.700"
+              mb="2"
+            >
+              Dashboard do Embaixador
+            </Heading>
+            <Text color="gray.500">
+              Visualize os dados e métricas do seu perfil
+            </Text>
+          </Box>
+
+          {appUser?.role === 'admin' && (
+            <Tooltip label="Editar configurações">
+              <IconButton
+                aria-label="Editar configurações"
+                icon={<EditIcon />}
+                onClick={onOpen}
+                colorScheme="blue"
+              />
+            </Tooltip>
+          )}
+        </Flex>
         
         {iframeUrl && (
           <Box 
@@ -191,6 +303,51 @@ export default function AmbassadorDashboard() {
             />
           </Box>
         )}
+
+        {/* Modal de Edição */}
+        <Modal isOpen={isOpen} onClose={onClose}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Editar Configurações do Embaixador</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody pb={6}>
+              <VStack spacing={4}>
+                <FormControl>
+                  <FormLabel>Usuário</FormLabel>
+                  <Input
+                    as="select"
+                    value={formData.user_id}
+                    onChange={(e) => setFormData(prev => ({ ...prev, user_id: e.target.value }))}
+                  >
+                    <option value="">Selecione um usuário</option>
+                    {users.map(user => (
+                      <option key={user.id} value={user.id}>
+                        {user.full_name || user.email}
+                      </option>
+                    ))}
+                  </Input>
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>ID do Dashboard Metabase</FormLabel>
+                  <Input
+                    value={formData.metabase_question_id}
+                    onChange={(e) => setFormData(prev => ({ ...prev, metabase_question_id: e.target.value }))}
+                    placeholder="Ex: 45"
+                  />
+                </FormControl>
+
+                <Button
+                  colorScheme="blue"
+                  width="100%"
+                  onClick={handleUpdateAmbassador}
+                >
+                  Salvar Alterações
+                </Button>
+              </VStack>
+            </ModalBody>
+          </ModalContent>
+        </Modal>
       </Container>
     </Box>
   );
