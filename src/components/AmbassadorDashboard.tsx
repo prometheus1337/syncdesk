@@ -40,15 +40,9 @@ export function AmbassadorDashboard() {
       if (error) throw error;
 
       if (ambassador) {
-        const questionId = parseInt(ambassador.metabase_question_id, 10);
-        
-        if (isNaN(questionId)) {
-          throw new Error('ID da questão inválido');
-        }
-
         const { data: tokenData, error: tokenError } = await supabase
           .rpc('generate_metabase_token', {
-            question_id: questionId
+            question_id: ambassador.metabase_question_id
           });
 
         if (tokenError) throw tokenError;
