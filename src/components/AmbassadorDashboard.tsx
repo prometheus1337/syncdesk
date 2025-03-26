@@ -11,19 +11,19 @@ import { useToast } from '@chakra-ui/react';
 import styles from './AmbassadorDashboard.module.css';
 
 // Função para gerar o token JWT
-async function generateMetabaseToken(questionId: string) {
+async function generateMetabaseToken(dashboardId: string) {
   const METABASE_SITE_URL = 'https://metabase-production-b92e.up.railway.app';
   const METABASE_SECRET_KEY = '74197c75b058669dd254f4eadb4551621983efa532c16c4bb61d90d0cb565188';
 
   // Converte o ID para número se for string
-  const questionIdNumber = parseInt(questionId, 10);
-  if (isNaN(questionIdNumber)) {
-    throw new Error(`ID inválido: ${questionId}`);
+  const dashboardIdNumber = parseInt(dashboardId, 10);
+  if (isNaN(dashboardIdNumber)) {
+    throw new Error(`ID inválido: ${dashboardId}`);
   }
 
-  // Cria o payload exatamente como no exemplo
+  // Cria o payload para dashboard
   const payload = {
-    resource: { question: questionIdNumber },
+    resource: { dashboard: dashboardIdNumber },
     params: {},
     exp: Math.round(Date.now() / 1000) + (10 * 60) // 10 minutos
   };
@@ -70,7 +70,7 @@ async function generateMetabaseToken(questionId: string) {
   const token = `${header}.${payloadBase64}.${signature}`;
   
   // Retorna a URL completa com os parâmetros de estilo
-  return `${METABASE_SITE_URL}/embed/question/${token}#bordered=true&titled=true`;
+  return `${METABASE_SITE_URL}/embed/dashboard/${token}#bordered=true&titled=true`;
 }
 
 export default function AmbassadorDashboard() {
@@ -104,7 +104,7 @@ export default function AmbassadorDashboard() {
       });
 
       if (!ambassadorData.metabase_question_id) {
-        throw new Error('ID da questão não configurado');
+        throw new Error('ID do dashboard não configurado');
       }
 
       // Gera o token e URL do iframe
