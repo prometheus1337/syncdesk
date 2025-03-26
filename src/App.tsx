@@ -157,11 +157,11 @@ export function App() {
             />
 
             <Route
-              path="/ambassador/dashboard"
+              path="/ambassador"
               element={
-                <RestrictedRoute allowedRoles={['ambassador']}>
+                <PrivateRoute requiredRole="ambassador">
                   <AmbassadorDashboard />
-                </RestrictedRoute>
+                </PrivateRoute>
               }
             />
 
