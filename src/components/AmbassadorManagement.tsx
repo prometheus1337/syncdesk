@@ -30,7 +30,7 @@ interface Ambassador {
   user_id: string;
   name: string;
   email: string;
-  metabase_embed_code: string;
+  metabase_question_id: number;
   created_at: string;
 }
 
@@ -46,7 +46,7 @@ export const AmbassadorManagement: React.FC = () => {
   const [ambassadors, setAmbassadors] = useState<Ambassador[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<string>('');
-  const [metabaseCode, setMetabaseCode] = useState<string>('');
+  const [questionId, setQuestionId] = useState<string>('');
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
@@ -91,7 +91,7 @@ export const AmbassadorManagement: React.FC = () => {
   };
 
   const handleCreateAmbassador = async () => {
-    if (!selectedUser || !metabaseCode) {
+    if (!selectedUser || !questionId) {
       toast({
         title: 'Preencha todos os campos',
         status: 'error',
@@ -110,7 +110,7 @@ export const AmbassadorManagement: React.FC = () => {
           user_id: selectedUser,
           name: selectedUserData.full_name || selectedUserData.email,
           email: selectedUserData.email,
-          metabase_embed_code: metabaseCode,
+          metabase_question_id: parseInt(questionId),
         },
       ]);
 
@@ -182,11 +182,12 @@ export const AmbassadorManagement: React.FC = () => {
             </FormControl>
 
             <FormControl>
-              <FormLabel>Código de Embed do Metabase</FormLabel>
+              <FormLabel>ID da Questão do Metabase</FormLabel>
               <Input
-                value={metabaseCode}
-                onChange={(e) => setMetabaseCode(e.target.value)}
-                placeholder="Cole o código de embed do Metabase aqui"
+                value={questionId}
+                onChange={(e) => setQuestionId(e.target.value)}
+                placeholder="Digite o ID da questão do Metabase"
+                type="number"
               />
             </FormControl>
           </ModalBody>

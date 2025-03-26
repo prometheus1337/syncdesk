@@ -10,11 +10,12 @@ import { supabase } from '../lib/supabaseClient';
 interface Ambassador {
   id: string;
   name: string;
-  metabase_embed_code: string;
+  metabase_question_id: number;
 }
 
 export const AmbassadorDashboard: React.FC = () => {
   const [ambassador, setAmbassador] = useState<Ambassador | null>(null);
+  const [iframeUrl, setIframeUrl] = useState<string>('');
   const toast = useToast();
 
   useEffect(() => {
@@ -41,6 +42,21 @@ export const AmbassadorDashboard: React.FC = () => {
     }
 
     setAmbassador(data);
+
+    // Gera o token do Metabase
+    const { data: tokenData, error: tokenError } = await supabase
+      .rpc('generate_metabase_token', { question_id: data.metabase_question_id });
+
+    if (tokenError) {
+      toast({
+        title: 'Erro ao gerar token do Metabase',
+        status: 'error',
+        duration: 3000,
+      });
+      return;
+    }
+
+    setIframeUrl(tokenData);
   };
 
   if (!ambassador) {
@@ -57,14 +73,24 @@ export const AmbassadorDashboard: React.FC = () => {
         <Heading size="lg">Dashboard do Embaixador</Heading>
       </Box>
 
-      <Box
-        dangerouslySetInnerHTML={{ __html: ambassador.metabase_embed_code }}
-        width="100%"
-        height="800px"
-        border="1px solid"
-        borderColor="gray.200"
-        borderRadius="md"
-      />
+      {iframeUrl && (
+        <Box
+          width="100%"
+          height="800px"
+          border="1px solid"
+          borderColor="gray.200"
+          borderRadius="md"
+          overflow="hidden"
+        >
+          <iframe
+            src={iframeUrl}
+            frameBorder="0"
+            width="100%"
+            height="100%"
+            allowTransparency
+          />
+        </Box>
+      )}
     </Container>
   );
 }; 
