@@ -38,6 +38,7 @@ interface Ambassador {
 interface User {
   id: string;
   email: string;
+  full_name: string;
 }
 
 export default function AmbassadorManagement() {
@@ -75,8 +76,8 @@ export default function AmbassadorManagement() {
   const fetchUsers = async () => {
     try {
       const { data, error } = await supabase
-        .from('users')
-        .select('id, email');
+        .from('users_view')
+        .select('id, email, full_name');
 
       if (error) throw error;
       setUsers(data || []);
@@ -226,7 +227,7 @@ export default function AmbassadorManagement() {
                   >
                     {users.map((user) => (
                       <option key={user.id} value={user.id}>
-                        {user.email}
+                        {user.full_name || user.email}
                       </option>
                     ))}
                   </Select>
