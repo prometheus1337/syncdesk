@@ -37,9 +37,9 @@ interface Ambassador {
 interface User {
   id: string;
   email: string;
-  user_metadata: {
-    full_name?: string;
-  };
+  full_name: string;
+  role: string;
+  created_at: string;
 }
 
 export const AmbassadorManagement: React.FC = () => {
@@ -108,7 +108,7 @@ export const AmbassadorManagement: React.FC = () => {
       .insert([
         {
           user_id: selectedUser,
-          name: selectedUserData.user_metadata.full_name || selectedUserData.email,
+          name: selectedUserData.full_name || selectedUserData.email,
           email: selectedUserData.email,
           metabase_embed_code: metabaseCode,
         },
@@ -175,7 +175,7 @@ export const AmbassadorManagement: React.FC = () => {
                 <option value="">Selecione um usuário</option>
                 {users.map((user) => (
                   <option key={user.id} value={user.id}>
-                    {user.user_metadata.full_name || user.email}
+                    {user.full_name || user.email}
                   </option>
                 ))}
               </Select>
