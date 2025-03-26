@@ -91,9 +91,20 @@ export const AmbassadorManagement: React.FC = () => {
   };
 
   const handleCreateAmbassador = async () => {
-    if (!selectedUser || !questionId) {
+    if (!selectedUser) {
       toast({
-        title: 'Preencha todos os campos',
+        title: 'Selecione um usuário',
+        status: 'error',
+        duration: 3000,
+      });
+      return;
+    }
+
+    const questionIdNumber = parseInt(questionId);
+    if (isNaN(questionIdNumber) || questionIdNumber <= 0) {
+      toast({
+        title: 'ID da questão inválido',
+        description: 'Digite um número válido maior que zero',
         status: 'error',
         duration: 3000,
       });
@@ -110,13 +121,14 @@ export const AmbassadorManagement: React.FC = () => {
           user_id: selectedUser,
           name: selectedUserData.full_name || selectedUserData.email,
           email: selectedUserData.email,
-          metabase_question_id: parseInt(questionId),
+          metabase_question_id: questionIdNumber,
         },
       ]);
 
     if (error) {
       toast({
         title: 'Erro ao criar embaixador',
+        description: error.message,
         status: 'error',
         duration: 3000,
       });
@@ -188,6 +200,8 @@ export const AmbassadorManagement: React.FC = () => {
                 onChange={(e) => setQuestionId(e.target.value)}
                 placeholder="Digite o ID da questão do Metabase"
                 type="number"
+                min="1"
+                required
               />
             </FormControl>
           </ModalBody>
