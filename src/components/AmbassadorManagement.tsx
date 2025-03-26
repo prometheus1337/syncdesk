@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Box,
   Button,
@@ -22,8 +22,10 @@ import {
   useDisclosure,
   useToast,
   Select,
+  Heading,
 } from '@chakra-ui/react';
 import { supabase } from '../lib/supabaseClient';
+import { Layout } from './Layout';
 
 interface Ambassador {
   id: string;
@@ -42,7 +44,7 @@ interface User {
   created_at: string;
 }
 
-export const AmbassadorManagement: React.FC = () => {
+export default function AmbassadorManagement() {
   const [ambassadors, setAmbassadors] = useState<Ambassador[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<string>('');
@@ -145,74 +147,77 @@ export const AmbassadorManagement: React.FC = () => {
   };
 
   return (
-    <Container maxW="container.xl" py={8}>
-      <Box mb={6}>
-        <Button colorScheme="blue" onClick={onOpen}>
-          Novo Embaixador
-        </Button>
-      </Box>
+    <Layout>
+      <Container maxW="container.xl" py={8}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={6}>
+          <Heading size="lg">Gerenciamento de Embaixadores</Heading>
+          <Button colorScheme="blue" onClick={onOpen}>
+            Adicionar Embaixador
+          </Button>
+        </Box>
 
-      <Table variant="simple">
-        <Thead>
-          <Tr>
-            <Th>Nome</Th>
-            <Th>Email</Th>
-            <Th>Data de Criação</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          {ambassadors.map((ambassador) => (
-            <Tr key={ambassador.id}>
-              <Td>{ambassador.name}</Td>
-              <Td>{ambassador.email}</Td>
-              <Td>{new Date(ambassador.created_at).toLocaleDateString()}</Td>
+        <Table variant="simple">
+          <Thead>
+            <Tr>
+              <Th>Nome</Th>
+              <Th>Email</Th>
+              <Th>Data de Criação</Th>
             </Tr>
-          ))}
-        </Tbody>
-      </Table>
+          </Thead>
+          <Tbody>
+            {ambassadors.map((ambassador) => (
+              <Tr key={ambassador.id}>
+                <Td>{ambassador.name}</Td>
+                <Td>{ambassador.email}</Td>
+                <Td>{new Date(ambassador.created_at).toLocaleDateString()}</Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
 
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Novo Embaixador</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <FormControl mb={4}>
-              <FormLabel>Usuário</FormLabel>
-              <Select
-                value={selectedUser}
-                onChange={(e) => setSelectedUser(e.target.value)}
-              >
-                <option value="">Selecione um usuário</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.full_name || user.email}
-                  </option>
-                ))}
-              </Select>
-            </FormControl>
+        <Modal isOpen={isOpen} onClose={onClose}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Novo Embaixador</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <FormControl mb={4}>
+                <FormLabel>Usuário</FormLabel>
+                <Select
+                  value={selectedUser}
+                  onChange={(e) => setSelectedUser(e.target.value)}
+                >
+                  <option value="">Selecione um usuário</option>
+                  {users.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.full_name || user.email}
+                    </option>
+                  ))}
+                </Select>
+              </FormControl>
 
-            <FormControl>
-              <FormLabel>ID da Questão do Metabase</FormLabel>
-              <Input
-                value={questionId}
-                onChange={(e) => setQuestionId(e.target.value)}
-                placeholder="Digite o ID da questão do Metabase"
-                required
-              />
-            </FormControl>
-          </ModalBody>
+              <FormControl>
+                <FormLabel>ID da Questão do Metabase</FormLabel>
+                <Input
+                  value={questionId}
+                  onChange={(e) => setQuestionId(e.target.value)}
+                  placeholder="Digite o ID da questão do Metabase"
+                  required
+                />
+              </FormControl>
+            </ModalBody>
 
-          <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button colorScheme="blue" onClick={handleCreateAmbassador}>
-              Criar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </Container>
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button colorScheme="blue" onClick={handleCreateAmbassador}>
+                Criar
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </Container>
+    </Layout>
   );
-}; 
+} 

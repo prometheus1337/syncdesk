@@ -13,7 +13,7 @@ import { EssayDashboard } from './components/EssayDashboard';
 import { EssayCreditLogs } from './components/EssayCreditLogs';
 import { RefundDashboard } from './components/RefundDashboard';
 import { CSDashboard } from './components/CSDashboard';
-import { AmbassadorManagement } from './components/AmbassadorManagement';
+import AmbassadorManagement from './components/AmbassadorManagement';
 import { AmbassadorDashboard } from './components/AmbassadorDashboard';
 
 const theme = extendTheme({

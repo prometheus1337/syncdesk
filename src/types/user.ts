@@ -4,7 +4,8 @@ export enum UserRole {
   COMMERCIAL = 'commercial',
   TEACHER = 'teacher',
   DESIGNER = 'designer',
-  CS = 'cs'
+  CS = 'cs',
+  AMBASSADOR = 'ambassador'
 }
 
 export interface User {

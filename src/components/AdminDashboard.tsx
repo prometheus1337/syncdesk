@@ -36,7 +36,7 @@ interface AppUser {
   id: string;
   email: string;
   full_name: string;
-  role: 'admin' | 'support' | 'commercial' | 'essay_director' | 'designer' | 'cs';
+  role: 'admin' | 'support' | 'commercial' | 'essay_director' | 'designer' | 'cs' | 'ambassador';
   created_at: string;
 }
 
@@ -88,6 +88,8 @@ export function AdminDashboard() {
         return 'blue';
       case 'cs':
         return 'orange';
+      case 'ambassador':
+        return 'yellow';
       default:
         return 'gray';
     }
@@ -107,6 +109,8 @@ export function AdminDashboard() {
         return 'Designer';
       case 'cs':
         return 'CS';
+      case 'ambassador':
+        return 'Embaixador';
       default:
         return role;
     }

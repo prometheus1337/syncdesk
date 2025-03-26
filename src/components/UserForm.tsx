@@ -92,6 +92,7 @@ export const UserForm = ({ onSubmit, initialData, isEditing = false }: UserFormP
             <option value="essay_director">Diretor de Redação</option>
             <option value="designer">Designer</option>
             <option value="cs">CS</option>
+            <option value="ambassador">Embaixador</option>
           </Select>
         </FormControl>
 

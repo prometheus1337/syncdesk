@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 
 interface PrivateRouteProps {
   children?: ReactNode;
-  requiredRole?: 'admin' | 'support' | 'essay_director' | 'cs';
+  requiredRole?: 'admin' | 'support' | 'essay_director' | 'cs' | 'ambassador';
 }
 
 const PrivateRoute = ({ children, requiredRole }: PrivateRouteProps) => {
